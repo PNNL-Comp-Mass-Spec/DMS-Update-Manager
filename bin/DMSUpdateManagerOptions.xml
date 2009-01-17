@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<sections>
+  <section name="DMSUpdateManager">
+    <item key="OverwriteNewerFiles" value="False" />
+    <item key="SourceFolderPath" value="\\gigasax\DMS_Programs\AnalysisToolManagerDistribution" />
+    <item key="TargetFolderPath" value="." />
+    <item key="FilesToIgnore" value="" />
+    <item key="LogMessages" value="True" />
+  </section>
+</sections>
