@@ -24,7 +24,7 @@
 ' this computer software.
 
 Module modMain
-	Public Const PROGRAM_DATE As String = "January 16, 2009"
+    Public Const PROGRAM_DATE As String = "February 1, 2009"
 
 	' Either mSourceFolderPath and mTargetFolderPath must be specified, or mParameterFilePath needs to be specified
 	Private mSourceFolderPath As String			' Option A
@@ -81,7 +81,12 @@ Module modMain
 					If intReturnCode <> 0 Then
 						Console.WriteLine("Error while processing: " & mDMSUpdateManager.GetErrorMessage())
 					End If
-				End If
+                End If
+
+                ' Note: This call will only have an effect if the parameter file defined by mParameterFilePath has an entry like this:
+                ' <item key="RebootCommandFolderPath" value="\\gigasax\DMS_Programs\AnalysisToolManagerReboot" />
+                mDMSUpdateManager.CheckForRebootOrShutdownFile(mPreviewMode)
+
 			End If
 
 		Catch ex As Exception
@@ -135,7 +140,8 @@ Module modMain
 			Console.WriteLine("All files present in the source folder will be copied to the target folder if the file size or file modification time are different.")
 			Console.WriteLine("You can either define the source and target folder at the command line, or using the parameter file.  All settings in the parameter file override command line settings.")
 			Console.WriteLine()
-			Console.WriteLine("Use /L to log details of the updated files.  Use /V to preview the files that would be updated.")
+            Console.WriteLine("  Use /L to log details of the updated files.")
+            Console.WriteLine("  Use /V to preview the files that would be updated.")
 
 			Console.WriteLine("Program written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA) in 2009")
 			Console.WriteLine()

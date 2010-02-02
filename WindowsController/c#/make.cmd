@@ -1,0 +1,1 @@
+csc /doc:out.xml /out:Restart.exe /target:exe WindowsController.cs TestApp.cs

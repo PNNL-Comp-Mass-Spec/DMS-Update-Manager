@@ -1,0 +1,14 @@
+DMS Update Manager Change Log
+
+Version 1.0.3684; February 1, 2010
+	- Added support for copying subdirectories when synchronizing folders
+		- Set CopySubdirectoriesToParentFolder to True in the parameter to have subdirectories in the source folder copied to the parent directory of the target folder
+	- Now examining the folder defined by RebootCommandFolderPath in the parameter file
+		- If a file named ComputerName_RebootNow.txt is found, then the computer is rebooted
+		- If a file named ComputerName_ShutdownNow.txt is found, then the computer is shutdown
+
+Version 1.0.3608; November 17, 2009
+	- Added 750 msec delay when showing syntax at the command line
+
+Version 1.0.3303; January 16, 2009
+	- Initial version

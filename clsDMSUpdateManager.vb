@@ -28,7 +28,7 @@ Public Class clsDMSUpdateManager
 	Inherits clsProcessFoldersBaseClass
 
 	Public Sub New()
-		MyBase.mFileDate = "January 16 2009"
+        MyBase.mFileDate = "February 1, 2010"
 		InitializeLocalVariables()
 	End Sub
 
@@ -55,12 +55,27 @@ Public Class clsDMSUpdateManager
 	' If False, then will not overwrite files in the target folder that are newer than files in the source folder
 	Protected mOverwriteNewerFiles As Boolean
 
+    ' When True, then will copy any subdirectories of the source folder into a subdirectory off the parent folder of the target folder
+    ' For example:
+    '   The .Exe resides at folder C:\DMS_Programs\AnalysisToolManager\DMSUpdateManager.exe
+    '   mSourceFolderPath = "\\gigasax\DMS_Programs\AnalysisToolManagerDistribution"
+    '   mTargetFolderPath = "."
+    '   Files are synced from "\\gigasax\DMS_Programs\AnalysisToolManagerDistribution" to "C:\DMS_Programs\AnalysisToolManager\"
+    '   Next, folder \\gigasax\DMS_Programs\AnalysisToolManagerDistribution\MASIC\ will get sync'd with ..\MASIC (but only if ..\MASIC exists)
+    '     Note that ..\MASIC is actually C:\DMS_Programs\MASIC\ 
+    '   When sync'ing the MASIC folders, will recursively sync additional folders that match
+
+    Protected mCopySubdirectoriesToParentFolder As Boolean
+
 	' The following is the path that lists the files that will be copied to the target folder
 	Protected mSourceFolderPath As String
-	Protected mTargetFolderPath As String
+    Protected mTargetFolderPath As String
 
-	' List of files that will not be copied
-	' The names must be full filenames (no wildcards)
+    ' This path defines the folder to examine to look for a file named ComputerName_RebootNow.txt or ComputerName_ShutdownNow.txt
+    Protected mRebootCommandFolderPath As String
+
+    ' List of files that will not be copied
+    ' The names must be full filenames (no wildcards)
 	Protected mFilesToIgnoreCount As Integer
 	Protected mFilesToIgnore() As String
 
@@ -69,6 +84,14 @@ Public Class clsDMSUpdateManager
 
 #Region "Properties"
 
+    Public Property CopySubdirectoriesToParentFolder() As Boolean
+        Get
+            Return mCopySubdirectoriesToParentFolder
+        End Get
+        Set(ByVal value As Boolean)
+            mCopySubdirectoriesToParentFolder = value
+        End Set
+    End Property
 	Public ReadOnly Property LocalErrorCode() As eDMSUpdateManagerErrorCodes
 		Get
 			Return mLocalErrorCode
@@ -92,6 +115,17 @@ Public Class clsDMSUpdateManager
 			mPreviewMode = value
 		End Set
 	End Property
+
+    Public Property RebootCommandFolderPath() As String
+        Get
+            Return mRebootCommandFolderPath
+        End Get
+        Set(ByVal value As String)
+            If Not value Is Nothing Then
+                mRebootCommandFolderPath = value
+            End If
+        End Set
+    End Property
 
 	Public Property SourceFolderPath() As String
 		Get
@@ -128,10 +162,12 @@ Public Class clsDMSUpdateManager
 		MyBase.mLogFileUsesDateStamp = False
 
 		mPreviewMode = False
-		mOverwriteNewerFiles = False
+        mOverwriteNewerFiles = False
+        mCopySubdirectoriesToParentFolder = False
 
 		mSourceFolderPath = String.Empty
 		mTargetFolderPath = String.Empty
+        mRebootCommandFolderPath = String.Empty
 
 		mFilesToIgnoreCount = 0
 		ReDim mFilesToIgnore(9)
@@ -198,9 +234,12 @@ Public Class clsDMSUpdateManager
 						MyBase.LogMessagesToFile = True
 					End If
 
-					mOverwriteNewerFiles = objSettingsFile.GetParam(OPTIONS_SECTION, "OverwriteNewerFiles", mOverwriteNewerFiles)
+                    mOverwriteNewerFiles = objSettingsFile.GetParam(OPTIONS_SECTION, "OverwriteNewerFiles", mOverwriteNewerFiles)
+                    mCopySubdirectoriesToParentFolder = objSettingsFile.GetParam(OPTIONS_SECTION, "CopySubdirectoriesToParentFolder", mCopySubdirectoriesToParentFolder)
+
 					mSourceFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "SourceFolderPath", mSourceFolderPath)
-					mTargetFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "TargetFolderPath", mTargetFolderPath)
+                    mTargetFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "TargetFolderPath", mTargetFolderPath)
+                    mRebootCommandFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "RebootCommandFolderPath", mRebootCommandFolderPath)
 
 					strFilesToIgnore = objSettingsFile.GetParam(OPTIONS_SECTION, "FilesToIgnore", String.Empty)
 					Try
@@ -237,21 +276,11 @@ Public Class clsDMSUpdateManager
 		' Returns True if success, False if failure
 
 		Dim blnSuccess As Boolean
-		Dim strStatusMessage As String
+        Dim objSourceFolder As System.IO.DirectoryInfo
+        Dim objTargetFolder As System.IO.DirectoryInfo
+        Dim objSourceSubFolder As System.IO.DirectoryInfo
 
-		Dim objSourceFolder As System.IO.DirectoryInfo
-		Dim objSourceFile As System.IO.FileInfo
-		Dim objTargetFile As System.IO.FileInfo
-		Dim objCopiedFile As System.IO.FileInfo
-
-		Dim intIndex As Integer
-		Dim strFileNameLCase As String
-		Dim strTargetFilePath As String
-		Dim strCopyReason As String
-
-		Dim blnSkipFile As Boolean
-		Dim blnNeedToCopy As Boolean
-		Dim intFileUpdateCount As Integer
+        Dim strTargetSubFolderPath As String
 
 		SetLocalErrorCode(eDMSUpdateManagerErrorCodes.NoError)
 
@@ -288,103 +317,28 @@ Public Class clsDMSUpdateManager
 			' Note that CleanupFilePaths() will update mOutputFolderPath, which is used by LogMessage()
 			If Not CleanupFolderPaths(strTargetFolderPath, String.Empty) Then
 				MyBase.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.FilePathError)
-			Else
-				strTargetFolderPath = New System.IO.DirectoryInfo(strTargetFolderPath).FullName
+            Else
+                objSourceFolder = New System.IO.DirectoryInfo(mSourceFolderPath)
+                objTargetFolder = New System.IO.DirectoryInfo(strTargetFolderPath)
+                strTargetFolderPath = objTargetFolder.FullName
 
-				MyBase.mProgressStepDescription = "Updating " & System.IO.Path.GetDirectoryName(strTargetFolderPath) & ControlChars.NewLine & " using " & mSourceFolderPath
-				ShowMessage(MyBase.mProgressStepDescription, False)
-				MyBase.ResetProgress()
+                MyBase.mProgressStepDescription = "Updating " & objTargetFolder.Name & ControlChars.NewLine & " using " & objSourceFolder.FullName
+                MyBase.ResetProgress()
 
-				' Obtain a list of files in the source folder
-				objSourceFolder = New System.IO.DirectoryInfo(mSourceFolderPath)
+                blnSuccess = UpdateFolderWork(objSourceFolder.FullName, objTargetFolder.FullName)
 
-				intFileUpdateCount = 0
+                If mCopySubdirectoriesToParentFolder Then
 
-				For Each objSourceFile In objSourceFolder.GetFiles()
+                    For Each objSourceSubFolder In objSourceFolder.GetDirectories()
 
-					Try
-						strFileNameLCase = objSourceFile.Name.ToLower
+                        strTargetSubFolderPath = System.IO.Path.Combine(objTargetFolder.Parent.FullName, objSourceSubFolder.Name)
 
-						' Make sure this file is not in mFilesToIgnore
-						For intIndex = 0 To mFilesToIgnoreCount - 1
-							If strFileNameLCase = mFilesToIgnore(intIndex).ToLower Then
-								' Skip file
-								blnSkipFile = True
-								Exit For
-							End If
-						Next intIndex
+                        If System.IO.Directory.Exists(strTargetSubFolderPath) Then
+                            blnSuccess = UpdateFolderWork(objSourceSubFolder.FullName, strTargetSubFolderPath)
+                        End If
+                    Next
 
-						If Not blnSkipFile Then
-							strTargetFilePath = System.IO.Path.Combine(strTargetFolderPath, objSourceFile.Name)
-							objTargetFile = New System.IO.FileInfo(strTargetFilePath)
-
-							strCopyReason = String.Empty
-							blnNeedToCopy = False
-
-							If Not objTargetFile.Exists Then
-								' File not present in the target; copy it now
-								strCopyReason = "not found in target folder"
-								blnNeedToCopy = True
-							Else
-								' File is present, see if the file has a different size
-								If objTargetFile.Length <> objSourceFile.Length Then
-									blnNeedToCopy = True
-									strCopyReason = "sizes are different"
-								ElseIf objSourceFile.LastWriteTime > objTargetFile.LastWriteTime Then
-									blnNeedToCopy = True
-									strCopyReason = "source file is newer"
-								End If
-
-								If blnNeedToCopy AndAlso Not mOverwriteNewerFiles Then
-									If objTargetFile.LastWriteTime > objSourceFile.LastWriteTime Then
-										' Target file is newer than the source; do not overwrite
-										ShowMessage("Warning: Skipping file " & objSourceFile.Name & " since a newer version exists in the target; source=" & objSourceFile.LastWriteTime & ", target=" & objTargetFile.LastWriteTime)
-										blnNeedToCopy = False
-									End If
-								End If
-							End If
-
-							If blnNeedToCopy Then
-								If mPreviewMode Then
-									ShowMessage("Preview: Update file: " & objSourceFile.Name & "; " & strCopyReason, False)
-								Else
-									ShowMessage("Update file: " & objSourceFile.Name & "; " & strCopyReason)
-
-									Try
-										objCopiedFile = objSourceFile.CopyTo(objTargetFile.FullName, True)
-
-										If objCopiedFile.Length <> objSourceFile.Length Then
-											ShowErrorMessage("Copy of " & objSourceFile.Name & " failed; sizes differ", True)
-										ElseIf objCopiedFile.LastWriteTime <> objSourceFile.LastWriteTime Then
-											ShowErrorMessage("Copy of " & objSourceFile.Name & " failed; modification times differ", True)
-										Else
-											intFileUpdateCount += 1
-										End If
-
-									Catch ex As Exception
-										ShowErrorMessage("Error copying " & objSourceFile.Name & ": " & ex.Message, True)
-									End Try
-
-								End If
-							End If
-						End If
-
-					Catch ex As Exception
-						ShowErrorMessage("Error synchronizing " & objSourceFile.Name & ": " & ex.Message, True)
-					End Try
-
-				Next
-
-				If intFileUpdateCount > 0 Then
-					strStatusMessage = "Updated " & intFileUpdateCount & " file"
-					If intFileUpdateCount > 1 Then strStatusMessage &= "s"
-
-					ShowMessage(strStatusMessage)
-					LogMessage("Source folder for updates: " & objSourceFolder.FullName)
-
-				End If
-				blnSuccess = True
-
+                End If
 			End If
 		Catch ex As Exception
 			HandleException("Error in UpdateFolder", ex)
@@ -394,25 +348,252 @@ Public Class clsDMSUpdateManager
 
 	End Function
 
-	Private Sub SetLocalErrorCode(ByVal eNewErrorCode As eDMSUpdateManagerErrorCodes)
-		SetLocalErrorCode(eNewErrorCode, False)
-	End Sub
+    Protected Function UpdateFolderWork(ByVal strSourceFolderPath As String, ByVal strTargetFolderPath As String) As Boolean
 
-	Private Sub SetLocalErrorCode(ByVal eNewErrorCode As eDMSUpdateManagerErrorCodes, ByVal blnLeaveExistingErrorCodeUnchanged As Boolean)
+        Dim strStatusMessage As String
 
-		If blnLeaveExistingErrorCodeUnchanged AndAlso mLocalErrorCode <> eDMSUpdateManagerErrorCodes.NoError Then
-			' An error code is already defined; do not change it
-		Else
-			mLocalErrorCode = eNewErrorCode
+        Dim objSourceFolder As System.IO.DirectoryInfo
+        Dim objSourceFile As System.IO.FileInfo
+        Dim objTargetFile As System.IO.FileInfo
+        Dim objCopiedFile As System.IO.FileInfo
 
-			If eNewErrorCode = eDMSUpdateManagerErrorCodes.NoError Then
-				If MyBase.ErrorCode = clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.LocalizedError Then
-					MyBase.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.NoError)
-				End If
-			Else
-				MyBase.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.LocalizedError)
-			End If
-		End If
+        Dim objSourceSubFolder As System.IO.DirectoryInfo
+        Dim strTargetSubFolderPath As String
+        Dim blnSuccess As Boolean
 
-	End Sub
+        Dim intIndex As Integer
+        Dim strFileNameLCase As String
+        Dim strTargetFilePath As String
+        Dim strCopyReason As String
+
+        Dim blnSkipFile As Boolean
+        Dim blnNeedToCopy As Boolean
+        Dim intFileUpdateCount As Integer
+
+        MyBase.mProgressStepDescription = "Updating " & System.IO.Path.GetDirectoryName(strTargetFolderPath) & ControlChars.NewLine & " using " & strSourceFolderPath
+        ShowMessage(MyBase.mProgressStepDescription, False)
+        
+        ' Obtain a list of files in the source folder
+        objSourceFolder = New System.IO.DirectoryInfo(strSourceFolderPath)
+
+        intFileUpdateCount = 0
+
+        For Each objSourceFile In objSourceFolder.GetFiles()
+
+            Try
+                strFileNameLCase = objSourceFile.Name.ToLower
+
+                ' Make sure this file is not in mFilesToIgnore
+                For intIndex = 0 To mFilesToIgnoreCount - 1
+                    If strFileNameLCase = mFilesToIgnore(intIndex).ToLower Then
+                        ' Skip file
+                        blnSkipFile = True
+                        Exit For
+                    End If
+                Next intIndex
+
+                If Not blnSkipFile Then
+                    strTargetFilePath = System.IO.Path.Combine(strTargetFolderPath, objSourceFile.Name)
+                    objTargetFile = New System.IO.FileInfo(strTargetFilePath)
+
+                    strCopyReason = String.Empty
+                    blnNeedToCopy = False
+
+                    If Not objTargetFile.Exists Then
+                        ' File not present in the target; copy it now
+                        strCopyReason = "not found in target folder"
+                        blnNeedToCopy = True
+                    Else
+                        ' File is present, see if the file has a different size
+                        If objTargetFile.Length <> objSourceFile.Length Then
+                            blnNeedToCopy = True
+                            strCopyReason = "sizes are different"
+                        ElseIf objSourceFile.LastWriteTime > objTargetFile.LastWriteTime Then
+                            blnNeedToCopy = True
+                            strCopyReason = "source file is newer"
+                        End If
+
+                        If blnNeedToCopy AndAlso Not mOverwriteNewerFiles Then
+                            If objTargetFile.LastWriteTime > objSourceFile.LastWriteTime Then
+                                ' Target file is newer than the source; do not overwrite
+                                ShowMessage("Warning: Skipping file " & objSourceFile.Name & " since a newer version exists in the target; source=" & objSourceFile.LastWriteTime & ", target=" & objTargetFile.LastWriteTime)
+                                blnNeedToCopy = False
+                            End If
+                        End If
+                    End If
+
+                    If blnNeedToCopy Then
+                        If mPreviewMode Then
+                            ShowMessage("Preview: Update file: " & objSourceFile.Name & "; " & strCopyReason, False)
+                        Else
+                            ShowMessage("Update file: " & objSourceFile.Name & "; " & strCopyReason)
+
+                            Try
+                                objCopiedFile = objSourceFile.CopyTo(objTargetFile.FullName, True)
+
+                                If objCopiedFile.Length <> objSourceFile.Length Then
+                                    ShowErrorMessage("Copy of " & objSourceFile.Name & " failed; sizes differ", True)
+                                ElseIf objCopiedFile.LastWriteTime <> objSourceFile.LastWriteTime Then
+                                    ShowErrorMessage("Copy of " & objSourceFile.Name & " failed; modification times differ", True)
+                                Else
+                                    intFileUpdateCount += 1
+                                End If
+
+                            Catch ex As Exception
+                                ShowErrorMessage("Error copying " & objSourceFile.Name & ": " & ex.Message, True)
+                            End Try
+
+                        End If
+                    End If
+                End If
+
+            Catch ex As Exception
+                ShowErrorMessage("Error synchronizing " & objSourceFile.Name & ": " & ex.Message, True)
+            End Try
+
+        Next
+
+        If intFileUpdateCount > 0 Then
+            strStatusMessage = "Updated " & intFileUpdateCount & " file"
+            If intFileUpdateCount > 1 Then strStatusMessage &= "s"
+
+            strStatusMessage &= " using " & objSourceFolder.FullName & "\"
+
+            ShowMessage(strStatusMessage, True, False)
+        End If
+
+        ' Process each subdirectory in the source folder
+        ' If the folder exists at the target, then copy it
+        For Each objSourceSubFolder In objSourceFolder.GetDirectories()
+            strTargetSubFolderPath = System.IO.Path.Combine(strTargetFolderPath, objSourceSubFolder.Name)
+
+            If System.IO.Directory.Exists(strTargetSubFolderPath) Then
+                blnSuccess = UpdateFolderWork(objSourceSubFolder.FullName, strTargetSubFolderPath)
+            End If
+        Next
+
+        Return True
+    End Function
+
+    Public Sub CheckForRebootOrShutdownFile(ByVal blnPreview As Boolean)
+        CheckForRebootOrShutdownFile(mRebootCommandFolderPath, blnPreview)
+    End Sub
+
+    ''' <summary>
+    ''' Look for a file named MachineName_RebootNow.txt or MachineName_ShutdownNow.txt in strSourceFolder
+    ''' If strSourceFolder is empty, then does not do anything
+    ''' </summary>
+    ''' <param name="strSourceFolder"></param>
+    ''' <remarks></remarks>
+    Public Sub CheckForRebootOrShutdownFile(ByVal strSourceFolder As String, ByVal blnPreview As Boolean)
+
+        Dim blnMatchFound As Boolean
+
+        If strSourceFolder Is Nothing OrElse strSourceFolder.Length = 0 Then
+            If blnPreview Then
+                Console.WriteLine("SourceFolder to look for the RebootNow.txt file is empty; will not look for the file")
+            End If
+        Else
+            blnMatchFound = CheckForRebootOrShutdownFileWork(strSourceFolder, "_RebootNow.txt", MentalisUtils.RestartOptions.Reboot, blnPreview)
+
+            If Not blnMatchFound Then
+                blnMatchFound = CheckForRebootOrShutdownFileWork(strSourceFolder, "_ShutdownNow.txt", MentalisUtils.RestartOptions.ShutDown, blnPreview)
+            End If
+        End If
+
+    End Sub
+
+    Protected Function CheckForRebootOrShutdownFileWork(ByVal strSourceFolder As String, _
+                                                        ByVal strTargetFileSuffix As String, _
+                                                        ByVal eAction As MentalisUtils.RestartOptions, _
+                                                        ByVal blnPreview As Boolean) As Boolean
+
+        Dim ioFileInfo As System.IO.FileInfo
+        Dim strFilePathToFind As String
+        Dim strNewPath As String
+        Dim strComputer As String
+
+        Dim blnMatchFound As Boolean = False
+
+        Try
+            strComputer = System.Environment.MachineName.ToString()
+            strFilePathToFind = System.IO.Path.Combine(strSourceFolder, strComputer & strTargetFileSuffix)
+
+            Console.WriteLine("Looking for " & strFilePathToFind)
+            ioFileInfo = New System.IO.FileInfo(strFilePathToFind)
+
+            If ioFileInfo.Exists Then
+                Console.WriteLine("Found file: " & strFilePathToFind)
+
+                If Not blnPreview Then
+                    strNewPath = strFilePathToFind & ".done"
+
+                    Try
+                        If System.IO.File.Exists(strNewPath) Then
+                            System.IO.File.Delete(strNewPath)
+                            System.Threading.Thread.Sleep(500)
+                        End If
+                    Catch ex As Exception
+                        Console.WriteLine("Error deleting file " & strNewPath & ": " & ex.Message)
+                    End Try
+
+                    Try
+                        ioFileInfo.MoveTo(strNewPath)
+                        System.Threading.Thread.Sleep(500)
+                    Catch ex As Exception
+                        Console.WriteLine("Error renaming " & System.IO.Path.GetFileName(strFilePathToFind) & " to " & System.IO.Path.GetFileName(strNewPath) & ": " & ex.Message)
+                    End Try
+
+                End If
+
+                If blnPreview Then
+                    Console.WriteLine("Preview: Call LogoffOrRebootMachine with command " & eAction.ToString)
+                Else
+                    LogoffOrRebootMachine(eAction, True)
+                End If
+
+            End If
+
+        Catch ex As Exception
+            Console.WriteLine("Error in CheckForRebootOrShutdownFileWork: " & ex.Message)
+
+        End Try
+        
+    End Function
+
+    Private Sub LogoffOrRebootMachine(ByVal eAction As MentalisUtils.RestartOptions, ByVal blnForce As Boolean)
+
+        ' Typical values for eAction are:
+        ' RestartOptions.LogOff
+        ' RestartOptions.PowerOff
+        ' RestartOptions.Reboot
+        ' RestartOptions.ShutDown
+        ' RestartOptions.Suspend
+        ' RestartOptions.Hibernate
+
+        MentalisUtils.WindowsController.ExitWindows(eAction, blnForce)
+
+    End Sub
+
+    Private Sub SetLocalErrorCode(ByVal eNewErrorCode As eDMSUpdateManagerErrorCodes)
+        SetLocalErrorCode(eNewErrorCode, False)
+    End Sub
+
+    Private Sub SetLocalErrorCode(ByVal eNewErrorCode As eDMSUpdateManagerErrorCodes, ByVal blnLeaveExistingErrorCodeUnchanged As Boolean)
+
+        If blnLeaveExistingErrorCodeUnchanged AndAlso mLocalErrorCode <> eDMSUpdateManagerErrorCodes.NoError Then
+            ' An error code is already defined; do not change it
+        Else
+            mLocalErrorCode = eNewErrorCode
+
+            If eNewErrorCode = eDMSUpdateManagerErrorCodes.NoError Then
+                If MyBase.ErrorCode = clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.LocalizedError Then
+                    MyBase.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.NoError)
+                End If
+            Else
+                MyBase.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.LocalizedError)
+            End If
+        End If
+
+    End Sub
 End Class

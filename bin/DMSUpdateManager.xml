@@ -357,6 +357,13 @@ DMSUpdateManager
 	<summary>
   A strongly-typed resource class, for looking up localized strings, etc.
 </summary>
+</member><member name="M:DMSUpdateManager.clsDMSUpdateManager.CheckForRebootOrShutdownFile(System.String,System.Boolean)">
+	<summary>
+ Look for a file named MachineName_RebootNow.txt or MachineName_ShutdownNow.txt in strSourceFolder
+ If strSourceFolder is empty, then does not do anything
+ </summary>
+	<param name="strSourceFolder"></param>
+	<remarks></remarks>
 </member>
 </members>
 </doc>
