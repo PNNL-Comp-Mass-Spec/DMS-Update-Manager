@@ -90,13 +90,20 @@ copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager1\
 
-copy %1 \\mash-01\DMS_Programs\AnalysisToolManager1\
-copy %1 \\mash-02\DMS_Programs\AnalysisToolManager1\
-copy %1 \\mash-03\DMS_Programs\AnalysisToolManager1\
-copy %1 \\mash-04\DMS_Programs\AnalysisToolManager1\
-copy %1 \\mash-05\DMS_Programs\AnalysisToolManager1\
-copy %1 \\mash-06\DMS_Programs\AnalysisToolManager1\
+copy %1 \\mash-01\DMS_Programs\AnalysisToolManager\
+copy %1 \\mash-02\DMS_Programs\AnalysisToolManager\
+copy %1 \\mash-03\DMS_Programs\AnalysisToolManager\
+copy %1 \\mash-04\DMS_Programs\AnalysisToolManager\
+copy %1 \\mash-05\DMS_Programs\AnalysisToolManager\
+copy %1 \\mash-06\DMS_Programs\AnalysisToolManager\
 
+copy %1 \\Proto-3\DMS_Programs\AnalysisToolManager\
+copy %1 \\Proto-4\DMS_Programs\AnalysisToolManager\
+copy %1 \\Proto-5\DMS_Programs\AnalysisToolManager\
+copy %1 \\Proto-7\DMS_Programs\AnalysisToolManager\
+copy %1 \\Proto-8\DMS_Programs\AnalysisToolManager\
+copy %1 \\Proto-9\DMS_Programs\AnalysisToolManager\
+copy %1 \\Proto-10\DMS_Programs\AnalysisToolManager\
 
 
 
