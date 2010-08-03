@@ -53,11 +53,11 @@ copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager1\
-rem  copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-56\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-57\DMS_Programs\AnalysisToolManager1\
-rem  copy %1 \\Pub-58\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Pub-58\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-59\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-60\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-61\DMS_Programs\AnalysisToolManager1\
@@ -153,11 +153,11 @@ copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager2\
-rem  copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager2\
+copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-56\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-57\DMS_Programs\AnalysisToolManager2\
-rem  copy %1 \\Pub-58\DMS_Programs\AnalysisToolManager2\
+copy %1 \\Pub-58\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-59\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-60\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-61\DMS_Programs\AnalysisToolManager2\
@@ -216,11 +216,11 @@ copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager3\
-rem copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager3\
+copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-56\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-57\DMS_Programs\AnalysisToolManager3\
-rem  %1 \\Pub-58\DMS_Programs\AnalysisToolManager3\
+copy %1 \\Pub-58\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-59\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-60\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-61\DMS_Programs\AnalysisToolManager3\
@@ -278,11 +278,11 @@ copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager4\
-rem copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager4\
+copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-56\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-57\DMS_Programs\AnalysisToolManager4\
-rem  %1 \\Pub-58\DMS_Programs\AnalysisToolManager4\
+copy %1 \\Pub-58\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-59\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-60\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-61\DMS_Programs\AnalysisToolManager4\
@@ -332,11 +332,11 @@ copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager5\
-rem copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager5\
+copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-56\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-57\DMS_Programs\AnalysisToolManager5\
-rem  %1 \\Pub-58\DMS_Programs\AnalysisToolManager5\
+copy %1 \\Pub-58\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-59\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-60\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-61\DMS_Programs\AnalysisToolManager5\
@@ -386,11 +386,11 @@ copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager6\
-rem copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager6\
+copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-56\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-57\DMS_Programs\AnalysisToolManager6\
-rem  %1 \\Pub-58\DMS_Programs\AnalysisToolManager6\
+copy %1 \\Pub-58\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-59\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-60\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-61\DMS_Programs\AnalysisToolManager6\
@@ -440,11 +440,11 @@ copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager7\
-rem copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager7\
+copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-56\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-57\DMS_Programs\AnalysisToolManager7\
-rem  %1 \\Pub-58\DMS_Programs\AnalysisToolManager7\
+copy %1 \\Pub-58\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-59\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-60\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-61\DMS_Programs\AnalysisToolManager7\
@@ -494,11 +494,11 @@ copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager8\
-rem copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager8\
+copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-56\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-57\DMS_Programs\AnalysisToolManager8\
-rem  %1 \\Pub-58\DMS_Programs\AnalysisToolManager8\
+copy %1 \\Pub-58\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-59\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-60\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-61\DMS_Programs\AnalysisToolManager8\

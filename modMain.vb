@@ -10,21 +10,9 @@
 ' Website: http://ncrr.pnl.gov/ or http://www.sysbio.org/resources/staff/
 ' -------------------------------------------------------------------------------
 ' 
-' Licensed under the Apache License, Version 2.0; you may not use this file except
-' in compliance with the License.  You may obtain a copy of the License at 
-' http://www.apache.org/licenses/LICENSE-2.0
-'
-' Notice: This computer software was prepared by Battelle Memorial Institute, 
-' hereinafter the Contractor, under Contract No. DE-AC05-76RL0 1830 with the 
-' Department of Energy (DOE).  All rights in the computer software are reserved 
-' by DOE on behalf of the United States Government and the Contractor as 
-' provided in the Contract.  NEITHER THE GOVERNMENT NOR THE CONTRACTOR MAKES ANY 
-' WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LIABILITY FOR THE USE OF THIS 
-' SOFTWARE.  This notice including this sentence must appear on any copies of 
-' this computer software.
 
 Module modMain
-    Public Const PROGRAM_DATE As String = "February 1, 2009"
+    Public Const PROGRAM_DATE As String = "August 2, 2010"
 
 	' Either mSourceFolderPath and mTargetFolderPath must be specified, or mParameterFilePath needs to be specified
 	Private mSourceFolderPath As String			' Option A
@@ -133,38 +121,24 @@ Module modMain
 
 			Console.WriteLine("This program copies new and updated files from a source folder to a target folder.")
 			Console.WriteLine()
-			Console.WriteLine("Program syntax:" & ControlChars.NewLine & System.IO.Path.GetFileName(System.Reflection.Assembly.GetExecutingAssembly().Location) & _
-			   " [/S:SourceFolderPath [/T:TargetFolderPath] [/P:ParameterFilePath] [/L] [/V]")
-			Console.WriteLine(" ")
-			Console.WriteLine()
+            Console.WriteLine("Program syntax:" & ControlChars.NewLine & System.IO.Path.GetFileName(System.Reflection.Assembly.GetExecutingAssembly().Location))
+            Console.WriteLine(" [/S:SourceFolderPath [/T:TargetFolderPath]")
+            Console.WriteLine(" [/P:ParameterFilePath] [/L] [/V]")
+            Console.WriteLine()
 			Console.WriteLine("All files present in the source folder will be copied to the target folder if the file size or file modification time are different.")
 			Console.WriteLine("You can either define the source and target folder at the command line, or using the parameter file.  All settings in the parameter file override command line settings.")
 			Console.WriteLine()
-            Console.WriteLine("  Use /L to log details of the updated files.")
-            Console.WriteLine("  Use /V to preview the files that would be updated.")
+            Console.WriteLine("Use /L to log details of the updated files.")
+            Console.WriteLine("Use /V to preview the files that would be updated.")
+            Console.WriteLine()
 
 			Console.WriteLine("Program written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA) in 2009")
-			Console.WriteLine()
-
-			Console.WriteLine("This is version " & System.Windows.Forms.Application.ProductVersion & " (" & PROGRAM_DATE & ")")
+            Console.WriteLine("This is version " & System.Windows.Forms.Application.ProductVersion & " (" & PROGRAM_DATE & ")")
 			Console.WriteLine()
 
 			Console.WriteLine("E-mail: matthew.monroe@pnl.gov or matt@alchemistmatt.com")
 			Console.WriteLine("Website: http://ncrr.pnl.gov/ or http://www.sysbio.org/resources/staff/")
 			Console.WriteLine()
-
-			Console.WriteLine("Licensed under the Apache License, Version 2.0; you may not use this file except in compliance with the License.  " & _
-							  "You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0")
-			Console.WriteLine()
-
-			Console.WriteLine("Notice: This computer software was prepared by Battelle Memorial Institute, " & _
-							  "hereinafter the Contractor, under Contract No. DE-AC05-76RL0 1830 with the " & _
-							  "Department of Energy (DOE).  All rights in the computer software are reserved " & _
-							  "by DOE on behalf of the United States Government and the Contractor as " & _
-							  "provided in the Contract.  NEITHER THE GOVERNMENT NOR THE CONTRACTOR MAKES ANY " & _
-							  "WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LIABILITY FOR THE USE OF THIS " & _
-							  "SOFTWARE.  This notice including this sentence must appear on any copies of " & _
-							  "this computer software.")
 
             ' Delay for 750 msec in case the user double clicked this file from within Windows Explorer (or started the program via a shortcut)
             System.Threading.Thread.Sleep(750)
