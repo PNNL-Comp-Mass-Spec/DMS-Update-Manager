@@ -12,7 +12,7 @@
 ' 
 
 Module modMain
-    Public Const PROGRAM_DATE As String = "August 2, 2010"
+    Public Const PROGRAM_DATE As String = "August 18, 2010"
 
 	' Either mSourceFolderPath and mTargetFolderPath must be specified, or mParameterFilePath needs to be specified
 	Private mSourceFolderPath As String			' Option A
@@ -86,6 +86,10 @@ Module modMain
 
 	End Function
 
+    Private Function GetAppVersion() As String
+        Return System.Reflection.Assembly.GetExecutingAssembly.GetName.Version.ToString & " (" & PROGRAM_DATE & ")"
+    End Function
+
 	Private Function SetOptionsUsingCommandLineParameters(ByVal objParseCommandLine As clsParseCommandLine) As Boolean
 		' Returns True if no problems; otherwise, returns false
 
@@ -132,9 +136,9 @@ Module modMain
             Console.WriteLine("Use /V to preview the files that would be updated.")
             Console.WriteLine()
 
-			Console.WriteLine("Program written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA) in 2009")
-            Console.WriteLine("This is version " & System.Windows.Forms.Application.ProductVersion & " (" & PROGRAM_DATE & ")")
-			Console.WriteLine()
+            Console.WriteLine("Program written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA) in 2009")
+            Console.WriteLine("Version: " & GetAppVersion())
+            Console.WriteLine()
 
 			Console.WriteLine("E-mail: matthew.monroe@pnl.gov or matt@alchemistmatt.com")
 			Console.WriteLine("Website: http://ncrr.pnl.gov/ or http://www.sysbio.org/resources/staff/")

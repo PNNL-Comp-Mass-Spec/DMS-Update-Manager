@@ -16,7 +16,7 @@ Public Class clsDMSUpdateManager
 	Inherits clsProcessFoldersBaseClass
 
 	Public Sub New()
-        MyBase.mFileDate = "August 2, 2010"
+        MyBase.mFileDate = "August 18, 2010"
 		InitializeLocalVariables()
 	End Sub
 
@@ -341,6 +341,7 @@ Public Class clsDMSUpdateManager
         Dim strStatusMessage As String
 
         Dim objSourceFolder As System.IO.DirectoryInfo
+
         Dim objSourceFile As System.IO.FileInfo
         Dim objTargetFile As System.IO.FileInfo
         Dim objCopiedFile As System.IO.FileInfo
@@ -358,7 +359,7 @@ Public Class clsDMSUpdateManager
         Dim blnNeedToCopy As Boolean
         Dim intFileUpdateCount As Integer
 
-        MyBase.mProgressStepDescription = "Updating " & System.IO.Path.GetDirectoryName(strTargetFolderPath) & ControlChars.NewLine & " using " & strSourceFolderPath
+        MyBase.mProgressStepDescription = "Updating " & strTargetFolderPath & ControlChars.NewLine & " using " & strSourceFolderPath
         ShowMessage(MyBase.mProgressStepDescription, False)
         
         ' Obtain a list of files in the source folder
@@ -370,6 +371,7 @@ Public Class clsDMSUpdateManager
 
             Try
                 strFileNameLCase = objSourceFile.Name.ToLower
+                blnSkipFile = False
 
                 ' Make sure this file is not in mFilesToIgnore
                 For intIndex = 0 To mFilesToIgnoreCount - 1

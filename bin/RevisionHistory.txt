@@ -1,5 +1,8 @@
 DMS Update Manager Change Log
 
+Version 1.0.3882; August 18, 2010
+	- Fixed bug that failed to reset the SkipFile flag after encountering a file to ignore
+
 Version 1.0.3866; August 2, 2010
 	- Now trimming extra whitespace from the comma-delimited list of file names in the "FilesToIgnore" option of the .XML parameter file
 
