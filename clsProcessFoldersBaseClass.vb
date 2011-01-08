@@ -11,7 +11,7 @@ Option Strict On
 Public MustInherit Class clsProcessFoldersBaseClass
 
     Public Sub New()
-        mFileDate = "January 16, 2009"
+        mFileDate = "January 7, 2011"
         mErrorCode = eProcessFoldersErrorCodes.NoError
         mProgressStepDescription = String.Empty
 
@@ -20,7 +20,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
         mLogFilePath = String.Empty
     End Sub
 
-#Region "Enums and Classwide Variables"
+#Region "Constants and Enums"
     Public Enum eProcessFoldersErrorCodes
         NoError = 0
         InvalidInputFolderPath = 1
@@ -32,18 +32,20 @@ Public MustInherit Class clsProcessFoldersBaseClass
         UnspecifiedError = -1
     End Enum
 
-	Protected Enum eMessageTypeConstants
-		Normal = 0
-		ErrorMsg = 1
-		Warning = 2
-	End Enum
+    Protected Enum eMessageTypeConstants
+        Normal = 0
+        ErrorMsg = 1
+        Warning = 2
+    End Enum
 
-	'' Copy the following to any derived classes
+    '' Copy the following to any derived classes
     ''Public Enum eDerivedClassErrorCodes
     ''    NoError = 0
     ''    UnspecifiedError = -1
     ''End Enum
+#End Region
 
+#Region "Classwide Variables"
     ''Private mLocalErrorCode As eDerivedClassErrorCodes
 
     ''Public ReadOnly Property LocalErrorCode() As eDerivedClassErrorCodes
@@ -58,9 +60,8 @@ Public MustInherit Class clsProcessFoldersBaseClass
     Protected mFileDate As String
     Protected mAbortProcessing As Boolean
 
-	Protected mLogMessagesToFile As Boolean
+    Protected mLogMessagesToFile As Boolean
 	Protected mLogFileUsesDateStamp As Boolean = True
-
     Protected mLogFilePath As String
     Protected mLogFile As System.IO.StreamWriter
 
@@ -71,6 +72,10 @@ Public MustInherit Class clsProcessFoldersBaseClass
     Public Event ProgressReset()
     Public Event ProgressChanged(ByVal taskDescription As String, ByVal percentComplete As Single)     ' PercentComplete ranges from 0 to 100, but can contain decimal percentage values
     Public Event ProgressComplete()
+
+    Public Event ErrorEvent(ByVal strMessage As String)
+    Public Event WarningEvent(ByVal strMessage As String)
+    Public Event MessageEvent(ByVal strMessage As String)
 
     Protected mProgressStepDescription As String
     Protected mProgressPercentComplete As Single        ' Ranges from 0 to 100, but can contain decimal percentage values
@@ -105,10 +110,14 @@ Public MustInherit Class clsProcessFoldersBaseClass
         End Get
     End Property
 
-    Public ReadOnly Property LogFilePath() As String
+    Public Property LogFilePath() As String
         Get
             Return mLogFilePath
         End Get
+        Set(ByVal value As String)
+            If value Is Nothing Then value = String.Empty
+            mLogFilePath = value
+        End Set
     End Property
 
     Public Property LogFolderPath() As String
@@ -173,7 +182,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
                 If Me.ShowMessages Then
                     ShowErrorMessage("Input folder not found: " & strInputFolderPath)
                 Else
-					LogMessage("Input folder not found: " & strInputFolderPath, eMessageTypeConstants.ErrorMsg)
+                    LogMessage("Input folder not found: " & strInputFolderPath, eMessageTypeConstants.ErrorMsg)
                 End If
                 mErrorCode = eProcessFoldersErrorCodes.InvalidInputFolderPath
                 blnSuccess = False
@@ -202,6 +211,17 @@ Public MustInherit Class clsProcessFoldersBaseClass
 
         Return blnSuccess
     End Function
+
+    Public Sub CloseLogFileNow()
+        If Not mLogFile Is Nothing Then
+            mLogFile.Close()
+            mLogFile = Nothing
+
+            GC.Collect()
+            GC.WaitForPendingFinalizers()
+            System.Threading.Thread.Sleep(100)
+        End If
+    End Sub
 
     Protected Function GetBaseClassErrorMessage() As String
         ' Returns String.Empty if no error
@@ -270,23 +290,26 @@ Public MustInherit Class clsProcessFoldersBaseClass
     End Sub
 
     Protected Sub LogMessage(ByVal strMessage As String, ByVal eMessageType As eMessageTypeConstants)
-        ' Note that CleanupFilePaths() will update mOutputFolderPath, which is used here if mLogFolderPath is blank
-        ' Thus, be sure to call CleanupFilePaths (or update mLogFolderPath) before the first call to LogMessage
+        ' Note that CleanupFolderPaths() will update mOutputFolderPath, which is used here if mLogFolderPath is blank
+        ' Thus, be sure to call CleanupFolderPaths (or update mLogFolderPath) before the first call to LogMessage
 
         Dim strMessageType As String
         Dim blnOpeningExistingFile As Boolean = False
 
         If mLogFile Is Nothing AndAlso mLogMessagesToFile Then
             Try
-                mLogFilePath = System.IO.Path.GetFileNameWithoutExtension(System.Reflection.Assembly.GetExecutingAssembly().Location)
-				mLogFilePath &= "_log"
+                If mLogFilePath Is Nothing OrElse mLogFilePath.Length = 0 Then
+                    ' Auto-name the log file
+                    mLogFilePath = System.IO.Path.GetFileNameWithoutExtension(System.Reflection.Assembly.GetExecutingAssembly().Location)
+                    mLogFilePath &= "_log"
 
-				If mLogFileUsesDateStamp Then
-					mLogFilePath &= "_" & System.DateTime.Now.ToString("yyyy-MM-dd") & ".txt"
-				Else
-					mLogFilePath &= ".txt"
-				End If
+                    If mLogFileUsesDateStamp Then
+                        mLogFilePath &= "_" & System.DateTime.Now.ToString("yyyy-MM-dd") & ".txt"
+                    Else
+                        mLogFilePath &= ".txt"
+                    End If
 
+                End If
 
                 Try
                     If mLogFolderPath Is Nothing Then mLogFolderPath = String.Empty
@@ -326,6 +349,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
             Catch ex As Exception
                 ' Error creating the log file; set mLogMessagesToFile to false so we don't repeatedly try to create it
                 mLogMessagesToFile = False
+                HandleException("Error opening log file", ex)
             End Try
 
         End If
@@ -346,6 +370,8 @@ Public MustInherit Class clsProcessFoldersBaseClass
                                strMessageType & ControlChars.Tab & _
                                strMessage)
         End If
+
+        RaiseMessageEvent(strMessage, eMessageType)
 
     End Sub
 
@@ -380,10 +406,10 @@ Public MustInherit Class clsProcessFoldersBaseClass
             ' Possibly reset the error code
             If blnResetErrorCode Then mErrorCode = eProcessFoldersErrorCodes.NoError
 
-			If Not strOutputFolderAlternatePath Is Nothing AndAlso strOutputFolderAlternatePath.Length > 0 Then
-				' Update the cached output folder path
-				mOutputFolderPath = String.Copy(strOutputFolderAlternatePath)
-			End If
+            If Not strOutputFolderAlternatePath Is Nothing AndAlso strOutputFolderAlternatePath.Length > 0 Then
+                ' Update the cached output folder path
+                mOutputFolderPath = String.Copy(strOutputFolderAlternatePath)
+            End If
 
             ' See if strInputFolderPath contains a wildcard (* or ?)
             If Not strInputFolderPath Is Nothing AndAlso (strInputFolderPath.IndexOf("*") >= 0 Or strInputFolderPath.IndexOf("?") >= 0) Then
@@ -405,10 +431,10 @@ Public MustInherit Class clsProcessFoldersBaseClass
                 ' Process any matching folder in this folder
                 Try
                     ioInputFolderInfo = New System.IO.DirectoryInfo(strInputFolderToUse)
-				Catch ex As Exception
-					HandleException("Error in ProcessFoldersWildcard", ex)
-					mErrorCode = eProcessFoldersErrorCodes.InvalidInputFolderPath
-					Return False
+                Catch ex As Exception
+                    HandleException("Error in ProcessFoldersWildcard", ex)
+                    mErrorCode = eProcessFoldersErrorCodes.InvalidInputFolderPath
+                    Return False
                 End Try
 
                 intMatchCount = 0
@@ -523,10 +549,10 @@ Public MustInherit Class clsProcessFoldersBaseClass
                     Try
                         ioFolderInfo = New System.IO.DirectoryInfo(strOutputFolderAlternatePath)
                         If Not ioFolderInfo.Exists Then ioFolderInfo.Create()
-					Catch ex As Exception
-						HandleException("Error in ProcessAndRecurseFolders", ex)
-						mErrorCode = clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.InvalidOutputFolderPath
-						Return False
+                    Catch ex As Exception
+                        HandleException("Error in ProcessAndRecurseFolders", ex)
+                        mErrorCode = clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.InvalidOutputFolderPath
+                        Return False
                     End Try
                 End If
 
@@ -551,6 +577,35 @@ Public MustInherit Class clsProcessFoldersBaseClass
         Return blnSuccess
 
     End Function
+
+    Private Sub RaiseMessageEvent(ByVal strMessage As String, ByVal eMessageType As eMessageTypeConstants)
+        Static strLastMessage As String = String.Empty
+        Static dtLastReportTime As System.DateTime
+
+        If Not String.IsNullOrEmpty(strMessage) Then
+            If strMessage = strLastMessage AndAlso System.DateTime.Now.Subtract(dtLastReportTime).TotalMilliseconds < 500 Then
+                ' Duplicate message; do not raise any events
+            Else
+                dtLastReportTime = System.DateTime.Now
+                strLastMessage = String.Copy(strMessage)
+
+                Select Case eMessageType
+                    Case eMessageTypeConstants.Normal
+                        RaiseEvent MessageEvent(strMessage)
+
+                    Case eMessageTypeConstants.Warning
+                        RaiseEvent WarningEvent(strMessage)
+
+                    Case eMessageTypeConstants.ErrorMsg
+                        RaiseEvent ErrorEvent(strMessage)
+
+                    Case Else
+                        RaiseEvent MessageEvent(strMessage)
+                End Select
+            End If
+        End If
+
+    End Sub
 
     Private Function RecurseFoldersWork(ByVal strInputFolderPath As String, ByVal strFolderNameMatchPattern As String, ByVal strParameterFilePath As String, ByVal strOutputFolderAlternatePath As String, ByRef intFolderProcessCount As Integer, ByRef intFolderProcessFailCount As Integer, ByVal intRecursionLevel As Integer, ByVal intRecurseFoldersMaxLevels As Integer) As Boolean
         ' If intRecurseFoldersMaxLevels is <=0 then we recurse infinitely
@@ -586,7 +641,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
         End Try
 
         Try
-            Console.WriteLine("Examining " & strInputFolderPath)
+            ShowMessage("Examining " & strInputFolderPath)
 
             If intRecursionLevel = 1 And strFolderNameMatchPattern = "*" Then
                 ' Need to process the current folder
@@ -669,6 +724,8 @@ Public MustInherit Class clsProcessFoldersBaseClass
 
         If blnAllowLogToFile Then
             LogMessage(strMessage, eMessageTypeConstants.ErrorMsg)
+        Else
+            RaiseMessageEvent(strMessage, eMessageTypeConstants.ErrorMsg)
         End If
 
     End Sub
@@ -690,6 +747,8 @@ Public MustInherit Class clsProcessFoldersBaseClass
 
         If blnAllowLogToFile Then
             LogMessage(strMessage, eMessageTypeConstants.Normal)
+        Else
+            RaiseMessageEvent(strMessage, eMessageTypeConstants.Normal)
         End If
 
     End Sub
@@ -719,13 +778,14 @@ Public MustInherit Class clsProcessFoldersBaseClass
 
         If blnDescriptionChanged Then
             If mProgressPercentComplete = 0 Then
-                LogMessage(mProgressStepDescription)
+                LogMessage(mProgressStepDescription.Replace(ControlChars.NewLine, "; "))
             Else
-                LogMessage(mProgressStepDescription & " (" & mProgressPercentComplete.ToString("0.0") & "% complete)")
+                LogMessage(mProgressStepDescription & " (" & mProgressPercentComplete.ToString("0.0") & "% complete)".Replace(ControlChars.NewLine, "; "))
             End If
         End If
 
         RaiseEvent ProgressChanged(Me.ProgressStepDescription, Me.ProgressPercentComplete)
+
     End Sub
 
     Protected Sub OperationComplete()
@@ -746,8 +806,8 @@ Public MustInherit Class clsProcessFoldersBaseClass
     ''        mLocalErrorCode = eNewErrorCode
 
     ''        If eNewErrorCode = eDerivedClassErrorCodes.NoError Then
-    ''            If MyBase.ErrorCode = Me.eProcessFoldersErrorCodes.LocalizedError Then
-    ''                MyBase.SetBaseClassErrorCode(Me.eProcessFoldersErrorCodes.NoError)
+    ''            If MyBase.ErrorCode = clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.LocalizedError Then
+    ''                MyBase.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.NoError)
     ''            End If
     ''        Else
     ''            MyBase.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.LocalizedError)

@@ -1,5 +1,8 @@
 DMS Update Manager Change Log
 
+Version 1.0.4024; January 7, 2011
+	- Updated version of clsProcessFoldersBaseClass.vb
+
 Version 1.0.3882; August 18, 2010
 	- Fixed bug that failed to reset the SkipFile flag after encountering a file to ignore
 
