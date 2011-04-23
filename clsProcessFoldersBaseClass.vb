@@ -11,7 +11,7 @@ Option Strict On
 Public MustInherit Class clsProcessFoldersBaseClass
 
     Public Sub New()
-        mFileDate = "January 7, 2011"
+        mFileDate = "February 26, 2011"
         mErrorCode = eProcessFoldersErrorCodes.NoError
         mProgressStepDescription = String.Empty
 
@@ -166,7 +166,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
     End Sub
 
     Protected Function CleanupFolderPaths(ByRef strInputFolderPath As String, ByRef strOutputFolderPath As String) As Boolean
-        ' Validates that strOutputFolderPath and strOutputFolderPath contain valid folder paths
+        ' Validates that strInputFolderPath and strOutputFolderPath contain valid folder paths
         ' Will ignore strOutputFolderPath if it is Nothing or empty; will create strOutputFolderPath if it does not exist
         '
         ' Returns True if success, False if failure
@@ -222,6 +222,32 @@ Public MustInherit Class clsProcessFoldersBaseClass
             System.Threading.Thread.Sleep(100)
         End If
     End Sub
+
+	Protected Function GetAppDataFolderPath(ByVal strAppName As String) As String
+        Dim strAppDataFolder As String = String.Empty
+
+		If String.IsNullOrEmpty(strAppName) Then
+			strAppName = String.Empty
+		End If
+		
+        Try
+            strAppDataFolder = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), strAppName)
+            If Not System.IO.Directory.Exists(strAppDataFolder) Then
+                System.IO.Directory.CreateDirectory(strAppDataFolder)
+            End If
+
+        Catch ex As Exception
+            ' Error creating the folder, revert to using the system Temp folder
+            strAppDataFolder = System.IO.Path.GetTempPath()
+        End Try
+
+        Return strAppDataFolder
+
+    End Function
+
+    Protected Function GetAppPath() As String
+        Return System.Reflection.Assembly.GetExecutingAssembly().Location
+    End Function
 
     Protected Function GetBaseClassErrorMessage() As String
         ' Returns String.Empty if no error
@@ -778,9 +804,9 @@ Public MustInherit Class clsProcessFoldersBaseClass
 
         If blnDescriptionChanged Then
             If mProgressPercentComplete = 0 Then
-                LogMessage(mProgressStepDescription.Replace(ControlChars.NewLine, "; "))
+                LogMessage(mProgressStepDescription.Replace(Environment.NewLine, "; "))
             Else
-                LogMessage(mProgressStepDescription & " (" & mProgressPercentComplete.ToString("0.0") & "% complete)".Replace(ControlChars.NewLine, "; "))
+                LogMessage(mProgressStepDescription & " (" & mProgressPercentComplete.ToString("0.0") & "% complete)".Replace(Environment.NewLine, "; "))
             End If
         End If
 

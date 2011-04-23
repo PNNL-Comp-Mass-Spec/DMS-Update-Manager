@@ -1,5 +1,18 @@
 DMS Update Manager Change Log
 
+Version 1.0.4129; April 22, 2011
+	- Now looking for files with a suffix of .rollback
+		- If found, then forces an update of a file if date or size differs, even if the target file is newer
+		- For example, if the source folder has file UIMFLibrary.dll.rollback in it
+		  then UIMFLibrary.dll will get copied to the target folder even if the date 
+		  of the file in the target folder is newer, like this:
+
+			Source folder              Date                 Target Folder    Date
+			UIMFLibrary.dll            3/2/2011             UIMFLibrary.dll  4/22/2011
+
+		- If the UIMFLibrary.dll.rollback file was not in the source folder, then the
+		  newer file would typically not get overwritten in the target folder
+			
 Version 1.0.4024; January 7, 2011
 	- Updated version of clsProcessFoldersBaseClass.vb
 
