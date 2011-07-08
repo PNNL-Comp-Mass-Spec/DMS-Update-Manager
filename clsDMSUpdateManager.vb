@@ -16,7 +16,7 @@ Public Class clsDMSUpdateManager
 	Inherits clsProcessFoldersBaseClass
 
 	Public Sub New()
-        MyBase.mFileDate = "April 22, 2011"
+        MyBase.mFileDate = "July 8, 2011"
 		InitializeLocalVariables()
 	End Sub
 
@@ -36,6 +36,7 @@ Public Class clsDMSUpdateManager
     End Enum
 
     Protected Const ROLLBACK_SUFFIX As String = ".rollback"
+    Protected Const DELETE_SUFFIX As String = ".delete"
 #End Region
 
 #Region "Structures"
@@ -572,6 +573,14 @@ Public Class clsDMSUpdateManager
                         ' However, do look for a corresponding file that does not have .rollback and copy it if the target file has a different date or size
 
                         ProcessRollbackFile(objSourceFile, strTargetFolderPath, intFileUpdateCount)
+
+                    ElseIf objSourceFile.Name.EndsWith(DELETE_SUFFIX) Then
+                        ' This is a Delete file
+                        ' Do not copy this file
+                        ' However, do look for a corresponding file that does not have .delete and delete that file in the target folder
+
+                        ProcessDeleteFile(objSourceFile, strTargetFolderPath, intFileUpdateCount)
+                    
                     Else
                         If mOverwriteNewerFiles Then
                             eDateComparisonMode = eDateComparisonModeConstants.OverwriteNewerTargetIfDifferentSize
@@ -624,6 +633,28 @@ Public Class clsDMSUpdateManager
 
         MentalisUtils.WindowsController.ExitWindows(eAction, blnForce)
 
+    End Sub
+
+    Private Sub ProcessDeleteFile(ByRef objDeleteFile As System.IO.FileInfo, ByVal strTargetFolderPath As String, ByRef intFileUpdateCount As Integer)
+        Dim objTargetFile As System.IO.FileInfo
+        Dim strTargetFilePath As String
+
+        strTargetFilePath = System.IO.Path.Combine(strTargetFolderPath, objDeleteFile.Name.Substring(0, objDeleteFile.Name.Length - DELETE_SUFFIX.Length))
+        objTargetFile = New System.IO.FileInfo(strTargetFilePath)
+
+        If objTargetFile.Exists() Then
+            objTargetFile.Delete()
+            ShowMessage("Deleted file " & objTargetFile.FullName)
+        End If
+
+        ' Make sure the .delete is also not in the target folder
+        strTargetFilePath = System.IO.Path.Combine(strTargetFolderPath, objDeleteFile.Name)
+        objTargetFile = New System.IO.FileInfo(strTargetFilePath)
+
+        If objTargetFile.Exists() Then
+            objTargetFile.Delete()
+            ShowMessage("Deleted file " & objTargetFile.FullName)
+        End If
     End Sub
 
     Private Sub ProcessRollbackFile(ByRef objRollbackFile As System.IO.FileInfo, ByVal strTargetFolderPath As String, ByRef intFileUpdateCount As Integer)

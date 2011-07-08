@@ -11,7 +11,7 @@ Option Strict On
 Public MustInherit Class clsProcessFoldersBaseClass
 
     Public Sub New()
-        mFileDate = "February 26, 2011"
+        mFileDate = "April 28, 2011"
         mErrorCode = eProcessFoldersErrorCodes.NoError
         mProgressStepDescription = String.Empty
 
@@ -200,7 +200,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
                     ioFolder.Create()
                 End If
 
-                mOutputFolderPath = String.Copy(strOutputFolderPath)
+                mOutputFolderPath = String.Copy(ioFolder.FullName)
 
                 blnSuccess = True
             End If

@@ -1,5 +1,12 @@
 DMS Update Manager Change Log
 
+Version 1.1.4206; July 8, 2011
+	- Now looking for files with a suffix of .delete
+		- If found, then deletes the file with the same name in the target folder if it exists
+		- For example, if the source folder has file PeptideProphetLibrary.dll.delete in it
+		  then PeptideProphetLibrary.dll will get deleted in the target folder
+	- Updated to Visual Studio 2010
+
 Version 1.0.4129; April 22, 2011
 	- Now looking for files with a suffix of .rollback
 		- If found, then forces an update of a file if date or size differs, even if the target file is newer
