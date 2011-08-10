@@ -1,16 +1,13 @@
-rem copy %1 \\Chemstation1326\DMS_Programs\AnalysisToolManager1\
-rem copy %1 \\WD37208\DMS_Programs\AnalysisToolManager1\
-rem copy %1 \\WD37447\DMS_Programs\AnalysisToolManager1\
-rem copy %1 \\Daffy\DMS_Programs\AnalysisToolManager1\
+
+copy %1 \\SeqCluster1\DMS_Programs\AnalysisToolManager\
+copy %1 \\SeqCluster2\DMS_Programs\AnalysisToolManager\
+copy %1 \\SeqCluster3\DMS_Programs\AnalysisToolManager\
+copy %1 \\SeqCluster4\DMS_Programs\AnalysisToolManager\
+copy %1 \\SeqCluster5\DMS_Programs\AnalysisToolManager\
+
 copy %1 \\Peaks1\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Peaks2\DMS_Programs\AnalysisToolManager1\
 
-rem copy %1 \\Pub-01\DMS_Programs\AnalysisToolManager1\
-rem copy %1 \\Pub-02\DMS_Programs\AnalysisToolManager1\
-rem copy %1 \\Pub-03\DMS_Programs\AnalysisToolManager1\
-rem copy %1 \\Pub-04\DMS_Programs\AnalysisToolManager1\
-rem copy %1 \\Pub-05\DMS_Programs\AnalysisToolManager1\
-rem copy %1 \\Pub-06\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-07\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-08\DMS_Programs\AnalysisToolManager1\
 rem Skip since firewall prevents remote management: copy %1 \\Pub-09\DMS_Programs\AnalysisToolManager1\
@@ -46,12 +43,12 @@ copy %1 \\Pub-43\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-44\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-45\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager1\
-rem Skip since offline: copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-48\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager1\
-rem Skip since offline: copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager1\
@@ -86,7 +83,7 @@ copy %1 \\Pub-83\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-84\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-85\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager1\
-rem Skip since offline: copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager1\
 
@@ -146,12 +143,12 @@ copy %1 \\Pub-43\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-44\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-45\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager2\
-rem Skip since offline: copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager2\
+copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-48\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager2\
-rem Skip since offline: copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager2\
+copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager2\
@@ -186,7 +183,7 @@ copy %1 \\Pub-83\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-84\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-85\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager2\
-rem Skip since offline: copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager2\
+copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager2\
 
@@ -209,12 +206,12 @@ copy %1 \\Pub-43\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-44\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-45\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager3\
-rem Skip since offline: copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager3\
+copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-48\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager3\
-rem Skip since offline: copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager3\
+copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager3\
@@ -249,7 +246,7 @@ copy %1 \\Pub-83\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-84\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-85\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager3\
-rem Skip since offline: copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager3\
+copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager3\
 
@@ -271,12 +268,12 @@ copy %1 \\Pub-43\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-44\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-45\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager4\
-rem Skip since offline: copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager4\
+copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-48\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager4\
-rem Skip since offline: copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager4\
+copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager4\
@@ -311,7 +308,7 @@ copy %1 \\Pub-83\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-84\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-85\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager4\
-rem Skip since offline: copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager4\
+copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager4\
 
@@ -325,12 +322,12 @@ rem Skip since offline: copy %1 \\Pub-39\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-44\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-45\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager5\
-rem Skip since offline: copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager5\
+copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-48\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager5\
-rem Skip since offline: copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager5\
+copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager5\
@@ -365,7 +362,7 @@ copy %1 \\Pub-83\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-84\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-85\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager5\
-rem Skip since offline: copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager5\
+copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager5\
 
@@ -379,12 +376,12 @@ rem Skip since offline: copy %1 \\Pub-39\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-44\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-45\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager6\
-rem Skip since offline: copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager6\
+copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-48\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager6\
-rem Skip since offline: copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager6\
+copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager6\
@@ -419,7 +416,7 @@ copy %1 \\Pub-83\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-84\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-85\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager6\
-rem Skip since offline: copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager6\
+copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager6\
 
@@ -433,12 +430,12 @@ rem Skip since offline: copy %1 \\Pub-39\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-44\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-45\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager7\
-rem Skip since offline: copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager7\
+copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-48\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager7\
-rem Skip since offline: copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager7\
+copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager7\
@@ -473,7 +470,7 @@ copy %1 \\Pub-83\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-84\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-85\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager7\
-rem Skip since offline: copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager7\
+copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager7\
 
@@ -487,12 +484,12 @@ rem Skip since offline: copy %1 \\Pub-39\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-44\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-45\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager8\
-rem Skip since offline: copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager8\
+copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-48\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager8\
-rem Skip since offline: copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager8\
+copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager8\
@@ -527,6 +524,53 @@ copy %1 \\Pub-83\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-84\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-85\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager8\
-rem Skip since offline: copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager8\
+copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager8\
+
+
+:CTM
+copy %1 \\mash-01\DMS_Programs\CaptureTaskManager\
+copy %1 \\mash-02\DMS_Programs\CaptureTaskManager\
+copy %1 \\mash-03\DMS_Programs\CaptureTaskManager\
+copy %1 \\mash-04\DMS_Programs\CaptureTaskManager\
+copy %1 \\mash-05\DMS_Programs\CaptureTaskManager\
+copy %1 \\mash-06\DMS_Programs\CaptureTaskManager\
+
+
+copy %1 \\proto-3\DMS_Programs\CaptureTaskManager\
+copy %1 \\proto-4\DMS_Programs\CaptureTaskManager\
+copy %1 \\proto-5\DMS_Programs\CaptureTaskManager\
+copy %1 \\proto-7\DMS_Programs\CaptureTaskManager\
+copy %1 \\proto-8\DMS_Programs\CaptureTaskManager\
+copy %1 \\proto-9\DMS_Programs\CaptureTaskManager\
+copy %1 \\proto-10\DMS_Programs\CaptureTaskManager\
+
+copy %1 \\proto-3\DMS_Programs\CaptureTaskManager_2\
+copy %1 \\proto-5\DMS_Programs\CaptureTaskManager_2\
+copy %1 \\proto-7\DMS_Programs\CaptureTaskManager_2\
+copy %1 \\proto-9\DMS_Programs\CaptureTaskManager_2\
+copy %1 \\proto-10\DMS_Programs\CaptureTaskManager_2\
+
+copy %1 \\pub-50\DMS_Programs\CaptureTaskManager\
+copy %1 \\pub-51\DMS_Programs\CaptureTaskManager\
+copy %1 \\pub-52\DMS_Programs\CaptureTaskManager\
+copy %1 \\pub-53\DMS_Programs\CaptureTaskManager\
+copy %1 \\pub-54\DMS_Programs\CaptureTaskManager\
+copy %1 \\pub-55\DMS_Programs\CaptureTaskManager\
+copy %1 \\pub-56\DMS_Programs\CaptureTaskManager\
+copy %1 \\pub-57\DMS_Programs\CaptureTaskManager\
+copy %1 \\pub-58\DMS_Programs\CaptureTaskManager\
+copy %1 \\pub-59\DMS_Programs\CaptureTaskManager\
+
+
+copy %1 \\pub-50\DMS_Programs\CaptureTaskManager_2\
+copy %1 \\pub-51\DMS_Programs\CaptureTaskManager_2\
+copy %1 \\pub-52\DMS_Programs\CaptureTaskManager_2\
+copy %1 \\pub-53\DMS_Programs\CaptureTaskManager_2\
+copy %1 \\pub-54\DMS_Programs\CaptureTaskManager_2\
+copy %1 \\pub-55\DMS_Programs\CaptureTaskManager_2\
+copy %1 \\pub-56\DMS_Programs\CaptureTaskManager_2\
+copy %1 \\pub-57\DMS_Programs\CaptureTaskManager_2\
+copy %1 \\pub-58\DMS_Programs\CaptureTaskManager_2\
+copy %1 \\pub-59\DMS_Programs\CaptureTaskManager_2\

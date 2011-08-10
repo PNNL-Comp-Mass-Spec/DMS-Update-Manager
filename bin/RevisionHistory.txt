@@ -1,5 +1,9 @@
 DMS Update Manager Change Log
 
+Version 1.1.4239; August 10, 2011
+	- Now looking for file _PushDir_.txt in source folders
+		- If the file exists in the source folder, then the folder is copied to the target even if it doesn't yet exist at the target
+
 Version 1.1.4206; July 8, 2011
 	- Now looking for files with a suffix of .delete
 		- If found, then deletes the file with the same name in the target folder if it exists

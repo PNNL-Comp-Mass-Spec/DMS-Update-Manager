@@ -16,7 +16,7 @@ Public Class clsDMSUpdateManager
 	Inherits clsProcessFoldersBaseClass
 
 	Public Sub New()
-        MyBase.mFileDate = "July 8, 2011"
+        MyBase.mFileDate = "August 10, 2011"
 		InitializeLocalVariables()
 	End Sub
 
@@ -37,6 +37,8 @@ Public Class clsDMSUpdateManager
 
     Protected Const ROLLBACK_SUFFIX As String = ".rollback"
     Protected Const DELETE_SUFFIX As String = ".delete"
+    Protected Const PUSH_DIR_FLAG As String = "_PushDir_.txt"
+
 #End Region
 
 #Region "Structures"
@@ -51,7 +53,7 @@ Public Class clsDMSUpdateManager
     ' If False, then will not overwrite files in the target folder that are newer than files in the source folder
     Protected mOverwriteNewerFiles As Boolean
 
-    ' When True, then will copy any subdirectories of the source folder into a subdirectory off the parent folder of the target folder
+    ' When mCopySubdirectoriesToParentFolder=True, then will copy any subdirectories of the source folder into a subdirectory off the parent folder of the target folder
     ' For example:
     '   The .Exe resides at folder C:\DMS_Programs\AnalysisToolManager\DMSUpdateManager.exe
     '   mSourceFolderPath = "\\gigasax\DMS_Programs\AnalysisToolManagerDistribution"
@@ -60,6 +62,7 @@ Public Class clsDMSUpdateManager
     '   Next, folder \\gigasax\DMS_Programs\AnalysisToolManagerDistribution\MASIC\ will get sync'd with ..\MASIC (but only if ..\MASIC exists)
     '     Note that ..\MASIC is actually C:\DMS_Programs\MASIC\ 
     '   When sync'ing the MASIC folders, will recursively sync additional folders that match
+    '   If the source folder contains file _PushDir_.txt then the directory will be copied to the target even if it doesn't exist there
 
     Protected mCopySubdirectoriesToParentFolder As Boolean
 
@@ -506,7 +509,8 @@ Public Class clsDMSUpdateManager
 
                         strTargetSubFolderPath = System.IO.Path.Combine(objTargetFolder.Parent.FullName, objSourceSubFolder.Name)
 
-                        If System.IO.Directory.Exists(strTargetSubFolderPath) Then
+                        If System.IO.Directory.Exists(strTargetSubFolderPath) OrElse _
+                           objSourceSubFolder.GetFiles(PUSH_DIR_FLAG).Length > 0 Then
                             blnSuccess = UpdateFolderWork(objSourceSubFolder.FullName, strTargetSubFolderPath)
                         End If
                     Next
@@ -525,7 +529,8 @@ Public Class clsDMSUpdateManager
 
         Dim strStatusMessage As String
 
-        Dim objSourceFolder As System.IO.DirectoryInfo
+        Dim diSourceFolder As System.IO.DirectoryInfo
+        Dim diTargetFolder As System.IO.DirectoryInfo
 
         Dim objSourceFile As System.IO.FileInfo
 
@@ -544,12 +549,18 @@ Public Class clsDMSUpdateManager
         MyBase.mProgressStepDescription = "Updating " & strTargetFolderPath & ControlChars.NewLine & " using " & strSourceFolderPath
         ShowMessage(MyBase.mProgressStepDescription, False)
 
+        ' Make sure the target folder exists
+        diTargetFolder = New System.IO.DirectoryInfo(strTargetFolderPath)
+        If Not diTargetFolder.Exists Then
+            diTargetFolder.Create()
+        End If
+
         ' Obtain a list of files in the source folder
-        objSourceFolder = New System.IO.DirectoryInfo(strSourceFolderPath)
+        diSourceFolder = New System.IO.DirectoryInfo(strSourceFolderPath)
 
         intFileUpdateCount = 0
 
-        For Each objSourceFile In objSourceFolder.GetFiles()
+        For Each objSourceFile In diSourceFolder.GetFiles()
 
             Try
                 strFileNameLCase = objSourceFile.Name.ToLower()
@@ -564,6 +575,10 @@ Public Class clsDMSUpdateManager
                     End If
                 Next intIndex
 
+                If strFileNameLCase = PUSH_DIR_FLAG.ToLower() Then
+                    blnSkipFile = True
+                End If
+
                 If Not blnSkipFile Then
 
                     ' See if file ends with ROLLBACK_SUFFIX
@@ -572,15 +587,15 @@ Public Class clsDMSUpdateManager
                         ' Do not copy this file
                         ' However, do look for a corresponding file that does not have .rollback and copy it if the target file has a different date or size
 
-                        ProcessRollbackFile(objSourceFile, strTargetFolderPath, intFileUpdateCount)
+                        ProcessRollbackFile(objSourceFile, diTargetFolder.FullName, intFileUpdateCount)
 
                     ElseIf objSourceFile.Name.EndsWith(DELETE_SUFFIX) Then
                         ' This is a Delete file
                         ' Do not copy this file
                         ' However, do look for a corresponding file that does not have .delete and delete that file in the target folder
 
-                        ProcessDeleteFile(objSourceFile, strTargetFolderPath, intFileUpdateCount)
-                    
+                        ProcessDeleteFile(objSourceFile, diTargetFolder.FullName, intFileUpdateCount)
+
                     Else
                         If mOverwriteNewerFiles Then
                             eDateComparisonMode = eDateComparisonModeConstants.OverwriteNewerTargetIfDifferentSize
@@ -588,7 +603,7 @@ Public Class clsDMSUpdateManager
                             eDateComparisonMode = eDateComparisonModeConstants.RetainNewerTargetIfDifferentSize
                         End If
 
-                        CopyFileIfNeeded(objSourceFile, strTargetFolderPath, intFileUpdateCount, eDateComparisonMode)
+                        CopyFileIfNeeded(objSourceFile, diTargetFolder.FullName, intFileUpdateCount, eDateComparisonMode)
                     End If
 
                 End If
@@ -603,17 +618,19 @@ Public Class clsDMSUpdateManager
             strStatusMessage = "Updated " & intFileUpdateCount & " file"
             If intFileUpdateCount > 1 Then strStatusMessage &= "s"
 
-            strStatusMessage &= " using " & objSourceFolder.FullName & "\"
+            strStatusMessage &= " using " & diSourceFolder.FullName & "\"
 
             ShowMessage(strStatusMessage, True, False)
         End If
 
         ' Process each subdirectory in the source folder
         ' If the folder exists at the target, then copy it
-        For Each objSourceSubFolder In objSourceFolder.GetDirectories()
-            strTargetSubFolderPath = System.IO.Path.Combine(strTargetFolderPath, objSourceSubFolder.Name)
+        ' Additionally, if the source folder contains file _PushDir_.txt then it gets copied even if it doesn't exist at the target
+        For Each objSourceSubFolder In diSourceFolder.GetDirectories()
+            strTargetSubFolderPath = System.IO.Path.Combine(diTargetFolder.FullName, objSourceSubFolder.Name)
 
-            If System.IO.Directory.Exists(strTargetSubFolderPath) Then
+            If System.IO.Directory.Exists(strTargetSubFolderPath) OrElse _
+               objSourceSubFolder.GetFiles(PUSH_DIR_FLAG).Length > 0 Then
                 blnSuccess = UpdateFolderWork(objSourceSubFolder.FullName, strTargetSubFolderPath)
             End If
         Next
