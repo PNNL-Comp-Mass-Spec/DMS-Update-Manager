@@ -39,6 +39,9 @@ Public Class clsDMSUpdateManager
     Protected Const DELETE_SUFFIX As String = ".delete"
     Protected Const PUSH_DIR_FLAG As String = "_PushDir_.txt"
 
+    Protected Const DELETE_SUBDIR_FLAG As String = "_DeleteSubDir_.txt"
+    Protected Const DELETE_AM_SUBDIR_FLAG As String = "_DeleteAMSubDir_.txt"
+
 #End Region
 
 #Region "Structures"
@@ -501,17 +504,63 @@ Public Class clsDMSUpdateManager
                 MyBase.mProgressStepDescription = "Updating " & objTargetFolder.Name & ControlChars.NewLine & " using " & objSourceFolder.FullName
                 MyBase.ResetProgress()
 
-                blnSuccess = UpdateFolderWork(objSourceFolder.FullName, objTargetFolder.FullName)
+                Dim blnPushNewSubfolders As Boolean
+                blnPushNewSubfolders = False
+
+                blnSuccess = UpdateFolderWork(objSourceFolder.FullName, objTargetFolder.FullName, blnPushNewSubfolders)
 
                 If mCopySubdirectoriesToParentFolder Then
+
+                    blnPushNewSubfolders = True
 
                     For Each objSourceSubFolder In objSourceFolder.GetDirectories()
 
                         strTargetSubFolderPath = System.IO.Path.Combine(objTargetFolder.Parent.FullName, objSourceSubFolder.Name)
 
-                        If System.IO.Directory.Exists(strTargetSubFolderPath) OrElse _
-                           objSourceSubFolder.GetFiles(PUSH_DIR_FLAG).Length > 0 Then
-                            blnSuccess = UpdateFolderWork(objSourceSubFolder.FullName, strTargetSubFolderPath)
+                        ' Initially assume we'll process this folder if it exists at the target
+                        Dim blnProcessSubfolder As Boolean
+                        blnProcessSubfolder = System.IO.Directory.Exists(strTargetSubFolderPath)
+
+                        If objSourceSubFolder.GetFiles(DELETE_SUBDIR_FLAG).Length > 0 Then
+                            ' Remove this subfolder at the target (but only if it's empty)
+                            Dim objTargetSubFolder As System.IO.DirectoryInfo
+                            objTargetSubFolder = New System.IO.DirectoryInfo(strTargetSubFolderPath)
+
+                            If objTargetSubFolder.Exists AndAlso objTargetSubFolder.GetFiles().Length = 0 Then
+                                blnProcessSubfolder = False
+                                Try
+                                    objTargetSubFolder.Delete(False)
+                                    ShowMessage("Deleted subfolder " & objTargetSubFolder.FullName)
+                                Catch ex As Exception
+                                    HandleException("Error removing empty directory flagged with " & DELETE_SUBDIR_FLAG, ex)
+                                End Try
+                            End If
+                        End If
+
+                        If objSourceSubFolder.GetFiles(DELETE_AM_SUBDIR_FLAG).Length > 0 Then
+                            ' Remove this subfolder if it is present below objTargetFolder (but only if it's empty)
+                          
+                            Dim objTargetSubFolder As System.IO.DirectoryInfo
+                            Dim strAMSubDirPath As String
+                            strAMSubDirPath = System.IO.Path.Combine(objTargetFolder.FullName, objSourceSubFolder.Name)
+                            objTargetSubFolder = New System.IO.DirectoryInfo(strAMSubDirPath)
+
+                            If objTargetSubFolder.Exists AndAlso objTargetSubFolder.GetFiles().Length = 0 Then
+                                blnProcessSubfolder = False
+                                Try
+                                    objTargetSubFolder.Delete(False)
+                                    ShowMessage("Deleted subfolder " & objTargetSubFolder.FullName)
+                                Catch ex As Exception
+                                    HandleException("Error removing empty directory flagged with " & DELETE_SUBDIR_FLAG, ex)
+                                End Try
+                            End If
+                        End If
+
+                        ' Note: Do Not look for the PUSH_DIR_FLAG file when processing the main folder
+                        ' Only when processing subfolders
+
+                        If blnProcessSubfolder Then
+                            blnSuccess = UpdateFolderWork(objSourceSubFolder.FullName, strTargetSubFolderPath, blnPushNewSubfolders)
                         End If
                     Next
 
@@ -525,7 +574,7 @@ Public Class clsDMSUpdateManager
 
     End Function
 
-    Protected Function UpdateFolderWork(ByVal strSourceFolderPath As String, ByVal strTargetFolderPath As String) As Boolean
+    Protected Function UpdateFolderWork(ByVal strSourceFolderPath As String, ByVal strTargetFolderPath As String, ByVal blnPushNewSubfolders As Boolean) As Boolean
 
         Dim strStatusMessage As String
 
@@ -560,7 +609,21 @@ Public Class clsDMSUpdateManager
 
         intFileUpdateCount = 0
 
-        For Each objSourceFile In diSourceFolder.GetFiles()
+        Dim fiFilesInSource() As System.IO.FileSystemInfo
+        Dim lstDeleteFiles As System.Collections.Generic.List(Of String)
+
+        fiFilesInSource = diSourceFolder.GetFiles()
+
+        ' Populate a SortedList object the with the names of any .delete files in fiFilesInSource
+        lstDeleteFiles = New System.Collections.Generic.List(Of String)(fiFilesInSource.Length)
+
+        For Each objSourceFile In fiFilesInSource
+            If objSourceFile.Name.EndsWith(DELETE_SUFFIX) Then
+                lstDeleteFiles.Add(TrimSuffix(objSourceFile.Name, DELETE_SUFFIX).ToLower())
+            End If
+        Next
+
+        For Each objSourceFile In fiFilesInSource
 
             Try
                 strFileNameLCase = objSourceFile.Name.ToLower()
@@ -576,6 +639,10 @@ Public Class clsDMSUpdateManager
                 Next intIndex
 
                 If strFileNameLCase = PUSH_DIR_FLAG.ToLower() Then
+                    blnSkipFile = True
+                ElseIf strFileNameLCase = DELETE_SUBDIR_FLAG.ToLower() Then
+                    blnSkipFile = True
+                ElseIf strFileNameLCase = DELETE_AM_SUBDIR_FLAG.ToLower() Then
                     blnSkipFile = True
                 End If
 
@@ -597,13 +664,18 @@ Public Class clsDMSUpdateManager
                         ProcessDeleteFile(objSourceFile, diTargetFolder.FullName, intFileUpdateCount)
 
                     Else
-                        If mOverwriteNewerFiles Then
-                            eDateComparisonMode = eDateComparisonModeConstants.OverwriteNewerTargetIfDifferentSize
-                        Else
-                            eDateComparisonMode = eDateComparisonModeConstants.RetainNewerTargetIfDifferentSize
-                        End If
+                        ' Make sure a corresponding .Delete file does not exist in fiFilesInSource
+                        If Not lstDeleteFiles.Contains(strFileNameLCase) Then
 
-                        CopyFileIfNeeded(objSourceFile, diTargetFolder.FullName, intFileUpdateCount, eDateComparisonMode)
+                            If mOverwriteNewerFiles Then
+                                eDateComparisonMode = eDateComparisonModeConstants.OverwriteNewerTargetIfDifferentSize
+                            Else
+                                eDateComparisonMode = eDateComparisonModeConstants.RetainNewerTargetIfDifferentSize
+                            End If
+
+                            CopyFileIfNeeded(objSourceFile, diTargetFolder.FullName, intFileUpdateCount, eDateComparisonMode)
+
+                        End If
                     End If
 
                 End If
@@ -629,9 +701,28 @@ Public Class clsDMSUpdateManager
         For Each objSourceSubFolder In diSourceFolder.GetDirectories()
             strTargetSubFolderPath = System.IO.Path.Combine(diTargetFolder.FullName, objSourceSubFolder.Name)
 
-            If System.IO.Directory.Exists(strTargetSubFolderPath) OrElse _
-               objSourceSubFolder.GetFiles(PUSH_DIR_FLAG).Length > 0 Then
-                blnSuccess = UpdateFolderWork(objSourceSubFolder.FullName, strTargetSubFolderPath)
+            ' Initially assume we'll process this folder if it exists at the target
+            Dim blnProcessSubfolder As Boolean
+            blnProcessSubfolder = System.IO.Directory.Exists(strTargetSubFolderPath)
+
+            If objSourceSubFolder.GetFiles(DELETE_SUBDIR_FLAG).Length > 0 Then
+                ' Remove this subfolder (but only if it's empty)
+                If objSourceSubFolder.GetFiles().Length = 1 Then
+                    blnProcessSubfolder = False
+                    Try
+                        objSourceSubFolder.Delete(False)
+                    Catch ex As Exception
+                        HandleException("Error removing empty directory flagged with " & DELETE_SUBDIR_FLAG, ex)
+                    End Try
+                End If
+            End If
+
+            If blnPushNewSubfolders AndAlso objSourceSubFolder.GetFiles(PUSH_DIR_FLAG).Length > 0 Then
+                blnProcessSubfolder = True
+            End If
+
+            If blnProcessSubfolder Then
+                blnSuccess = UpdateFolderWork(objSourceSubFolder.FullName, strTargetSubFolderPath, blnPushNewSubfolders)
             End If
         Next
 
@@ -656,7 +747,7 @@ Public Class clsDMSUpdateManager
         Dim objTargetFile As System.IO.FileInfo
         Dim strTargetFilePath As String
 
-        strTargetFilePath = System.IO.Path.Combine(strTargetFolderPath, objDeleteFile.Name.Substring(0, objDeleteFile.Name.Length - DELETE_SUFFIX.Length))
+        strTargetFilePath = System.IO.Path.Combine(strTargetFolderPath, TrimSuffix(objDeleteFile.Name, DELETE_SUFFIX))
         objTargetFile = New System.IO.FileInfo(strTargetFilePath)
 
         If objTargetFile.Exists() Then
@@ -679,7 +770,7 @@ Public Class clsDMSUpdateManager
         Dim strSourceFilePath As String
         Dim blnCopied As Boolean
 
-        strSourceFilePath = objRollbackFile.FullName.Substring(0, objRollbackFile.FullName.Length - ROLLBACK_SUFFIX.Length)
+        strSourceFilePath = TrimSuffix(objRollbackFile.FullName, ROLLBACK_SUFFIX)
 
         objSourceFile = New System.IO.FileInfo(strSourceFilePath)
 
@@ -715,4 +806,12 @@ Public Class clsDMSUpdateManager
         End If
 
     End Sub
+
+    Private Function TrimSuffix(strText As String, strSuffix As String) As String
+        If strText.Length >= strSuffix.Length Then
+            Return strText.Substring(0, strText.Length - strSuffix.Length)
+        Else
+            Return strText
+        End If
+    End Function
 End Class
