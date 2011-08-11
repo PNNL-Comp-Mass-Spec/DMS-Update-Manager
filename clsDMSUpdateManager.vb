@@ -556,8 +556,9 @@ Public Class clsDMSUpdateManager
                             End If
                         End If
 
-                        ' Note: Do Not look for the PUSH_DIR_FLAG file when processing the main folder
-                        ' Only when processing subfolders
+                        If objSourceSubFolder.GetFiles(PUSH_DIR_FLAG).Length > 0 Then
+                            blnProcessSubfolder = True
+                        End If
 
                         If blnProcessSubfolder Then
                             blnSuccess = UpdateFolderWork(objSourceSubFolder.FullName, strTargetSubFolderPath, blnPushNewSubfolders)
