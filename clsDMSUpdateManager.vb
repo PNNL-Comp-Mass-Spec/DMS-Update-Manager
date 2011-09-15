@@ -259,7 +259,7 @@ Public Class clsDMSUpdateManager
 
                 If objCopiedFile.Length <> objSourceFile.Length Then
                     ShowErrorMessage("Copy of " & objSourceFile.Name & " failed; sizes differ", True)
-                ElseIf objCopiedFile.LastWriteTime <> objSourceFile.LastWriteTime Then
+                ElseIf objCopiedFile.LastWriteTimeUtc <> objSourceFile.LastWriteTimeUtc Then
                     ShowErrorMessage("Copy of " & objSourceFile.Name & " failed; modification times differ", True)
                 Else
                     intFileUpdateCount += 1
@@ -300,7 +300,7 @@ Public Class clsDMSUpdateManager
                 If objTargetFile.Length <> objSourceFile.Length Then
                     blnNeedToCopy = True
                     strCopyReason = "sizes are different"
-                ElseIf objSourceFile.LastWriteTime <> objTargetFile.LastWriteTime Then
+                ElseIf objSourceFile.LastWriteTimeUtc <> objTargetFile.LastWriteTimeUtc Then
                     blnNeedToCopy = True
                     strCopyReason = "dates are different"
                 End If
@@ -310,15 +310,15 @@ Public Class clsDMSUpdateManager
                 If objTargetFile.Length <> objSourceFile.Length Then
                     blnNeedToCopy = True
                     strCopyReason = "sizes are different"
-                ElseIf objSourceFile.LastWriteTime > objTargetFile.LastWriteTime Then
+                ElseIf objSourceFile.LastWriteTimeUtc > objTargetFile.LastWriteTimeUtc Then
                     blnNeedToCopy = True
                     strCopyReason = "source file is newer"
                 End If
 
                 If blnNeedToCopy AndAlso eDateComparisonMode = eDateComparisonModeConstants.RetainNewerTargetIfDifferentSize Then
-                    If objTargetFile.LastWriteTime > objSourceFile.LastWriteTime Then
+                    If objTargetFile.LastWriteTimeUtc > objSourceFile.LastWriteTimeUtc Then
                         ' Target file is newer than the source; do not overwrite
-                        ShowMessage("Warning: Skipping file " & objSourceFile.Name & " since a newer version exists in the target; source=" & objSourceFile.LastWriteTime & ", target=" & objTargetFile.LastWriteTime)
+                        ShowMessage("Warning: Skipping file " & objSourceFile.Name & " since a newer version exists in the target; source=" & objSourceFile.LastWriteTimeUtc.ToLocalTime() & ", target=" & objTargetFile.LastWriteTimeUtc.ToLocalTime())
                         blnNeedToCopy = False
                     End If
                 End If
@@ -778,7 +778,7 @@ Public Class clsDMSUpdateManager
         If objSourceFile.Exists() Then
             blnCopied = CopyFileIfNeeded(objSourceFile, strTargetFolderPath, intFileUpdateCount, eDateComparisonModeConstants.CopyIfSizeOrDateDiffers)
             If blnCopied Then
-                ShowMessage("Rolled back file " & objSourceFile.Name & " to version from " & objSourceFile.LastWriteTime & " with size " & (objSourceFile.Length / 1024.0).ToString("0.0") & " KB")
+                ShowMessage("Rolled back file " & objSourceFile.Name & " to version from " & objSourceFile.LastWriteTimeUtc.ToLocalTime() & " with size " & (objSourceFile.Length / 1024.0).ToString("0.0") & " KB")
             End If
         Else
             ShowMessage("Warning: Rollback file is present (" + objRollbackFile.Name + ") but expected source file was not found: " & objSourceFile.Name)
