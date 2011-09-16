@@ -10,7 +10,7 @@ copy %1 \\Peaks2\DMS_Programs\AnalysisToolManager1\
 
 copy %1 \\Pub-07\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-08\DMS_Programs\AnalysisToolManager1\
-rem Skip since firewall prevents remote management: copy %1 \\Pub-09\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Pub-09\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-10\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-11\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-12\DMS_Programs\AnalysisToolManager1\
@@ -110,7 +110,7 @@ copy %1 \\Peaks2\DMS_Programs\AnalysisToolManager2\
 
 copy %1 \\Pub-07\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-08\DMS_Programs\AnalysisToolManager2\
-rem Skip since firewall prevents remote management: copy %1 \\Pub-09\DMS_Programs\AnalysisToolManager2\
+copy %1 \\Pub-09\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-10\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-11\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-12\DMS_Programs\AnalysisToolManager2\
