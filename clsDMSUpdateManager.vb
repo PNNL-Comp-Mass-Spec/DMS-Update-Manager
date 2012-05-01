@@ -274,67 +274,75 @@ Public Class clsDMSUpdateManager
     End Sub
 
 
-    Protected Function CopyFileIfNeeded(ByRef objSourceFile As System.IO.FileInfo, ByVal strTargetFolderPath As String, _
-                                        ByRef intFileUpdateCount As Integer, ByVal eDateComparisonMode As eDateComparisonModeConstants) As Boolean
+	Protected Function CopyFileIfNeeded(ByRef objSourceFile As System.IO.FileInfo, ByVal strTargetFolderPath As String, _
+										ByRef intFileUpdateCount As Integer, ByVal eDateComparisonMode As eDateComparisonModeConstants, _
+										ByVal blnProcessingSubFolder As Boolean) As Boolean
 
-        Dim blnNeedToCopy As Boolean
-        Dim strCopyReason As String
+		Dim blnNeedToCopy As Boolean
+		Dim strCopyReason As String
 
-        Dim strTargetFilePath As String
-        Dim objTargetFile As System.IO.FileInfo
+		Dim strTargetFilePath As String
+		Dim objTargetFile As System.IO.FileInfo
 
-        strTargetFilePath = System.IO.Path.Combine(strTargetFolderPath, objSourceFile.Name)
-        objTargetFile = New System.IO.FileInfo(strTargetFilePath)
+		strTargetFilePath = System.IO.Path.Combine(strTargetFolderPath, objSourceFile.Name)
+		objTargetFile = New System.IO.FileInfo(strTargetFilePath)
 
-        strCopyReason = String.Empty
-        blnNeedToCopy = False
+		strCopyReason = String.Empty
+		blnNeedToCopy = False
 
-        If Not objTargetFile.Exists Then
-            ' File not present in the target; copy it now
-            strCopyReason = "not found in target folder"
-            blnNeedToCopy = True
-        Else
-            ' File is present, see if the file has a different size
-            If eDateComparisonMode = eDateComparisonModeConstants.CopyIfSizeOrDateDiffers Then
+		If Not objTargetFile.Exists Then
+			' File not present in the target; copy it now
+			strCopyReason = "not found in target folder"
+			blnNeedToCopy = True
+		Else
+			' File is present, see if the file has a different size
+			If eDateComparisonMode = eDateComparisonModeConstants.CopyIfSizeOrDateDiffers Then
 
-                If objTargetFile.Length <> objSourceFile.Length Then
-                    blnNeedToCopy = True
-                    strCopyReason = "sizes are different"
-                ElseIf objSourceFile.LastWriteTimeUtc <> objTargetFile.LastWriteTimeUtc Then
-                    blnNeedToCopy = True
-                    strCopyReason = "dates are different"
-                End If
+				If objTargetFile.Length <> objSourceFile.Length Then
+					blnNeedToCopy = True
+					strCopyReason = "sizes are different"
+				ElseIf objSourceFile.LastWriteTimeUtc <> objTargetFile.LastWriteTimeUtc Then
+					blnNeedToCopy = True
+					strCopyReason = "dates are different"
+				End If
 
-            Else
+			Else
 
-                If objTargetFile.Length <> objSourceFile.Length Then
-                    blnNeedToCopy = True
-                    strCopyReason = "sizes are different"
-                ElseIf objSourceFile.LastWriteTimeUtc > objTargetFile.LastWriteTimeUtc Then
-                    blnNeedToCopy = True
-                    strCopyReason = "source file is newer"
-                End If
+				If objTargetFile.Length <> objSourceFile.Length Then
+					blnNeedToCopy = True
+					strCopyReason = "sizes are different"
+				ElseIf objSourceFile.LastWriteTimeUtc > objTargetFile.LastWriteTimeUtc Then
+					blnNeedToCopy = True
+					strCopyReason = "source file is newer"
+				End If
 
-                If blnNeedToCopy AndAlso eDateComparisonMode = eDateComparisonModeConstants.RetainNewerTargetIfDifferentSize Then
-                    If objTargetFile.LastWriteTimeUtc > objSourceFile.LastWriteTimeUtc Then
-                        ' Target file is newer than the source; do not overwrite
-                        ShowMessage("Warning: Skipping file " & objSourceFile.Name & " since a newer version exists in the target; source=" & objSourceFile.LastWriteTimeUtc.ToLocalTime() & ", target=" & objTargetFile.LastWriteTimeUtc.ToLocalTime())
-                        blnNeedToCopy = False
-                    End If
-                End If
+				If blnNeedToCopy AndAlso eDateComparisonMode = eDateComparisonModeConstants.RetainNewerTargetIfDifferentSize Then
+					If objTargetFile.LastWriteTimeUtc > objSourceFile.LastWriteTimeUtc Then
+						' Target file is newer than the source; do not overwrite
 
-            End If
+						Dim strWarning = "Warning: Skipping file " & objSourceFile.Name
+						If blnProcessingSubFolder Then
+							strWarning &= " in " & strTargetFolderPath
+						End If
+						strWarning &= " since a newer version exists in the target; source=" & objSourceFile.LastWriteTimeUtc.ToLocalTime() & ", target=" & objTargetFile.LastWriteTimeUtc.ToLocalTime()
 
-        End If
+						ShowMessage(strWarning)
+						blnNeedToCopy = False
+					End If
+				End If
 
-        If blnNeedToCopy Then
-            CopyFile(objSourceFile, objTargetFile, intFileUpdateCount, strCopyReason)
-            Return True
-        Else
-            Return False
-        End If
+			End If
 
-    End Function
+		End If
+
+		If blnNeedToCopy Then
+			CopyFile(objSourceFile, objTargetFile, intFileUpdateCount, strCopyReason)
+			Return True
+		Else
+			Return False
+		End If
+
+	End Function
 
     Private Sub InitializeLocalVariables()
         MyBase.ShowMessages = False
@@ -507,7 +515,7 @@ Public Class clsDMSUpdateManager
                 Dim blnPushNewSubfolders As Boolean
                 blnPushNewSubfolders = False
 
-                blnSuccess = UpdateFolderWork(objSourceFolder.FullName, objTargetFolder.FullName, blnPushNewSubfolders)
+				blnSuccess = UpdateFolderWork(objSourceFolder.FullName, objTargetFolder.FullName, blnPushNewSubfolders, blnProcessingSubFolder:=False)
 
                 If mCopySubdirectoriesToParentFolder Then
 
@@ -561,7 +569,7 @@ Public Class clsDMSUpdateManager
                         End If
 
                         If blnProcessSubfolder Then
-                            blnSuccess = UpdateFolderWork(objSourceSubFolder.FullName, strTargetSubFolderPath, blnPushNewSubfolders)
+							blnSuccess = UpdateFolderWork(objSourceSubFolder.FullName, strTargetSubFolderPath, blnPushNewSubfolders, blnProcessingSubFolder:=True)
                         End If
                     Next
 
@@ -575,160 +583,160 @@ Public Class clsDMSUpdateManager
 
     End Function
 
-    Protected Function UpdateFolderWork(ByVal strSourceFolderPath As String, ByVal strTargetFolderPath As String, ByVal blnPushNewSubfolders As Boolean) As Boolean
+	Protected Function UpdateFolderWork(ByVal strSourceFolderPath As String, ByVal strTargetFolderPath As String, ByVal blnPushNewSubfolders As Boolean, ByVal blnProcessingSubFolder As Boolean) As Boolean
 
-        Dim strStatusMessage As String
+		Dim strStatusMessage As String
 
-        Dim diSourceFolder As System.IO.DirectoryInfo
-        Dim diTargetFolder As System.IO.DirectoryInfo
+		Dim diSourceFolder As System.IO.DirectoryInfo
+		Dim diTargetFolder As System.IO.DirectoryInfo
 
-        Dim objSourceFile As System.IO.FileInfo
+		Dim objSourceFile As System.IO.FileInfo
 
-        Dim objSourceSubFolder As System.IO.DirectoryInfo
-        Dim strTargetSubFolderPath As String
-        Dim blnSuccess As Boolean
+		Dim objSourceSubFolder As System.IO.DirectoryInfo
+		Dim strTargetSubFolderPath As String
+		Dim blnSuccess As Boolean
 
-        Dim intIndex As Integer
-        Dim strFileNameLCase As String
+		Dim intIndex As Integer
+		Dim strFileNameLCase As String
 
-        Dim blnSkipFile As Boolean
-        Dim intFileUpdateCount As Integer
+		Dim blnSkipFile As Boolean
+		Dim intFileUpdateCount As Integer
 
-        Dim eDateComparisonMode As eDateComparisonModeConstants
+		Dim eDateComparisonMode As eDateComparisonModeConstants
 
-        MyBase.mProgressStepDescription = "Updating " & strTargetFolderPath & ControlChars.NewLine & " using " & strSourceFolderPath
-        ShowMessage(MyBase.mProgressStepDescription, False)
+		MyBase.mProgressStepDescription = "Updating " & strTargetFolderPath & ControlChars.NewLine & " using " & strSourceFolderPath
+		ShowMessage(MyBase.mProgressStepDescription, False)
 
-        ' Make sure the target folder exists
-        diTargetFolder = New System.IO.DirectoryInfo(strTargetFolderPath)
-        If Not diTargetFolder.Exists Then
-            diTargetFolder.Create()
-        End If
+		' Make sure the target folder exists
+		diTargetFolder = New System.IO.DirectoryInfo(strTargetFolderPath)
+		If Not diTargetFolder.Exists Then
+			diTargetFolder.Create()
+		End If
 
-        ' Obtain a list of files in the source folder
-        diSourceFolder = New System.IO.DirectoryInfo(strSourceFolderPath)
+		' Obtain a list of files in the source folder
+		diSourceFolder = New System.IO.DirectoryInfo(strSourceFolderPath)
 
-        intFileUpdateCount = 0
+		intFileUpdateCount = 0
 
-        Dim fiFilesInSource() As System.IO.FileSystemInfo
-        Dim lstDeleteFiles As System.Collections.Generic.List(Of String)
+		Dim fiFilesInSource() As System.IO.FileSystemInfo
+		Dim lstDeleteFiles As System.Collections.Generic.List(Of String)
 
-        fiFilesInSource = diSourceFolder.GetFiles()
+		fiFilesInSource = diSourceFolder.GetFiles()
 
-        ' Populate a SortedList object the with the names of any .delete files in fiFilesInSource
-        lstDeleteFiles = New System.Collections.Generic.List(Of String)(fiFilesInSource.Length)
+		' Populate a SortedList object the with the names of any .delete files in fiFilesInSource
+		lstDeleteFiles = New System.Collections.Generic.List(Of String)(fiFilesInSource.Length)
 
-        For Each objSourceFile In fiFilesInSource
-            If objSourceFile.Name.EndsWith(DELETE_SUFFIX) Then
-                lstDeleteFiles.Add(TrimSuffix(objSourceFile.Name, DELETE_SUFFIX).ToLower())
-            End If
-        Next
+		For Each objSourceFile In fiFilesInSource
+			If objSourceFile.Name.EndsWith(DELETE_SUFFIX) Then
+				lstDeleteFiles.Add(TrimSuffix(objSourceFile.Name, DELETE_SUFFIX).ToLower())
+			End If
+		Next
 
-        For Each objSourceFile In fiFilesInSource
+		For Each objSourceFile In fiFilesInSource
 
-            Try
-                strFileNameLCase = objSourceFile.Name.ToLower()
-                blnSkipFile = False
+			Try
+				strFileNameLCase = objSourceFile.Name.ToLower()
+				blnSkipFile = False
 
-                ' Make sure this file is not in mFilesToIgnore
-                For intIndex = 0 To mFilesToIgnoreCount - 1
-                    If strFileNameLCase = mFilesToIgnore(intIndex).ToLower Then
-                        ' Skip file
-                        blnSkipFile = True
-                        Exit For
-                    End If
-                Next intIndex
+				' Make sure this file is not in mFilesToIgnore
+				For intIndex = 0 To mFilesToIgnoreCount - 1
+					If strFileNameLCase = mFilesToIgnore(intIndex).ToLower Then
+						' Skip file
+						blnSkipFile = True
+						Exit For
+					End If
+				Next intIndex
 
-                If strFileNameLCase = PUSH_DIR_FLAG.ToLower() Then
-                    blnSkipFile = True
-                ElseIf strFileNameLCase = DELETE_SUBDIR_FLAG.ToLower() Then
-                    blnSkipFile = True
-                ElseIf strFileNameLCase = DELETE_AM_SUBDIR_FLAG.ToLower() Then
-                    blnSkipFile = True
-                End If
+				If strFileNameLCase = PUSH_DIR_FLAG.ToLower() Then
+					blnSkipFile = True
+				ElseIf strFileNameLCase = DELETE_SUBDIR_FLAG.ToLower() Then
+					blnSkipFile = True
+				ElseIf strFileNameLCase = DELETE_AM_SUBDIR_FLAG.ToLower() Then
+					blnSkipFile = True
+				End If
 
-                If Not blnSkipFile Then
+				If Not blnSkipFile Then
 
-                    ' See if file ends with ROLLBACK_SUFFIX
-                    If objSourceFile.Name.EndsWith(ROLLBACK_SUFFIX) Then
-                        ' This is a Rollback file
-                        ' Do not copy this file
-                        ' However, do look for a corresponding file that does not have .rollback and copy it if the target file has a different date or size
+					' See if file ends with ROLLBACK_SUFFIX
+					If objSourceFile.Name.EndsWith(ROLLBACK_SUFFIX) Then
+						' This is a Rollback file
+						' Do not copy this file
+						' However, do look for a corresponding file that does not have .rollback and copy it if the target file has a different date or size
 
-                        ProcessRollbackFile(objSourceFile, diTargetFolder.FullName, intFileUpdateCount)
+						ProcessRollbackFile(objSourceFile, diTargetFolder.FullName, intFileUpdateCount, blnProcessingSubFolder)
 
-                    ElseIf objSourceFile.Name.EndsWith(DELETE_SUFFIX) Then
-                        ' This is a Delete file
-                        ' Do not copy this file
-                        ' However, do look for a corresponding file that does not have .delete and delete that file in the target folder
+					ElseIf objSourceFile.Name.EndsWith(DELETE_SUFFIX) Then
+						' This is a Delete file
+						' Do not copy this file
+						' However, do look for a corresponding file that does not have .delete and delete that file in the target folder
 
-                        ProcessDeleteFile(objSourceFile, diTargetFolder.FullName, intFileUpdateCount)
+						ProcessDeleteFile(objSourceFile, diTargetFolder.FullName, intFileUpdateCount)
 
-                    Else
-                        ' Make sure a corresponding .Delete file does not exist in fiFilesInSource
-                        If Not lstDeleteFiles.Contains(strFileNameLCase) Then
+					Else
+						' Make sure a corresponding .Delete file does not exist in fiFilesInSource
+						If Not lstDeleteFiles.Contains(strFileNameLCase) Then
 
-                            If mOverwriteNewerFiles Then
-                                eDateComparisonMode = eDateComparisonModeConstants.OverwriteNewerTargetIfDifferentSize
-                            Else
-                                eDateComparisonMode = eDateComparisonModeConstants.RetainNewerTargetIfDifferentSize
-                            End If
+							If mOverwriteNewerFiles Then
+								eDateComparisonMode = eDateComparisonModeConstants.OverwriteNewerTargetIfDifferentSize
+							Else
+								eDateComparisonMode = eDateComparisonModeConstants.RetainNewerTargetIfDifferentSize
+							End If
 
-                            CopyFileIfNeeded(objSourceFile, diTargetFolder.FullName, intFileUpdateCount, eDateComparisonMode)
+							CopyFileIfNeeded(objSourceFile, diTargetFolder.FullName, intFileUpdateCount, eDateComparisonMode, blnProcessingSubFolder)
 
-                        End If
-                    End If
+						End If
+					End If
 
-                End If
+				End If
 
-            Catch ex As Exception
-                ShowErrorMessage("Error synchronizing " & objSourceFile.Name & ": " & ex.Message, True)
-            End Try
+			Catch ex As Exception
+				ShowErrorMessage("Error synchronizing " & objSourceFile.Name & ": " & ex.Message, True)
+			End Try
 
-        Next
+		Next
 
-        If intFileUpdateCount > 0 Then
-            strStatusMessage = "Updated " & intFileUpdateCount & " file"
-            If intFileUpdateCount > 1 Then strStatusMessage &= "s"
+		If intFileUpdateCount > 0 Then
+			strStatusMessage = "Updated " & intFileUpdateCount & " file"
+			If intFileUpdateCount > 1 Then strStatusMessage &= "s"
 
-            strStatusMessage &= " using " & diSourceFolder.FullName & "\"
+			strStatusMessage &= " using " & diSourceFolder.FullName & "\"
 
-            ShowMessage(strStatusMessage, True, False)
-        End If
+			ShowMessage(strStatusMessage, True, False)
+		End If
 
-        ' Process each subdirectory in the source folder
-        ' If the folder exists at the target, then copy it
-        ' Additionally, if the source folder contains file _PushDir_.txt then it gets copied even if it doesn't exist at the target
-        For Each objSourceSubFolder In diSourceFolder.GetDirectories()
-            strTargetSubFolderPath = System.IO.Path.Combine(diTargetFolder.FullName, objSourceSubFolder.Name)
+		' Process each subdirectory in the source folder
+		' If the folder exists at the target, then copy it
+		' Additionally, if the source folder contains file _PushDir_.txt then it gets copied even if it doesn't exist at the target
+		For Each objSourceSubFolder In diSourceFolder.GetDirectories()
+			strTargetSubFolderPath = System.IO.Path.Combine(diTargetFolder.FullName, objSourceSubFolder.Name)
 
-            ' Initially assume we'll process this folder if it exists at the target
-            Dim blnProcessSubfolder As Boolean
-            blnProcessSubfolder = System.IO.Directory.Exists(strTargetSubFolderPath)
+			' Initially assume we'll process this folder if it exists at the target
+			Dim blnProcessSubfolder As Boolean
+			blnProcessSubfolder = System.IO.Directory.Exists(strTargetSubFolderPath)
 
-            If objSourceSubFolder.GetFiles(DELETE_SUBDIR_FLAG).Length > 0 Then
-                ' Remove this subfolder (but only if it's empty)
-                If objSourceSubFolder.GetFiles().Length = 1 Then
-                    blnProcessSubfolder = False
-                    Try
-                        objSourceSubFolder.Delete(False)
-                    Catch ex As Exception
-                        HandleException("Error removing empty directory flagged with " & DELETE_SUBDIR_FLAG, ex)
-                    End Try
-                End If
-            End If
+			If objSourceSubFolder.GetFiles(DELETE_SUBDIR_FLAG).Length > 0 Then
+				' Remove this subfolder (but only if it's empty)
+				If objSourceSubFolder.GetFiles().Length = 1 Then
+					blnProcessSubfolder = False
+					Try
+						objSourceSubFolder.Delete(False)
+					Catch ex As Exception
+						HandleException("Error removing empty directory flagged with " & DELETE_SUBDIR_FLAG, ex)
+					End Try
+				End If
+			End If
 
-            If blnPushNewSubfolders AndAlso objSourceSubFolder.GetFiles(PUSH_DIR_FLAG).Length > 0 Then
-                blnProcessSubfolder = True
-            End If
+			If blnPushNewSubfolders AndAlso objSourceSubFolder.GetFiles(PUSH_DIR_FLAG).Length > 0 Then
+				blnProcessSubfolder = True
+			End If
 
-            If blnProcessSubfolder Then
-                blnSuccess = UpdateFolderWork(objSourceSubFolder.FullName, strTargetSubFolderPath, blnPushNewSubfolders)
-            End If
-        Next
+			If blnProcessSubfolder Then
+				blnSuccess = UpdateFolderWork(objSourceSubFolder.FullName, strTargetSubFolderPath, blnPushNewSubfolders, blnProcessingSubFolder)
+			End If
+		Next
 
-        Return True
-    End Function
+		Return True
+	End Function
 
     Private Sub LogoffOrRebootMachine(ByVal eAction As MentalisUtils.RestartOptions, ByVal blnForce As Boolean)
 
@@ -766,25 +774,25 @@ Public Class clsDMSUpdateManager
         End If
     End Sub
 
-    Private Sub ProcessRollbackFile(ByRef objRollbackFile As System.IO.FileInfo, ByVal strTargetFolderPath As String, ByRef intFileUpdateCount As Integer)
-        Dim objSourceFile As System.IO.FileInfo
-        Dim strSourceFilePath As String
-        Dim blnCopied As Boolean
+	Private Sub ProcessRollbackFile(ByRef objRollbackFile As System.IO.FileInfo, ByVal strTargetFolderPath As String, ByRef intFileUpdateCount As Integer, ByVal blnProcessingSubFolder As Boolean)
+		Dim objSourceFile As System.IO.FileInfo
+		Dim strSourceFilePath As String
+		Dim blnCopied As Boolean
 
-        strSourceFilePath = TrimSuffix(objRollbackFile.FullName, ROLLBACK_SUFFIX)
+		strSourceFilePath = TrimSuffix(objRollbackFile.FullName, ROLLBACK_SUFFIX)
 
-        objSourceFile = New System.IO.FileInfo(strSourceFilePath)
+		objSourceFile = New System.IO.FileInfo(strSourceFilePath)
 
-        If objSourceFile.Exists() Then
-            blnCopied = CopyFileIfNeeded(objSourceFile, strTargetFolderPath, intFileUpdateCount, eDateComparisonModeConstants.CopyIfSizeOrDateDiffers)
-            If blnCopied Then
-                ShowMessage("Rolled back file " & objSourceFile.Name & " to version from " & objSourceFile.LastWriteTimeUtc.ToLocalTime() & " with size " & (objSourceFile.Length / 1024.0).ToString("0.0") & " KB")
-            End If
-        Else
-            ShowMessage("Warning: Rollback file is present (" + objRollbackFile.Name + ") but expected source file was not found: " & objSourceFile.Name)
-        End If
+		If objSourceFile.Exists() Then
+			blnCopied = CopyFileIfNeeded(objSourceFile, strTargetFolderPath, intFileUpdateCount, eDateComparisonModeConstants.CopyIfSizeOrDateDiffers, blnProcessingSubFolder)
+			If blnCopied Then
+				ShowMessage("Rolled back file " & objSourceFile.Name & " to version from " & objSourceFile.LastWriteTimeUtc.ToLocalTime() & " with size " & (objSourceFile.Length / 1024.0).ToString("0.0") & " KB")
+			End If
+		Else
+			ShowMessage("Warning: Rollback file is present (" + objRollbackFile.Name + ") but expected source file was not found: " & objSourceFile.Name)
+		End If
 
-    End Sub
+	End Sub
 
     Private Sub SetLocalErrorCode(ByVal eNewErrorCode As eDMSUpdateManagerErrorCodes)
         SetLocalErrorCode(eNewErrorCode, False)

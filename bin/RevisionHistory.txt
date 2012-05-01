@@ -1,5 +1,8 @@
 DMS Update Manager Change Log
 
+Version 1.1.4478; April 5, 2012
+	- Added parameter blnProcessingSubFolder to several functions
+
 Version 1.1.4275; September 15, 2011
 	- Switched from .Now to .UtcNow
 
