@@ -217,10 +217,49 @@ Public MustInherit Class clsProcessFoldersBaseClass
 			mLogFile.Close()
 			mLogFile = Nothing
 
-			GC.Collect()
-			GC.WaitForPendingFinalizers()
+			GarbageCollectNow()
 			System.Threading.Thread.Sleep(100)
 		End If
+	End Sub
+
+	Public Shared Sub GarbageCollectNow()
+		Dim intMaxWaitTimeMSec As Integer = 1000
+		GarbageCollectNow(intMaxWaitTimeMSec)
+	End Sub
+
+	Public Shared Sub GarbageCollectNow(ByVal intMaxWaitTimeMSec As Integer)
+		Const THREAD_SLEEP_TIME_MSEC As Integer = 100
+
+		Dim intTotalThreadWaitTimeMsec As Integer
+		If intMaxWaitTimeMSec < 100 Then intMaxWaitTimeMSec = 100
+		If intMaxWaitTimeMSec > 5000 Then intMaxWaitTimeMSec = 5000
+
+		System.Threading.Thread.Sleep(100)
+
+		Try
+			Dim gcThread As New Threading.Thread(AddressOf GarbageCollectWaitForGC)
+			gcThread.Start()
+
+			intTotalThreadWaitTimeMsec = 0
+			While gcThread.IsAlive AndAlso intTotalThreadWaitTimeMsec < intMaxWaitTimeMSec
+				Threading.Thread.Sleep(THREAD_SLEEP_TIME_MSEC)
+				intTotalThreadWaitTimeMsec += THREAD_SLEEP_TIME_MSEC
+			End While
+			If gcThread.IsAlive Then gcThread.Abort()
+
+		Catch ex As Exception
+			' Ignore errors here
+		End Try
+
+	End Sub
+
+	Protected Shared Sub GarbageCollectWaitForGC()
+		Try
+			GC.Collect()
+			GC.WaitForPendingFinalizers()
+		Catch
+			' Ignore errors here
+		End Try
 	End Sub
 
 	Protected Function GetAppDataFolderPath(ByVal strAppName As String) As String

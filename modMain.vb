@@ -12,7 +12,7 @@
 ' 
 
 Module modMain
-	Public Const PROGRAM_DATE As String = "April 5, 2012"
+	Public Const PROGRAM_DATE As String = "May 18, 2012"
 
 	' Either mSourceFolderPath and mTargetFolderPath must be specified, or mParameterFilePath needs to be specified
 	Private mSourceFolderPath As String			' Option A
