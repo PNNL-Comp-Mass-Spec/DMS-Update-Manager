@@ -78,7 +78,7 @@ Module modMain
 			End If
 
 		Catch ex As Exception
-			Console.WriteLine("Error occurred in modMain->Main: " & ControlChars.NewLine & ex.Message)
+            ShowErrorMessage("Error occurred in modMain->Main: " & System.Environment.NewLine & ex.Message)
 			intReturnCode = -1
 		End Try
 
@@ -87,7 +87,7 @@ Module modMain
 	End Function
 
     Private Function GetAppVersion() As String
-        Return System.Reflection.Assembly.GetExecutingAssembly.GetName.Version.ToString & " (" & PROGRAM_DATE & ")"
+        Return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString() & " (" & PROGRAM_DATE & ")"
     End Function
 
 	Private Function SetOptionsUsingCommandLineParameters(ByVal objParseCommandLine As clsParseCommandLine) As Boolean
@@ -113,11 +113,24 @@ Module modMain
 				Return True
 			End If
 
-		Catch ex As Exception
-			Console.WriteLine("Error parsing the command line parameters: " & ControlChars.NewLine & ex.Message)
-		End Try
+        Catch ex As Exception
+            ShowErrorMessage("Error parsing the command line parameters: " & System.Environment.NewLine & ex.Message)
+        End Try
+
+        Return False
 
 	End Function
+
+    Private Sub ShowErrorMessage(ByVal strMessage As String)
+        Dim strSeparator As String = "------------------------------------------------------------------------------"
+
+        Console.WriteLine()
+        Console.WriteLine(strSeparator)
+        Console.WriteLine(strMessage)
+        Console.WriteLine(strSeparator)
+        Console.WriteLine()
+
+    End Sub
 
 	Private Sub ShowProgramHelp()
 
@@ -141,14 +154,14 @@ Module modMain
             Console.WriteLine()
 
 			Console.WriteLine("E-mail: matthew.monroe@pnnl.gov or matt@alchemistmatt.com")
-			Console.WriteLine("Website: http://ncrr.pnnl.gov/ or http://www.sysbio.org/resources/staff/")
+            Console.WriteLine("Website: http://ncrr.pnl.gov/ or http://omics.pnl.gov")
 			Console.WriteLine()
 
             ' Delay for 750 msec in case the user double clicked this file from within Windows Explorer (or started the program via a shortcut)
             System.Threading.Thread.Sleep(750)
 
 		Catch ex As Exception
-			Console.WriteLine("Error displaying the program syntax: " & ex.Message)
+			ShowErrorMessage("Error displaying the program syntax: " & ex.Message)
 		End Try
 
 	End Sub
