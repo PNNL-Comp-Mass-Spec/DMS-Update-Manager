@@ -1,23 +1,33 @@
 Option Strict On
 
-' This class can be used as a base class for classes that process a folder or folders
-' Note that this class contains simple error codes that
-' can be set from any derived classes.  The derived classes can also set their own local error codes
-'
-' Written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA)
-' Copyright 2005, Battelle Memorial Institute.  All Rights Reserved.
-' Started April 26, 2005
+Imports System.IO
+Imports System.Text.RegularExpressions
+Imports System.Threading
+Imports System.Reflection
 
+''' <summary>
+''' This class can be used as a base class for classes that process a folder or folders
+''' Note that this class contains simple error codes that
+''' can be set from any derived classes.  The derived classes can also set their own local error codes
+''' </summary>
+''' <remarks>
+'''  Written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA)
+'''  Copyright 2005, Battelle Memorial Institute.  All Rights Reserved.
+'''  Started April 26, 2005
+''' </remarks>
 Public MustInherit Class clsProcessFoldersBaseClass
 
 	Public Sub New()
-		mFileDate = "September 15, 2011"
+		mFileDate = "October 16, 2013"
 		mErrorCode = eProcessFoldersErrorCodes.NoError
 		mProgressStepDescription = String.Empty
 
 		mOutputFolderPath = String.Empty
 		mLogFolderPath = String.Empty
 		mLogFilePath = String.Empty
+
+		mLogDataCache = New Dictionary(Of String, DateTime)
+		mLogDataCacheStartTime = DateTime.UtcNow
 	End Sub
 
 #Region "Constants and Enums"
@@ -63,7 +73,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
 	Protected mLogMessagesToFile As Boolean
 	Protected mLogFileUsesDateStamp As Boolean = True
 	Protected mLogFilePath As String
-	Protected mLogFile As System.IO.StreamWriter
+	Protected mLogFile As StreamWriter
 
 	' This variable is updated when CleanupFilePaths() is called
 	Protected mOutputFolderPath As String
@@ -79,6 +89,14 @@ Public MustInherit Class clsProcessFoldersBaseClass
 
 	Protected mProgressStepDescription As String
 	Protected mProgressPercentComplete As Single		' Ranges from 0 to 100, but can contain decimal percentage values
+
+	''' <summary>
+	''' Keys in this dictionary are the log type and message (separated by an underscore), values are the most recent time the string was logged
+	''' </summary>
+	''' <remarks></remarks>
+	Protected mLogDataCache As Dictionary(Of String, DateTime)
+	Protected mLogDataCacheStartTime As DateTime
+	Protected Const MAX_LOGDATA_CACHE_SIZE As Integer = 10000
 
 #End Region
 
@@ -171,12 +189,12 @@ Public MustInherit Class clsProcessFoldersBaseClass
 		'
 		' Returns True if success, False if failure
 
-		Dim ioFolder As System.IO.DirectoryInfo
+		Dim ioFolder As DirectoryInfo
 		Dim blnSuccess As Boolean
 
 		Try
 			' Make sure strInputFolderPath points to a valid folder
-			ioFolder = New System.IO.DirectoryInfo(strInputFolderPath)
+			ioFolder = New DirectoryInfo(strInputFolderPath)
 
 			If Not ioFolder.Exists() Then
 				If Me.ShowMessages Then
@@ -193,7 +211,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
 				End If
 
 				' Make sure strOutputFolderPath points to a folder
-				ioFolder = New System.IO.DirectoryInfo(strOutputFolderPath)
+				ioFolder = New DirectoryInfo(strOutputFolderPath)
 
 				If Not ioFolder.Exists() Then
 					' strOutputFolderPath points to a non-existent folder; attempt to create it
@@ -218,12 +236,12 @@ Public MustInherit Class clsProcessFoldersBaseClass
 			mLogFile = Nothing
 
 			GarbageCollectNow()
-			System.Threading.Thread.Sleep(100)
+			Thread.Sleep(100)
 		End If
 	End Sub
 
 	Public Shared Sub GarbageCollectNow()
-		Dim intMaxWaitTimeMSec As Integer = 1000
+		Const intMaxWaitTimeMSec As Integer = 1000
 		GarbageCollectNow(intMaxWaitTimeMSec)
 	End Sub
 
@@ -234,15 +252,15 @@ Public MustInherit Class clsProcessFoldersBaseClass
 		If intMaxWaitTimeMSec < 100 Then intMaxWaitTimeMSec = 100
 		If intMaxWaitTimeMSec > 5000 Then intMaxWaitTimeMSec = 5000
 
-		System.Threading.Thread.Sleep(100)
+		Thread.Sleep(100)
 
 		Try
-			Dim gcThread As New Threading.Thread(AddressOf GarbageCollectWaitForGC)
+			Dim gcThread As New Thread(AddressOf GarbageCollectWaitForGC)
 			gcThread.Start()
 
 			intTotalThreadWaitTimeMsec = 0
 			While gcThread.IsAlive AndAlso intTotalThreadWaitTimeMsec < intMaxWaitTimeMSec
-				Threading.Thread.Sleep(THREAD_SLEEP_TIME_MSEC)
+				Thread.Sleep(THREAD_SLEEP_TIME_MSEC)
 				intTotalThreadWaitTimeMsec += THREAD_SLEEP_TIME_MSEC
 			End While
 			If gcThread.IsAlive Then gcThread.Abort()
@@ -263,21 +281,21 @@ Public MustInherit Class clsProcessFoldersBaseClass
 	End Sub
 
 	Protected Function GetAppDataFolderPath(ByVal strAppName As String) As String
-		Dim strAppDataFolder As String = String.Empty
+		Dim strAppDataFolder As String
 
 		If String.IsNullOrEmpty(strAppName) Then
 			strAppName = String.Empty
 		End If
 
 		Try
-			strAppDataFolder = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), strAppName)
-			If Not System.IO.Directory.Exists(strAppDataFolder) Then
-				System.IO.Directory.CreateDirectory(strAppDataFolder)
+			strAppDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), strAppName)
+			If Not Directory.Exists(strAppDataFolder) Then
+				Directory.CreateDirectory(strAppDataFolder)
 			End If
 
 		Catch ex As Exception
 			' Error creating the folder, revert to using the system Temp folder
-			strAppDataFolder = System.IO.Path.GetTempPath()
+			strAppDataFolder = Path.GetTempPath()
 		End Try
 
 		Return strAppDataFolder
@@ -285,7 +303,17 @@ Public MustInherit Class clsProcessFoldersBaseClass
 	End Function
 
 	Protected Function GetAppPath() As String
-		Return System.Reflection.Assembly.GetExecutingAssembly().Location
+		Return Assembly.GetExecutingAssembly().Location
+	End Function
+
+	''' <summary>
+	''' Returns the .NET assembly version followed by the program date
+	''' </summary>
+	''' <param name="strProgramDate"></param>
+	''' <returns></returns>
+	''' <remarks></remarks>
+	Public Shared Function GetAppVersion(ByVal strProgramDate As String) As String
+		Return Assembly.GetExecutingAssembly().GetName().Version.ToString() & " (" & strProgramDate & ")"
 	End Function
 
 	Protected Function GetBaseClassErrorMessage() As String
@@ -324,7 +352,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
 		Dim strVersion As String
 
 		Try
-			strVersion = System.Reflection.Assembly.GetExecutingAssembly.GetName.Version.ToString()
+			strVersion = Assembly.GetExecutingAssembly.GetName.Version.ToString()
 		Catch ex As Exception
 			strVersion = "??.??.??.??"
 		End Try
@@ -335,7 +363,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
 
 	Public MustOverride Function GetErrorMessage() As String
 
-	Protected Sub HandleException(ByVal strBaseMessage As String, ByVal ex As System.Exception)
+	Protected Sub HandleException(ByVal strBaseMessage As String, ByVal ex As Exception)
 		If strBaseMessage Is Nothing OrElse strBaseMessage.Length = 0 Then
 			strBaseMessage = "Error"
 		End If
@@ -345,7 +373,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
 			ShowErrorMessage(strBaseMessage & ": " & ex.Message, True)
 		Else
 			LogMessage(strBaseMessage & ": " & ex.Message, eMessageTypeConstants.ErrorMsg)
-			Throw New System.Exception(strBaseMessage, ex)
+			Throw New Exception(strBaseMessage, ex)
 		End If
 
 	End Sub
@@ -355,21 +383,36 @@ Public MustInherit Class clsProcessFoldersBaseClass
 	End Sub
 
 	Protected Sub LogMessage(ByVal strMessage As String, ByVal eMessageType As eMessageTypeConstants)
+		LogMessage(strMessage, eMessageType, intDuplicateHoldoffHours:=0)
+	End Sub
+
+	Protected Sub LogMessage(ByVal strMessage As String, ByVal eMessageType As eMessageTypeConstants, ByVal intDuplicateHoldoffHours As Integer)
 		' Note that CleanupFolderPaths() will update mOutputFolderPath, which is used here if mLogFolderPath is blank
 		' Thus, be sure to call CleanupFolderPaths (or update mLogFolderPath) before the first call to LogMessage
 
 		Dim strMessageType As String
-		Dim blnOpeningExistingFile As Boolean = False
+		Dim blnOpeningExistingFile As Boolean
+
+		Select Case eMessageType
+			Case eMessageTypeConstants.Normal
+				strMessageType = "Normal"
+			Case eMessageTypeConstants.ErrorMsg
+				strMessageType = "Error"
+			Case eMessageTypeConstants.Warning
+				strMessageType = "Warning"
+			Case Else
+				strMessageType = "Unknown"
+		End Select
 
 		If mLogFile Is Nothing AndAlso mLogMessagesToFile Then
 			Try
 				If mLogFilePath Is Nothing OrElse mLogFilePath.Length = 0 Then
 					' Auto-name the log file
-					mLogFilePath = System.IO.Path.GetFileNameWithoutExtension(System.Reflection.Assembly.GetExecutingAssembly().Location)
+					mLogFilePath = Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().Location)
 					mLogFilePath &= "_log"
 
 					If mLogFileUsesDateStamp Then
-						mLogFilePath &= "_" & System.DateTime.Now.ToString("yyyy-MM-dd") & ".txt"
+						mLogFilePath &= "_" & DateTime.Now.ToString("yyyy-MM-dd") & ".txt"
 					Else
 						mLogFilePath &= ".txt"
 					End If
@@ -388,8 +431,8 @@ Public MustInherit Class clsProcessFoldersBaseClass
 
 					If mLogFolderPath.Length > 0 Then
 						' Create the log folder if it doesn't exist
-						If Not System.IO.Directory.Exists(mLogFolderPath) Then
-							System.IO.Directory.CreateDirectory(mLogFolderPath)
+						If Not Directory.Exists(mLogFolderPath) Then
+							Directory.CreateDirectory(mLogFolderPath)
 						End If
 					End If
 				Catch ex As Exception
@@ -397,18 +440,22 @@ Public MustInherit Class clsProcessFoldersBaseClass
 				End Try
 
 				If mLogFolderPath.Length > 0 Then
-					mLogFilePath = System.IO.Path.Combine(mLogFolderPath, mLogFilePath)
+					mLogFilePath = Path.Combine(mLogFolderPath, mLogFilePath)
 				End If
 
-				blnOpeningExistingFile = System.IO.File.Exists(mLogFilePath)
+				blnOpeningExistingFile = File.Exists(mLogFilePath)
 
-				mLogFile = New System.IO.StreamWriter(New System.IO.FileStream(mLogFilePath, IO.FileMode.Append, IO.FileAccess.Write, IO.FileShare.Read))
+				If (blnOpeningExistingFile And mLogDataCache.Count = 0) Then
+					UpdateLogDataCache(mLogFilePath, DateTime.UtcNow.AddHours(-intDuplicateHoldoffHours))
+				End If
+
+				mLogFile = New StreamWriter(New FileStream(mLogFilePath, FileMode.Append, FileAccess.Write, FileShare.Read))
 				mLogFile.AutoFlush = True
 
 				If Not blnOpeningExistingFile Then
 					mLogFile.WriteLine("Date" & ControlChars.Tab & _
-									   "Type" & ControlChars.Tab & _
-									   "Message")
+					 "Type" & ControlChars.Tab & _
+					 "Message")
 				End If
 
 			Catch ex As Exception
@@ -420,20 +467,45 @@ Public MustInherit Class clsProcessFoldersBaseClass
 		End If
 
 		If Not mLogFile Is Nothing Then
-			Select Case eMessageType
-				Case eMessageTypeConstants.Normal
-					strMessageType = "Normal"
-				Case eMessageTypeConstants.ErrorMsg
-					strMessageType = "Error"
-				Case eMessageTypeConstants.Warning
-					strMessageType = "Warning"
-				Case Else
-					strMessageType = "Unknown"
-			End Select
+			Dim blnWriteToLog As Boolean = True
 
-			mLogFile.WriteLine(System.DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss tt") & ControlChars.Tab & _
-							   strMessageType & ControlChars.Tab & _
-							   strMessage)
+			Dim strLogKey As String = strMessageType & "_" & strMessage
+			Dim dtLastLogTime As DateTime
+			Dim blnMessageCached As Boolean
+
+			If mLogDataCache.TryGetValue(strLogKey, dtLastLogTime) Then
+				blnMessageCached = True
+			Else
+				blnMessageCached = False
+				dtLastLogTime = DateTime.UtcNow.AddHours(-(intDuplicateHoldoffHours + 1))
+			End If
+
+			If intDuplicateHoldoffHours > 0 AndAlso DateTime.UtcNow.Subtract(dtLastLogTime).TotalHours < intDuplicateHoldoffHours Then
+				blnWriteToLog = False
+			End If
+
+			If blnWriteToLog Then
+
+				mLogFile.WriteLine(
+				  DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss tt") & ControlChars.Tab & _
+				  strMessageType & ControlChars.Tab & _
+				  strMessage)
+
+				If blnMessageCached Then
+					mLogDataCache(strLogKey) = DateTime.UtcNow
+				Else
+					Try
+						mLogDataCache.Add(strLogKey, DateTime.UtcNow)
+
+						If mLogDataCache.Count > MAX_LOGDATA_CACHE_SIZE Then
+							TrimLogDataCache()
+						End If
+					Catch ex As Exception
+						' Ignore errors here
+					End Try
+				End If
+			End If
+
 		End If
 
 		RaiseMessageEvent(strMessage, eMessageType)
@@ -462,8 +534,8 @@ Public MustInherit Class clsProcessFoldersBaseClass
 		Dim strInputFolderToUse As String
 		Dim strFolderNameMatchPattern As String
 
-		Dim ioFolderMatch As System.IO.DirectoryInfo
-		Dim ioInputFolderInfo As System.IO.DirectoryInfo
+		Dim ioFolderMatch As DirectoryInfo
+		Dim ioInputFolderInfo As DirectoryInfo
 
 		mAbortProcessing = False
 		blnSuccess = True
@@ -482,20 +554,20 @@ Public MustInherit Class clsProcessFoldersBaseClass
 				strCleanPath = strInputFolderPath.Replace("*", "_")
 				strCleanPath = strCleanPath.Replace("?", "_")
 
-				ioInputFolderInfo = New System.IO.DirectoryInfo(strCleanPath)
+				ioInputFolderInfo = New DirectoryInfo(strCleanPath)
 				If ioInputFolderInfo.Parent.Exists Then
 					strInputFolderToUse = ioInputFolderInfo.Parent.FullName
 				Else
 					' Use the current working directory
-					strInputFolderToUse = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)
+					strInputFolderToUse = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
 				End If
 
 				' Remove any directory information from strInputFolderPath
-				strFolderNameMatchPattern = System.IO.Path.GetFileName(strInputFolderPath)
+				strFolderNameMatchPattern = Path.GetFileName(strInputFolderPath)
 
 				' Process any matching folder in this folder
 				Try
-					ioInputFolderInfo = New System.IO.DirectoryInfo(strInputFolderToUse)
+					ioInputFolderInfo = New DirectoryInfo(strInputFolderToUse)
 				Catch ex As Exception
 					HandleException("Error in ProcessFoldersWildcard", ex)
 					mErrorCode = eProcessFoldersErrorCodes.InvalidInputFolderPath
@@ -573,7 +645,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
 		Dim strInputFolderToUse As String
 		Dim strFolderNameMatchPattern As String
 
-		Dim ioFolderInfo As System.IO.DirectoryInfo
+		Dim ioFolderInfo As DirectoryInfo
 
 		Dim blnSuccess As Boolean
 		Dim intFolderProcessCount, intFolderProcessFailCount As Integer
@@ -585,24 +657,24 @@ Public MustInherit Class clsProcessFoldersBaseClass
 				strCleanPath = strInputFolderPath.Replace("*", "_")
 				strCleanPath = strCleanPath.Replace("?", "_")
 
-				ioFolderInfo = New System.IO.DirectoryInfo(strCleanPath)
+				ioFolderInfo = New DirectoryInfo(strCleanPath)
 				If ioFolderInfo.Parent.Exists Then
 					strInputFolderToUse = ioFolderInfo.Parent.FullName
 				Else
 					' Use the current working directory
-					strInputFolderToUse = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)
+					strInputFolderToUse = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
 				End If
 
 				' Remove any directory information from strInputFolderPath
-				strFolderNameMatchPattern = System.IO.Path.GetFileName(strInputFolderPath)
+				strFolderNameMatchPattern = Path.GetFileName(strInputFolderPath)
 
 			Else
-				ioFolderInfo = New System.IO.DirectoryInfo(strInputFolderPath)
+				ioFolderInfo = New DirectoryInfo(strInputFolderPath)
 				If ioFolderInfo.Exists Then
 					strInputFolderToUse = ioFolderInfo.FullName
 				Else
 					' Use the current working directory
-					strInputFolderToUse = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)
+					strInputFolderToUse = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
 				End If
 				strFolderNameMatchPattern = "*"
 			End If
@@ -612,11 +684,11 @@ Public MustInherit Class clsProcessFoldersBaseClass
 				' Validate the output folder path
 				If Not strOutputFolderAlternatePath Is Nothing AndAlso strOutputFolderAlternatePath.Length > 0 Then
 					Try
-						ioFolderInfo = New System.IO.DirectoryInfo(strOutputFolderAlternatePath)
+						ioFolderInfo = New DirectoryInfo(strOutputFolderAlternatePath)
 						If Not ioFolderInfo.Exists Then ioFolderInfo.Create()
 					Catch ex As Exception
 						HandleException("Error in ProcessAndRecurseFolders", ex)
-						mErrorCode = clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.InvalidOutputFolderPath
+						mErrorCode = eProcessFoldersErrorCodes.InvalidOutputFolderPath
 						Return False
 					End Try
 				End If
@@ -630,7 +702,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
 				blnSuccess = RecurseFoldersWork(strInputFolderToUse, strFolderNameMatchPattern, strParameterFilePath, strOutputFolderAlternatePath, intFolderProcessCount, intFolderProcessFailCount, 1, intRecurseFoldersMaxLevels)
 
 			Else
-				mErrorCode = clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.InvalidInputFolderPath
+				mErrorCode = eProcessFoldersErrorCodes.InvalidInputFolderPath
 				Return False
 			End If
 
@@ -645,13 +717,13 @@ Public MustInherit Class clsProcessFoldersBaseClass
 
 	Private Sub RaiseMessageEvent(ByVal strMessage As String, ByVal eMessageType As eMessageTypeConstants)
 		Static strLastMessage As String = String.Empty
-		Static dtLastReportTime As System.DateTime
+		Static dtLastReportTime As DateTime
 
 		If Not String.IsNullOrEmpty(strMessage) Then
-			If strMessage = strLastMessage AndAlso System.DateTime.UtcNow.Subtract(dtLastReportTime).TotalSeconds < 0.5 Then
+			If strMessage = strLastMessage AndAlso DateTime.UtcNow.Subtract(dtLastReportTime).TotalSeconds < 0.5 Then
 				' Duplicate message; do not raise any events
 			Else
-				dtLastReportTime = System.DateTime.UtcNow
+				dtLastReportTime = DateTime.UtcNow
 				strLastMessage = String.Copy(strMessage)
 
 				Select Case eMessageType
@@ -675,15 +747,15 @@ Public MustInherit Class clsProcessFoldersBaseClass
 	Private Function RecurseFoldersWork(ByVal strInputFolderPath As String, ByVal strFolderNameMatchPattern As String, ByVal strParameterFilePath As String, ByVal strOutputFolderAlternatePath As String, ByRef intFolderProcessCount As Integer, ByRef intFolderProcessFailCount As Integer, ByVal intRecursionLevel As Integer, ByVal intRecurseFoldersMaxLevels As Integer) As Boolean
 		' If intRecurseFoldersMaxLevels is <=0 then we recurse infinitely
 
-		Dim ioInputFolderInfo As System.IO.DirectoryInfo
-		Dim ioSubFolderInfo As System.IO.DirectoryInfo
-		Dim ioFolderMatch As System.io.DirectoryInfo
+		Dim ioInputFolderInfo As DirectoryInfo
+		Dim ioSubFolderInfo As DirectoryInfo
+		Dim ioFolderMatch As DirectoryInfo
 
 		Dim strOutputFolderPathToUse As String
 		Dim blnSuccess As Boolean
 
 		Try
-			ioInputFolderInfo = New System.IO.DirectoryInfo(strInputFolderPath)
+			ioInputFolderInfo = New DirectoryInfo(strInputFolderPath)
 		Catch ex As Exception
 			' Input folder path error
 			HandleException("Error in RecurseFoldersWork", ex)
@@ -693,7 +765,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
 
 		Try
 			If Not strOutputFolderAlternatePath Is Nothing AndAlso strOutputFolderAlternatePath.Length > 0 Then
-				strOutputFolderAlternatePath = System.IO.Path.Combine(strOutputFolderAlternatePath, ioInputFolderInfo.Name)
+				strOutputFolderAlternatePath = Path.Combine(strOutputFolderAlternatePath, ioInputFolderInfo.Name)
 				strOutputFolderPathToUse = String.Copy(strOutputFolderAlternatePath)
 			Else
 				strOutputFolderPathToUse = String.Empty
@@ -725,7 +797,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
 				If mAbortProcessing Then Exit For
 
 				If strOutputFolderPathToUse.Length > 0 Then
-					blnSuccess = ProcessFolder(ioFolderMatch.FullName, System.IO.Path.Combine(strOutputFolderPathToUse, ioFolderMatch.Name), strParameterFilePath, True)
+					blnSuccess = ProcessFolder(ioFolderMatch.FullName, Path.Combine(strOutputFolderPathToUse, ioFolderMatch.Name), strParameterFilePath, True)
 				Else
 					blnSuccess = ProcessFolder(ioFolderMatch.FullName, String.Empty, strParameterFilePath, True)
 				End If
@@ -775,11 +847,19 @@ Public MustInherit Class clsProcessFoldersBaseClass
 	End Sub
 
 	Protected Sub ShowErrorMessage(ByVal strMessage As String)
-		ShowErrorMessage(strMessage, True)
+		ShowErrorMessage(strMessage, blnAllowLogToFile:=True)
 	End Sub
 
 	Protected Sub ShowErrorMessage(ByVal strMessage As String, ByVal blnAllowLogToFile As Boolean)
-		Dim strSeparator As String = "------------------------------------------------------------------------------"
+		ShowErrorMessage(strMessage, blnAllowLogToFile, intDuplicateHoldoffHours:=0)
+	End Sub
+
+	Protected Sub ShowErrorMessage(ByVal strMessage As String, ByVal intDuplicateHoldoffHours As Integer)
+		ShowErrorMessage(strMessage, blnAllowLogToFile:=True, intDuplicateHoldoffHours:=intDuplicateHoldoffHours)
+	End Sub
+
+	Protected Sub ShowErrorMessage(ByVal strMessage As String, ByVal blnAllowLogToFile As Boolean, ByVal intDuplicateHoldoffHours As Integer)
+		Const strSeparator As String = "------------------------------------------------------------------------------"
 
 		Console.WriteLine()
 		Console.WriteLine(strSeparator)
@@ -788,7 +868,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
 		Console.WriteLine()
 
 		If blnAllowLogToFile Then
-			LogMessage(strMessage, eMessageTypeConstants.ErrorMsg)
+			LogMessage(strMessage, eMessageTypeConstants.ErrorMsg, intDuplicateHoldoffHours)
 		Else
 			RaiseMessageEvent(strMessage, eMessageTypeConstants.ErrorMsg)
 		End If
@@ -796,14 +876,22 @@ Public MustInherit Class clsProcessFoldersBaseClass
 	End Sub
 
 	Protected Sub ShowMessage(ByVal strMessage As String)
-		ShowMessage(strMessage, True, False)
+		ShowMessage(strMessage, blnAllowLogToFile:=True, blnPrecedeWithNewline:=False, intDuplicateHoldoffHours:=0)
+	End Sub
+
+	Protected Sub ShowMessage(ByVal strMessage As String, ByVal intDuplicateHoldoffHours As Integer)
+		ShowMessage(strMessage, blnAllowLogToFile:=True, blnPrecedeWithNewline:=False, intDuplicateHoldoffHours:=intDuplicateHoldoffHours)
 	End Sub
 
 	Protected Sub ShowMessage(ByVal strMessage As String, ByVal blnAllowLogToFile As Boolean)
-		ShowMessage(strMessage, blnAllowLogToFile, False)
+		ShowMessage(strMessage, blnAllowLogToFile, blnPrecedeWithNewline:=False, intDuplicateHoldoffHours:=0)
 	End Sub
 
 	Protected Sub ShowMessage(ByVal strMessage As String, ByVal blnAllowLogToFile As Boolean, ByVal blnPrecedeWithNewline As Boolean)
+		ShowMessage(strMessage, blnAllowLogToFile, blnPrecedeWithNewline, intDuplicateHoldoffHours:=0)
+	End Sub
+
+	Protected Sub ShowMessage(ByVal strMessage As String, ByVal blnAllowLogToFile As Boolean, ByVal blnPrecedeWithNewline As Boolean, ByVal intDuplicateHoldoffHours As Integer)
 
 		If blnPrecedeWithNewline Then
 			Console.WriteLine()
@@ -811,10 +899,93 @@ Public MustInherit Class clsProcessFoldersBaseClass
 		Console.WriteLine(strMessage)
 
 		If blnAllowLogToFile Then
-			LogMessage(strMessage, eMessageTypeConstants.Normal)
+			LogMessage(strMessage, eMessageTypeConstants.Normal, intDuplicateHoldoffHours)
 		Else
 			RaiseMessageEvent(strMessage, eMessageTypeConstants.Normal)
 		End If
+
+	End Sub
+
+	Private Sub TrimLogDataCache()
+
+		If mLogDataCache.Count < MAX_LOGDATA_CACHE_SIZE Then Exit Sub
+
+		Try
+			' Remove entries from mLogDataCache so that the list count is 80% of MAX_LOGDATA_CACHE_SIZE
+
+			' First construct a list of dates that we can sort to determine the datetime threshold for removal
+			Dim lstDates As List(Of Date) = (From entry In mLogDataCache Select entry.Value).ToList()
+
+			' Sort by date
+			lstDates.Sort()
+
+			Dim intThresholdIndex As Integer = CInt(Math.Floor(mLogDataCache.Count - MAX_LOGDATA_CACHE_SIZE * 0.8))
+			If intThresholdIndex < 0 Then intThresholdIndex = 0
+
+			Dim dtThreshold = lstDates(intThresholdIndex)
+
+			' Construct a list of keys to be removed
+			Dim lstKeys As List(Of String) = (From entry In mLogDataCache Where entry.Value <= dtThreshold Select entry.Key).ToList()
+
+			' Remove each of the keys
+			For Each strKey In lstKeys
+				mLogDataCache.Remove(strKey)
+			Next
+
+		Catch ex As Exception
+			' Ignore errors here
+		End Try
+	End Sub
+
+
+	Private Sub UpdateLogDataCache(ByVal strLogFilePath As String, ByVal dtDateThresholdToStore As DateTime)
+		Static dtLastErrorShown As DateTime = DateTime.UtcNow.AddSeconds(-60)
+
+		Dim reParseLine As Regex = New Regex("^([^\t]+)\t([^\t]+)\t(.+)", RegexOptions.Compiled)
+
+		Try
+			mLogDataCache.Clear()
+			mLogDataCacheStartTime = dtDateThresholdToStore
+
+			Using srLogFile = New StreamReader(New FileStream(strLogFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+				While srLogFile.Peek > -1
+					Dim strLineIn = srLogFile.ReadLine()
+					Dim reMatch = reParseLine.Match(strLineIn)
+
+					If reMatch.Success Then
+						Dim dtLogTime As DateTime
+						If DateTime.TryParse(reMatch.Groups(1).Value, dtLogTime) Then
+							dtLogTime = dtLogTime.ToUniversalTime()
+							If dtLogTime >= dtDateThresholdToStore Then
+								Dim strKey As String = reMatch.Groups(2).Value & "_" & reMatch.Groups(3).Value
+
+								Try
+									If mLogDataCache.ContainsKey(strKey) Then
+										mLogDataCache(strKey) = dtLogTime
+									Else
+										mLogDataCache.Add(strKey, dtLogTime)
+									End If
+								Catch ex As Exception
+									' Ignore errors here
+								End Try
+
+							End If
+						End If
+					End If
+				End While
+			End Using
+
+			If mLogDataCache.Count > MAX_LOGDATA_CACHE_SIZE Then
+				TrimLogDataCache()
+			End If
+
+		Catch ex As Exception
+			If DateTime.UtcNow.Subtract(dtLastErrorShown).TotalSeconds > 10 Then
+				dtLastErrorShown = DateTime.UtcNow
+				Console.WriteLine("Error caching the log file: " & ex.Message)
+			End If
+
+		End Try
 
 	End Sub
 
@@ -827,11 +998,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
 	End Sub
 
 	Protected Sub UpdateProgress(ByVal strProgressStepDescription As String, ByVal sngPercentComplete As Single)
-		Dim blnDescriptionChanged As Boolean = False
-
-		If strProgressStepDescription <> mProgressStepDescription Then
-			blnDescriptionChanged = True
-		End If
+		Dim blnDescriptionChanged = strProgressStepDescription <> mProgressStepDescription
 
 		mProgressStepDescription = String.Copy(strProgressStepDescription)
 		If sngPercentComplete < 0 Then
@@ -842,7 +1009,7 @@ Public MustInherit Class clsProcessFoldersBaseClass
 		mProgressPercentComplete = sngPercentComplete
 
 		If blnDescriptionChanged Then
-			If mProgressPercentComplete = 0 Then
+			If mProgressPercentComplete < Single.Epsilon Then
 				LogMessage(mProgressStepDescription.Replace(Environment.NewLine, "; "))
 			Else
 				LogMessage(mProgressStepDescription & " (" & mProgressPercentComplete.ToString("0.0") & "% complete)".Replace(Environment.NewLine, "; "))

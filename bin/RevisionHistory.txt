@@ -1,5 +1,8 @@
 DMS Update Manager Change Log
 
+Version 1.1.5037; October 16, 2013
+	- Now making sure that duplicate warning messages for skipped files appear a minimum of 24 hours apart
+
 Version 1.1.4521; May 18, 2012
 	- Updated to .NET 4
 

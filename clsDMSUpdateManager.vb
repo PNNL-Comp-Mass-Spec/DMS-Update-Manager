@@ -1,22 +1,21 @@
 ﻿Option Strict On
 
-' This program copies new and updated files from a source folder (master file folder) 
-' to a target folder
-'
-' -------------------------------------------------------------------------------
-' Written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA)
-' Program started January 16, 2009
-'
-' E-mail: matthew.monroe@pnnl.gov or matt@alchemistmatt.com
-' Website: http://ncrr.pnnl.gov/ or http://www.sysbio.org/resources/staff/
-' -------------------------------------------------------------------------------
-' 
-
+''' <summary>
+'''  This program copies new and updated files from a source folder (master file folder) 
+''' to a target folder
+''' </summary>
+''' <remarks>
+''' Written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA)
+''' Program started January 16, 2009
+''' --
+''' E-mail: matthew.monroe@pnnl.gov or matt@alchemistmatt.com
+''' Website: http://ncrr.pnnl.gov/ or http://www.sysbio.org/resources/staff/
+''' </remarks>
 Public Class clsDMSUpdateManager
 	Inherits clsProcessFoldersBaseClass
 
 	Public Sub New()
-        MyBase.mFileDate = "August 10, 2011"
+		mFileDate = "October 16, 2013"
 		InitializeLocalVariables()
 	End Sub
 
@@ -181,111 +180,111 @@ Public Class clsDMSUpdateManager
             blnMatchFound = CheckForRebootOrShutdownFileWork(strSourceFolder, "_RebootNow.txt", MentalisUtils.RestartOptions.Reboot, blnPreview)
 
             If Not blnMatchFound Then
-                blnMatchFound = CheckForRebootOrShutdownFileWork(strSourceFolder, "_ShutdownNow.txt", MentalisUtils.RestartOptions.ShutDown, blnPreview)
+				CheckForRebootOrShutdownFileWork(strSourceFolder, "_ShutdownNow.txt", MentalisUtils.RestartOptions.ShutDown, blnPreview)
             End If
         End If
 
     End Sub
 
-    Protected Function CheckForRebootOrShutdownFileWork(ByVal strSourceFolder As String, _
-                                                        ByVal strTargetFileSuffix As String, _
-                                                        ByVal eAction As MentalisUtils.RestartOptions, _
-                                                        ByVal blnPreview As Boolean) As Boolean
+	Protected Function CheckForRebootOrShutdownFileWork(ByVal strSourceFolder As String, _
+														ByVal strTargetFileSuffix As String, _
+														ByVal eAction As MentalisUtils.RestartOptions, _
+														ByVal blnPreview As Boolean) As Boolean
 
-        Dim ioFileInfo As System.IO.FileInfo
-        Dim strFilePathToFind As String
-        Dim strNewPath As String
-        Dim strComputer As String
+		Dim ioFileInfo As IO.FileInfo
+		Dim strFilePathToFind As String
+		Dim strNewPath As String
+		Dim strComputer As String
 
-        Dim blnMatchFound As Boolean = False
+		Try
+			strComputer = Environment.MachineName.ToString()
+			strFilePathToFind = IO.Path.Combine(strSourceFolder, strComputer & strTargetFileSuffix)
 
-        Try
-            strComputer = System.Environment.MachineName.ToString()
-            strFilePathToFind = System.IO.Path.Combine(strSourceFolder, strComputer & strTargetFileSuffix)
+			Console.WriteLine("Looking for " & strFilePathToFind)
+			ioFileInfo = New IO.FileInfo(strFilePathToFind)
 
-            Console.WriteLine("Looking for " & strFilePathToFind)
-            ioFileInfo = New System.IO.FileInfo(strFilePathToFind)
+			If ioFileInfo.Exists Then
+				Console.WriteLine("Found file: " & strFilePathToFind)
 
-            If ioFileInfo.Exists Then
-                Console.WriteLine("Found file: " & strFilePathToFind)
+				If Not blnPreview Then
+					strNewPath = strFilePathToFind & ".done"
 
-                If Not blnPreview Then
-                    strNewPath = strFilePathToFind & ".done"
+					Try
+						If IO.File.Exists(strNewPath) Then
+							IO.File.Delete(strNewPath)
+							Threading.Thread.Sleep(500)
+						End If
+					Catch ex As Exception
+						Console.WriteLine("Error deleting file " & strNewPath & ": " & ex.Message)
+					End Try
 
-                    Try
-                        If System.IO.File.Exists(strNewPath) Then
-                            System.IO.File.Delete(strNewPath)
-                            System.Threading.Thread.Sleep(500)
-                        End If
-                    Catch ex As Exception
-                        Console.WriteLine("Error deleting file " & strNewPath & ": " & ex.Message)
-                    End Try
+					Try
+						ioFileInfo.MoveTo(strNewPath)
+						Threading.Thread.Sleep(500)
+					Catch ex As Exception
+						Console.WriteLine("Error renaming " & IO.Path.GetFileName(strFilePathToFind) & " to " & IO.Path.GetFileName(strNewPath) & ": " & ex.Message)
+					End Try
 
-                    Try
-                        ioFileInfo.MoveTo(strNewPath)
-                        System.Threading.Thread.Sleep(500)
-                    Catch ex As Exception
-                        Console.WriteLine("Error renaming " & System.IO.Path.GetFileName(strFilePathToFind) & " to " & System.IO.Path.GetFileName(strNewPath) & ": " & ex.Message)
-                    End Try
+				End If
 
-                End If
+				If blnPreview Then
+					Console.WriteLine("Preview: Call LogoffOrRebootMachine with command " & eAction.ToString)
+				Else
+					LogoffOrRebootMachine(eAction, True)
+				End If
 
-                If blnPreview Then
-                    Console.WriteLine("Preview: Call LogoffOrRebootMachine with command " & eAction.ToString)
-                Else
-                    LogoffOrRebootMachine(eAction, True)
-                End If
+			End If
 
-            End If
+		Catch ex As Exception
+			Console.WriteLine("Error in CheckForRebootOrShutdownFileWork: " & ex.Message)
 
-        Catch ex As Exception
-            Console.WriteLine("Error in CheckForRebootOrShutdownFileWork: " & ex.Message)
+		End Try
 
-        End Try
+		Return False
 
-    End Function
+	End Function
 
-    Protected Sub CopyFile(ByRef objSourceFile As System.IO.FileInfo, ByRef objTargetFile As System.IO.FileInfo, ByRef intFileUpdateCount As Integer, ByVal strCopyReason As String)
+	Protected Sub CopyFile(ByRef objSourceFile As IO.FileInfo, ByRef objTargetFile As IO.FileInfo, ByRef intFileUpdateCount As Integer, ByVal strCopyReason As String)
 
-        Dim objCopiedFile As System.IO.FileInfo
+		Dim objCopiedFile As IO.FileInfo
 
-        If mPreviewMode Then
-            ShowMessage("Preview: Update file: " & objSourceFile.Name & "; " & strCopyReason, False)
-        Else
-            ShowMessage("Update file: " & objSourceFile.Name & "; " & strCopyReason)
+		If mPreviewMode Then
+			ShowMessage("Preview: Update file: " & objSourceFile.Name & "; " & strCopyReason, False)
+		Else
+			ShowMessage("Update file: " & objSourceFile.Name & "; " & strCopyReason)
 
-            Try
-                objCopiedFile = objSourceFile.CopyTo(objTargetFile.FullName, True)
+			Try
+				objCopiedFile = objSourceFile.CopyTo(objTargetFile.FullName, True)
 
-                If objCopiedFile.Length <> objSourceFile.Length Then
-                    ShowErrorMessage("Copy of " & objSourceFile.Name & " failed; sizes differ", True)
-                ElseIf objCopiedFile.LastWriteTimeUtc <> objSourceFile.LastWriteTimeUtc Then
-                    ShowErrorMessage("Copy of " & objSourceFile.Name & " failed; modification times differ", True)
-                Else
-                    intFileUpdateCount += 1
-                End If
+				If objCopiedFile.Length <> objSourceFile.Length Then
+					ShowErrorMessage("Copy of " & objSourceFile.Name & " failed; sizes differ", True)
+				ElseIf objCopiedFile.LastWriteTimeUtc <> objSourceFile.LastWriteTimeUtc Then
+					ShowErrorMessage("Copy of " & objSourceFile.Name & " failed; modification times differ", True)
+				Else
+					intFileUpdateCount += 1
+				End If
 
-            Catch ex As Exception
-                ShowErrorMessage("Error copying " & objSourceFile.Name & ": " & ex.Message, True)
-            End Try
+			Catch ex As Exception
+				ShowErrorMessage("Error copying " & objSourceFile.Name & ": " & ex.Message, True)
+			End Try
 
-        End If
+		End If
 
-    End Sub
+	End Sub
 
 
-	Protected Function CopyFileIfNeeded(ByRef objSourceFile As System.IO.FileInfo, ByVal strTargetFolderPath As String, _
-										ByRef intFileUpdateCount As Integer, ByVal eDateComparisonMode As eDateComparisonModeConstants, _
-										ByVal blnProcessingSubFolder As Boolean) As Boolean
+	Protected Function CopyFileIfNeeded(ByRef objSourceFile As IO.FileInfo, ByVal strTargetFolderPath As String, _
+			 ByRef intFileUpdateCount As Integer, ByVal eDateComparisonMode As eDateComparisonModeConstants, _
+			 ByVal blnProcessingSubFolder As Boolean) As Boolean
 
 		Dim blnNeedToCopy As Boolean
 		Dim strCopyReason As String
 
 		Dim strTargetFilePath As String
-		Dim objTargetFile As System.IO.FileInfo
+		Dim objTargetFile As IO.FileInfo
 
-		strTargetFilePath = System.IO.Path.Combine(strTargetFolderPath, objSourceFile.Name)
-		objTargetFile = New System.IO.FileInfo(strTargetFilePath)
+		strTargetFilePath = IO.Path.Combine(strTargetFolderPath, objSourceFile.Name)
+		objTargetFile = New IO.FileInfo(strTargetFilePath)
 
 		strCopyReason = String.Empty
 		blnNeedToCopy = False
@@ -326,7 +325,7 @@ Public Class clsDMSUpdateManager
 						End If
 						strWarning &= " since a newer version exists in the target; source=" & objSourceFile.LastWriteTimeUtc.ToLocalTime() & ", target=" & objTargetFile.LastWriteTimeUtc.ToLocalTime()
 
-						ShowMessage(strWarning)
+						ShowMessage(strWarning, intDuplicateHoldoffHours:=24)
 						blnNeedToCopy = False
 					End If
 				End If
@@ -344,257 +343,255 @@ Public Class clsDMSUpdateManager
 
 	End Function
 
-    Private Sub InitializeLocalVariables()
-        MyBase.ShowMessages = False
-        MyBase.mLogFileUsesDateStamp = False
+	Private Sub InitializeLocalVariables()
+		MyBase.ShowMessages = False
+		MyBase.mLogFileUsesDateStamp = False
 
-        mPreviewMode = False
-        mOverwriteNewerFiles = False
-        mCopySubdirectoriesToParentFolder = False
+		mPreviewMode = False
+		mOverwriteNewerFiles = False
+		mCopySubdirectoriesToParentFolder = False
 
-        mSourceFolderPath = String.Empty
-        mTargetFolderPath = String.Empty
-        mRebootCommandFolderPath = String.Empty
+		mSourceFolderPath = String.Empty
+		mTargetFolderPath = String.Empty
+		mRebootCommandFolderPath = String.Empty
 
-        mFilesToIgnoreCount = 0
-        ReDim mFilesToIgnore(9)
+		mFilesToIgnoreCount = 0
+		ReDim mFilesToIgnore(9)
 
-        mLocalErrorCode = eDMSUpdateManagerErrorCodes.NoError
+		mLocalErrorCode = eDMSUpdateManagerErrorCodes.NoError
 
-    End Sub
+	End Sub
 
-    Public Overrides Function GetErrorMessage() As String
-        ' Returns "" if no error
+	Public Overrides Function GetErrorMessage() As String
+		' Returns "" if no error
 
-        Dim strErrorMessage As String
+		Dim strErrorMessage As String
 
-        If MyBase.ErrorCode = clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.LocalizedError Or _
-           MyBase.ErrorCode = clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.NoError Then
-            Select Case mLocalErrorCode
-                Case eDMSUpdateManagerErrorCodes.NoError
-                    strErrorMessage = ""
-                Case eDMSUpdateManagerErrorCodes.UnspecifiedError
-                    strErrorMessage = "Unspecified localized error"
-                Case Else
-                    ' This shouldn't happen
-                    strErrorMessage = "Unknown error state"
-            End Select
-        Else
-            strErrorMessage = MyBase.GetBaseClassErrorMessage()
-        End If
+		If MyBase.ErrorCode = eProcessFoldersErrorCodes.LocalizedError Or _
+		   MyBase.ErrorCode = eProcessFoldersErrorCodes.NoError Then
+			Select Case mLocalErrorCode
+				Case eDMSUpdateManagerErrorCodes.NoError
+					strErrorMessage = ""
+				Case eDMSUpdateManagerErrorCodes.UnspecifiedError
+					strErrorMessage = "Unspecified localized error"
+				Case Else
+					' This shouldn't happen
+					strErrorMessage = "Unknown error state"
+			End Select
+		Else
+			strErrorMessage = MyBase.GetBaseClassErrorMessage()
+		End If
 
-        Return strErrorMessage
-    End Function
+		Return strErrorMessage
+	End Function
 
-    Private Function LoadParameterFileSettings(ByVal strParameterFilePath As String) As Boolean
+	Private Function LoadParameterFileSettings(ByVal strParameterFilePath As String) As Boolean
 
-        Const OPTIONS_SECTION As String = "DMSUpdateManager"
+		Const OPTIONS_SECTION As String = "DMSUpdateManager"
 
-        Dim objSettingsFile As New XmlSettingsFileAccessor
+		Dim objSettingsFile As New XmlSettingsFileAccessor
 
-        Dim strFilesToIgnore As String
-        Dim strIgnoreList() As String
+		Dim strFilesToIgnore As String
+		Dim strIgnoreList() As String
 
-        Try
+		Try
 
-            If strParameterFilePath Is Nothing OrElse strParameterFilePath.Length = 0 Then
-                ' No parameter file specified; nothing to load
-                Return True
-            End If
+			If strParameterFilePath Is Nothing OrElse strParameterFilePath.Length = 0 Then
+				' No parameter file specified; nothing to load
+				Return True
+			End If
 
-            If Not System.IO.File.Exists(strParameterFilePath) Then
-                ' See if strParameterFilePath points to a file in the same directory as the application
-                strParameterFilePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), System.IO.Path.GetFileName(strParameterFilePath))
-                If Not System.IO.File.Exists(strParameterFilePath) Then
-                    MyBase.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.ParameterFileNotFound)
-                    Return False
-                End If
-            End If
+			If Not IO.File.Exists(strParameterFilePath) Then
+				' See if strParameterFilePath points to a file in the same directory as the application
+				strParameterFilePath = IO.Path.Combine(IO.Path.GetDirectoryName(Reflection.Assembly.GetExecutingAssembly().Location), IO.Path.GetFileName(strParameterFilePath))
+				If Not IO.File.Exists(strParameterFilePath) Then
+					MyBase.SetBaseClassErrorCode(eProcessFoldersErrorCodes.ParameterFileNotFound)
+					Return False
+				End If
+			End If
 
-            If objSettingsFile.LoadSettings(strParameterFilePath) Then
-                If Not objSettingsFile.SectionPresent(OPTIONS_SECTION) Then
-                    ShowErrorMessage("The node '<section name=""" & OPTIONS_SECTION & """> was not found in the parameter file: " & strParameterFilePath)
-                    MyBase.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.InvalidParameterFile)
-                    Return False
-                Else
-                    If objSettingsFile.GetParam(OPTIONS_SECTION, "LogMessages", False) Then
-                        MyBase.LogMessagesToFile = True
-                    End If
+			If objSettingsFile.LoadSettings(strParameterFilePath) Then
+				If Not objSettingsFile.SectionPresent(OPTIONS_SECTION) Then
+					ShowErrorMessage("The node '<section name=""" & OPTIONS_SECTION & """> was not found in the parameter file: " & strParameterFilePath)
+					MyBase.SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidParameterFile)
+					Return False
+				Else
+					If objSettingsFile.GetParam(OPTIONS_SECTION, "LogMessages", False) Then
+						MyBase.LogMessagesToFile = True
+					End If
 
-                    mOverwriteNewerFiles = objSettingsFile.GetParam(OPTIONS_SECTION, "OverwriteNewerFiles", mOverwriteNewerFiles)
-                    mCopySubdirectoriesToParentFolder = objSettingsFile.GetParam(OPTIONS_SECTION, "CopySubdirectoriesToParentFolder", mCopySubdirectoriesToParentFolder)
+					mOverwriteNewerFiles = objSettingsFile.GetParam(OPTIONS_SECTION, "OverwriteNewerFiles", mOverwriteNewerFiles)
+					mCopySubdirectoriesToParentFolder = objSettingsFile.GetParam(OPTIONS_SECTION, "CopySubdirectoriesToParentFolder", mCopySubdirectoriesToParentFolder)
 
-                    mSourceFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "SourceFolderPath", mSourceFolderPath)
-                    mTargetFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "TargetFolderPath", mTargetFolderPath)
-                    mRebootCommandFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "RebootCommandFolderPath", mRebootCommandFolderPath)
+					mSourceFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "SourceFolderPath", mSourceFolderPath)
+					mTargetFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "TargetFolderPath", mTargetFolderPath)
+					mRebootCommandFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "RebootCommandFolderPath", mRebootCommandFolderPath)
 
-                    strFilesToIgnore = objSettingsFile.GetParam(OPTIONS_SECTION, "FilesToIgnore", String.Empty)
-                    Try
-                        If strFilesToIgnore.Length > 0 Then
-                            strIgnoreList = strFilesToIgnore.Split(","c)
+					strFilesToIgnore = objSettingsFile.GetParam(OPTIONS_SECTION, "FilesToIgnore", String.Empty)
+					Try
+						If strFilesToIgnore.Length > 0 Then
+							strIgnoreList = strFilesToIgnore.Split(","c)
 
-                            For Each strFile As String In strIgnoreList
-                                AddFileToIgnore(strFile.Trim)
-                            Next
-                        End If
-                    Catch ex As Exception
-                        ' Ignore errors here
-                    End Try
-                End If
-            End If
+							For Each strFile As String In strIgnoreList
+								AddFileToIgnore(strFile.Trim)
+							Next
+						End If
+					Catch ex As Exception
+						' Ignore errors here
+					End Try
+				End If
+			End If
 
-        Catch ex As Exception
-            HandleException("Error in LoadParameterFileSettings", ex)
-            Return False
-        End Try
+		Catch ex As Exception
+			HandleException("Error in LoadParameterFileSettings", ex)
+			Return False
+		End Try
 
-        Return True
+		Return True
 
-    End Function
+	End Function
 
-    Public Overloads Overrides Function ProcessFolder(ByVal strInputFolderPath As String, ByVal strOutputFolderAlternatePath As String, ByVal strParameterFilePath As String, ByVal blnResetErrorCode As Boolean) As Boolean
-        ' Returns True if success, False if failure
-        ' Note: strOutputFolderAlternatePath is ignored in this function
+	Public Overloads Overrides Function ProcessFolder(ByVal strInputFolderPath As String, ByVal strOutputFolderAlternatePath As String, ByVal strParameterFilePath As String, ByVal blnResetErrorCode As Boolean) As Boolean
+		' Returns True if success, False if failure
+		' Note: strOutputFolderAlternatePath is ignored in this function
 
-        Return UpdateFolder(strInputFolderPath, strParameterFilePath)
-    End Function
+		Return UpdateFolder(strInputFolderPath, strParameterFilePath)
+	End Function
 
-    Public Function UpdateFolder(ByVal strTargetFolderPath As String, ByVal strParameterFilePath As String) As Boolean
-        ' Returns True if success, False if failure
+	Public Function UpdateFolder(ByVal strTargetFolderPath As String, ByVal strParameterFilePath As String) As Boolean
+		' Returns True if success, False if failure
 
-        Dim blnSuccess As Boolean
-        Dim objSourceFolder As System.IO.DirectoryInfo
-        Dim objTargetFolder As System.IO.DirectoryInfo
-        Dim objSourceSubFolder As System.IO.DirectoryInfo
+		Dim blnSuccess As Boolean
+		Dim objSourceFolder As IO.DirectoryInfo
+		Dim objTargetFolder As IO.DirectoryInfo
+		Dim objSourceSubFolder As IO.DirectoryInfo
 
-        Dim strTargetSubFolderPath As String
+		Dim strTargetSubFolderPath As String
 
-        SetLocalErrorCode(eDMSUpdateManagerErrorCodes.NoError)
+		SetLocalErrorCode(eDMSUpdateManagerErrorCodes.NoError)
 
-        If Not strTargetFolderPath Is Nothing AndAlso strTargetFolderPath.Length > 0 Then
-            ' Update mTargetFolderPath using strTargetFolderPath
-            ' Note: If TargetFolder is defined in the parameter file, then this value will get overridden
-            mTargetFolderPath = String.Copy(strTargetFolderPath)
-        End If
+		If Not strTargetFolderPath Is Nothing AndAlso strTargetFolderPath.Length > 0 Then
+			' Update mTargetFolderPath using strTargetFolderPath
+			' Note: If TargetFolder is defined in the parameter file, then this value will get overridden
+			mTargetFolderPath = String.Copy(strTargetFolderPath)
+		End If
 
-        If Not LoadParameterFileSettings(strParameterFilePath) Then
-            ShowErrorMessage("Parameter file load error: " & strParameterFilePath)
+		If Not LoadParameterFileSettings(strParameterFilePath) Then
+			ShowErrorMessage("Parameter file load error: " & strParameterFilePath)
 
-            If MyBase.ErrorCode = clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.NoError Then
-                MyBase.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.InvalidParameterFile)
-            End If
-            Return False
-        End If
+			If MyBase.ErrorCode = eProcessFoldersErrorCodes.NoError Then
+				MyBase.SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidParameterFile)
+			End If
+			Return False
+		End If
 
-        Try
-            strTargetFolderPath = String.Copy(mTargetFolderPath)
+		Try
+			strTargetFolderPath = String.Copy(mTargetFolderPath)
 
-            If mSourceFolderPath Is Nothing OrElse mSourceFolderPath.Length = 0 Then
-                ShowMessage("Source folder path is not defined.  Either specify it at the command line or include it in the parameter file.")
-                MyBase.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.InvalidInputFolderPath)
-                Return False
-            End If
+			If mSourceFolderPath Is Nothing OrElse mSourceFolderPath.Length = 0 Then
+				ShowMessage("Source folder path is not defined.  Either specify it at the command line or include it in the parameter file.")
+				MyBase.SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidInputFolderPath)
+				Return False
+			End If
 
-            If strTargetFolderPath Is Nothing OrElse strTargetFolderPath.Length = 0 Then
-                ShowMessage("Target folder path is not defined.  Either specify it at the command line or include it in the parameter file.")
-                MyBase.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.InvalidInputFolderPath)
-                Return False
-            End If
+			If strTargetFolderPath Is Nothing OrElse strTargetFolderPath.Length = 0 Then
+				ShowMessage("Target folder path is not defined.  Either specify it at the command line or include it in the parameter file.")
+				MyBase.SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidInputFolderPath)
+				Return False
+			End If
 
-            ' Note that CleanupFilePaths() will update mOutputFolderPath, which is used by LogMessage()
-            If Not CleanupFolderPaths(strTargetFolderPath, String.Empty) Then
-                MyBase.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.FilePathError)
-            Else
-                objSourceFolder = New System.IO.DirectoryInfo(mSourceFolderPath)
-                objTargetFolder = New System.IO.DirectoryInfo(strTargetFolderPath)
-                strTargetFolderPath = objTargetFolder.FullName
+			' Note that CleanupFilePaths() will update mOutputFolderPath, which is used by LogMessage()
+			If Not CleanupFolderPaths(strTargetFolderPath, String.Empty) Then
+				MyBase.SetBaseClassErrorCode(eProcessFoldersErrorCodes.FilePathError)
+			Else
+				objSourceFolder = New IO.DirectoryInfo(mSourceFolderPath)
+				objTargetFolder = New IO.DirectoryInfo(strTargetFolderPath)
 
-                MyBase.mProgressStepDescription = "Updating " & objTargetFolder.Name & ControlChars.NewLine & " using " & objSourceFolder.FullName
-                MyBase.ResetProgress()
+				MyBase.mProgressStepDescription = "Updating " & objTargetFolder.Name & ControlChars.NewLine & " using " & objSourceFolder.FullName
+				MyBase.ResetProgress()
 
-                Dim blnPushNewSubfolders As Boolean
-                blnPushNewSubfolders = False
+				Dim blnPushNewSubfolders As Boolean
+				blnPushNewSubfolders = False
 
 				blnSuccess = UpdateFolderWork(objSourceFolder.FullName, objTargetFolder.FullName, blnPushNewSubfolders, blnProcessingSubFolder:=False)
 
-                If mCopySubdirectoriesToParentFolder Then
+				If mCopySubdirectoriesToParentFolder Then
 
-                    blnPushNewSubfolders = True
+					blnPushNewSubfolders = True
 
-                    For Each objSourceSubFolder In objSourceFolder.GetDirectories()
+					For Each objSourceSubFolder In objSourceFolder.GetDirectories()
 
-                        strTargetSubFolderPath = System.IO.Path.Combine(objTargetFolder.Parent.FullName, objSourceSubFolder.Name)
+						strTargetSubFolderPath = IO.Path.Combine(objTargetFolder.Parent.FullName, objSourceSubFolder.Name)
 
-                        ' Initially assume we'll process this folder if it exists at the target
-                        Dim blnProcessSubfolder As Boolean
-                        blnProcessSubfolder = System.IO.Directory.Exists(strTargetSubFolderPath)
+						' Initially assume we'll process this folder if it exists at the target
+						Dim blnProcessSubfolder As Boolean
+						blnProcessSubfolder = IO.Directory.Exists(strTargetSubFolderPath)
 
-                        If objSourceSubFolder.GetFiles(DELETE_SUBDIR_FLAG).Length > 0 Then
-                            ' Remove this subfolder at the target (but only if it's empty)
-                            Dim objTargetSubFolder As System.IO.DirectoryInfo
-                            objTargetSubFolder = New System.IO.DirectoryInfo(strTargetSubFolderPath)
+						If objSourceSubFolder.GetFiles(DELETE_SUBDIR_FLAG).Length > 0 Then
+							' Remove this subfolder at the target (but only if it's empty)
+							Dim objTargetSubFolder As IO.DirectoryInfo
+							objTargetSubFolder = New IO.DirectoryInfo(strTargetSubFolderPath)
 
-                            If objTargetSubFolder.Exists AndAlso objTargetSubFolder.GetFiles().Length = 0 Then
-                                blnProcessSubfolder = False
-                                Try
-                                    objTargetSubFolder.Delete(False)
-                                    ShowMessage("Deleted subfolder " & objTargetSubFolder.FullName)
-                                Catch ex As Exception
-                                    HandleException("Error removing empty directory flagged with " & DELETE_SUBDIR_FLAG, ex)
-                                End Try
-                            End If
-                        End If
+							If objTargetSubFolder.Exists AndAlso objTargetSubFolder.GetFiles().Length = 0 Then
+								blnProcessSubfolder = False
+								Try
+									objTargetSubFolder.Delete(False)
+									ShowMessage("Deleted subfolder " & objTargetSubFolder.FullName)
+								Catch ex As Exception
+									HandleException("Error removing empty directory flagged with " & DELETE_SUBDIR_FLAG, ex)
+								End Try
+							End If
+						End If
 
-                        If objSourceSubFolder.GetFiles(DELETE_AM_SUBDIR_FLAG).Length > 0 Then
-                            ' Remove this subfolder if it is present below objTargetFolder (but only if it's empty)
-                          
-                            Dim objTargetSubFolder As System.IO.DirectoryInfo
-                            Dim strAMSubDirPath As String
-                            strAMSubDirPath = System.IO.Path.Combine(objTargetFolder.FullName, objSourceSubFolder.Name)
-                            objTargetSubFolder = New System.IO.DirectoryInfo(strAMSubDirPath)
+						If objSourceSubFolder.GetFiles(DELETE_AM_SUBDIR_FLAG).Length > 0 Then
+							' Remove this subfolder if it is present below objTargetFolder (but only if it's empty)
 
-                            If objTargetSubFolder.Exists AndAlso objTargetSubFolder.GetFiles().Length = 0 Then
-                                blnProcessSubfolder = False
-                                Try
-                                    objTargetSubFolder.Delete(False)
-                                    ShowMessage("Deleted subfolder " & objTargetSubFolder.FullName)
-                                Catch ex As Exception
-                                    HandleException("Error removing empty directory flagged with " & DELETE_SUBDIR_FLAG, ex)
-                                End Try
-                            End If
-                        End If
+							Dim objTargetSubFolder As IO.DirectoryInfo
+							Dim strAMSubDirPath As String
+							strAMSubDirPath = IO.Path.Combine(objTargetFolder.FullName, objSourceSubFolder.Name)
+							objTargetSubFolder = New IO.DirectoryInfo(strAMSubDirPath)
 
-                        If objSourceSubFolder.GetFiles(PUSH_DIR_FLAG).Length > 0 Then
-                            blnProcessSubfolder = True
-                        End If
+							If objTargetSubFolder.Exists AndAlso objTargetSubFolder.GetFiles().Length = 0 Then
+								blnProcessSubfolder = False
+								Try
+									objTargetSubFolder.Delete(False)
+									ShowMessage("Deleted subfolder " & objTargetSubFolder.FullName)
+								Catch ex As Exception
+									HandleException("Error removing empty directory flagged with " & DELETE_SUBDIR_FLAG, ex)
+								End Try
+							End If
+						End If
 
-                        If blnProcessSubfolder Then
+						If objSourceSubFolder.GetFiles(PUSH_DIR_FLAG).Length > 0 Then
+							blnProcessSubfolder = True
+						End If
+
+						If blnProcessSubfolder Then
 							blnSuccess = UpdateFolderWork(objSourceSubFolder.FullName, strTargetSubFolderPath, blnPushNewSubfolders, blnProcessingSubFolder:=True)
-                        End If
-                    Next
+						End If
+					Next
 
-                End If
-            End If
-        Catch ex As Exception
-            HandleException("Error in UpdateFolder", ex)
-        End Try
+				End If
+			End If
+		Catch ex As Exception
+			HandleException("Error in UpdateFolder", ex)
+		End Try
 
-        Return blnSuccess
+		Return blnSuccess
 
-    End Function
+	End Function
 
 	Protected Function UpdateFolderWork(ByVal strSourceFolderPath As String, ByVal strTargetFolderPath As String, ByVal blnPushNewSubfolders As Boolean, ByVal blnProcessingSubFolder As Boolean) As Boolean
 
 		Dim strStatusMessage As String
 
-		Dim diSourceFolder As System.IO.DirectoryInfo
-		Dim diTargetFolder As System.IO.DirectoryInfo
+		Dim diSourceFolder As IO.DirectoryInfo
+		Dim diTargetFolder As IO.DirectoryInfo
 
-		Dim objSourceFile As System.IO.FileInfo
+		Dim objSourceFile As IO.FileInfo
 
-		Dim objSourceSubFolder As System.IO.DirectoryInfo
+		Dim objSourceSubFolder As IO.DirectoryInfo
 		Dim strTargetSubFolderPath As String
-		Dim blnSuccess As Boolean
 
 		Dim intIndex As Integer
 		Dim strFileNameLCase As String
@@ -608,23 +605,23 @@ Public Class clsDMSUpdateManager
 		ShowMessage(MyBase.mProgressStepDescription, False)
 
 		' Make sure the target folder exists
-		diTargetFolder = New System.IO.DirectoryInfo(strTargetFolderPath)
+		diTargetFolder = New IO.DirectoryInfo(strTargetFolderPath)
 		If Not diTargetFolder.Exists Then
 			diTargetFolder.Create()
 		End If
 
 		' Obtain a list of files in the source folder
-		diSourceFolder = New System.IO.DirectoryInfo(strSourceFolderPath)
+		diSourceFolder = New IO.DirectoryInfo(strSourceFolderPath)
 
 		intFileUpdateCount = 0
 
-		Dim fiFilesInSource() As System.IO.FileSystemInfo
-		Dim lstDeleteFiles As System.Collections.Generic.List(Of String)
+		Dim fiFilesInSource() As IO.FileSystemInfo
+		Dim lstDeleteFiles As List(Of String)
 
 		fiFilesInSource = diSourceFolder.GetFiles()
 
 		' Populate a SortedList object the with the names of any .delete files in fiFilesInSource
-		lstDeleteFiles = New System.Collections.Generic.List(Of String)(fiFilesInSource.Length)
+		lstDeleteFiles = New List(Of String)(fiFilesInSource.Length)
 
 		For Each objSourceFile In fiFilesInSource
 			If objSourceFile.Name.EndsWith(DELETE_SUFFIX) Then
@@ -670,7 +667,7 @@ Public Class clsDMSUpdateManager
 						' Do not copy this file
 						' However, do look for a corresponding file that does not have .delete and delete that file in the target folder
 
-						ProcessDeleteFile(objSourceFile, diTargetFolder.FullName, intFileUpdateCount)
+						ProcessDeleteFile(objSourceFile, diTargetFolder.FullName)
 
 					Else
 						' Make sure a corresponding .Delete file does not exist in fiFilesInSource
@@ -708,11 +705,11 @@ Public Class clsDMSUpdateManager
 		' If the folder exists at the target, then copy it
 		' Additionally, if the source folder contains file _PushDir_.txt then it gets copied even if it doesn't exist at the target
 		For Each objSourceSubFolder In diSourceFolder.GetDirectories()
-			strTargetSubFolderPath = System.IO.Path.Combine(diTargetFolder.FullName, objSourceSubFolder.Name)
+			strTargetSubFolderPath = IO.Path.Combine(diTargetFolder.FullName, objSourceSubFolder.Name)
 
 			' Initially assume we'll process this folder if it exists at the target
 			Dim blnProcessSubfolder As Boolean
-			blnProcessSubfolder = System.IO.Directory.Exists(strTargetSubFolderPath)
+			blnProcessSubfolder = IO.Directory.Exists(strTargetSubFolderPath)
 
 			If objSourceSubFolder.GetFiles(DELETE_SUBDIR_FLAG).Length > 0 Then
 				' Remove this subfolder (but only if it's empty)
@@ -731,57 +728,57 @@ Public Class clsDMSUpdateManager
 			End If
 
 			If blnProcessSubfolder Then
-				blnSuccess = UpdateFolderWork(objSourceSubFolder.FullName, strTargetSubFolderPath, blnPushNewSubfolders, blnProcessingSubFolder)
+				UpdateFolderWork(objSourceSubFolder.FullName, strTargetSubFolderPath, blnPushNewSubfolders, blnProcessingSubFolder)
 			End If
 		Next
 
 		Return True
 	End Function
 
-    Private Sub LogoffOrRebootMachine(ByVal eAction As MentalisUtils.RestartOptions, ByVal blnForce As Boolean)
+	Private Sub LogoffOrRebootMachine(ByVal eAction As MentalisUtils.RestartOptions, ByVal blnForce As Boolean)
 
-        ' Typical values for eAction are:
-        ' RestartOptions.LogOff
-        ' RestartOptions.PowerOff
-        ' RestartOptions.Reboot
-        ' RestartOptions.ShutDown
-        ' RestartOptions.Suspend
-        ' RestartOptions.Hibernate
+		' Typical values for eAction are:
+		' RestartOptions.LogOff
+		' RestartOptions.PowerOff
+		' RestartOptions.Reboot
+		' RestartOptions.ShutDown
+		' RestartOptions.Suspend
+		' RestartOptions.Hibernate
 
-        MentalisUtils.WindowsController.ExitWindows(eAction, blnForce)
+		MentalisUtils.WindowsController.ExitWindows(eAction, blnForce)
 
-    End Sub
+	End Sub
 
-    Private Sub ProcessDeleteFile(ByRef objDeleteFile As System.IO.FileInfo, ByVal strTargetFolderPath As String, ByRef intFileUpdateCount As Integer)
-        Dim objTargetFile As System.IO.FileInfo
-        Dim strTargetFilePath As String
+	Private Sub ProcessDeleteFile(ByRef objDeleteFile As IO.FileInfo, ByVal strTargetFolderPath As String)
+		Dim objTargetFile As IO.FileInfo
+		Dim strTargetFilePath As String
 
-        strTargetFilePath = System.IO.Path.Combine(strTargetFolderPath, TrimSuffix(objDeleteFile.Name, DELETE_SUFFIX))
-        objTargetFile = New System.IO.FileInfo(strTargetFilePath)
+		strTargetFilePath = IO.Path.Combine(strTargetFolderPath, TrimSuffix(objDeleteFile.Name, DELETE_SUFFIX))
+		objTargetFile = New IO.FileInfo(strTargetFilePath)
 
-        If objTargetFile.Exists() Then
-            objTargetFile.Delete()
-            ShowMessage("Deleted file " & objTargetFile.FullName)
-        End If
+		If objTargetFile.Exists() Then
+			objTargetFile.Delete()
+			ShowMessage("Deleted file " & objTargetFile.FullName)
+		End If
 
-        ' Make sure the .delete is also not in the target folder
-        strTargetFilePath = System.IO.Path.Combine(strTargetFolderPath, objDeleteFile.Name)
-        objTargetFile = New System.IO.FileInfo(strTargetFilePath)
+		' Make sure the .delete is also not in the target folder
+		strTargetFilePath = IO.Path.Combine(strTargetFolderPath, objDeleteFile.Name)
+		objTargetFile = New IO.FileInfo(strTargetFilePath)
 
-        If objTargetFile.Exists() Then
-            objTargetFile.Delete()
-            ShowMessage("Deleted file " & objTargetFile.FullName)
-        End If
-    End Sub
+		If objTargetFile.Exists() Then
+			objTargetFile.Delete()
+			ShowMessage("Deleted file " & objTargetFile.FullName)
+		End If
+	End Sub
 
-	Private Sub ProcessRollbackFile(ByRef objRollbackFile As System.IO.FileInfo, ByVal strTargetFolderPath As String, ByRef intFileUpdateCount As Integer, ByVal blnProcessingSubFolder As Boolean)
-		Dim objSourceFile As System.IO.FileInfo
+	Private Sub ProcessRollbackFile(ByRef objRollbackFile As IO.FileInfo, ByVal strTargetFolderPath As String, ByRef intFileUpdateCount As Integer, ByVal blnProcessingSubFolder As Boolean)
+		Dim objSourceFile As IO.FileInfo
 		Dim strSourceFilePath As String
 		Dim blnCopied As Boolean
 
 		strSourceFilePath = TrimSuffix(objRollbackFile.FullName, ROLLBACK_SUFFIX)
 
-		objSourceFile = New System.IO.FileInfo(strSourceFilePath)
+		objSourceFile = New IO.FileInfo(strSourceFilePath)
 
 		If objSourceFile.Exists() Then
 			blnCopied = CopyFileIfNeeded(objSourceFile, strTargetFolderPath, intFileUpdateCount, eDateComparisonModeConstants.CopyIfSizeOrDateDiffers, blnProcessingSubFolder)
@@ -789,32 +786,32 @@ Public Class clsDMSUpdateManager
 				ShowMessage("Rolled back file " & objSourceFile.Name & " to version from " & objSourceFile.LastWriteTimeUtc.ToLocalTime() & " with size " & (objSourceFile.Length / 1024.0).ToString("0.0") & " KB")
 			End If
 		Else
-			ShowMessage("Warning: Rollback file is present (" + objRollbackFile.Name + ") but expected source file was not found: " & objSourceFile.Name)
+			ShowMessage("Warning: Rollback file is present (" + objRollbackFile.Name + ") but expected source file was not found: " & objSourceFile.Name, intDuplicateHoldoffHours:=24)
 		End If
 
 	End Sub
 
-    Private Sub SetLocalErrorCode(ByVal eNewErrorCode As eDMSUpdateManagerErrorCodes)
-        SetLocalErrorCode(eNewErrorCode, False)
-    End Sub
+	Private Sub SetLocalErrorCode(ByVal eNewErrorCode As eDMSUpdateManagerErrorCodes)
+		SetLocalErrorCode(eNewErrorCode, False)
+	End Sub
 
-    Private Sub SetLocalErrorCode(ByVal eNewErrorCode As eDMSUpdateManagerErrorCodes, ByVal blnLeaveExistingErrorCodeUnchanged As Boolean)
+	Private Sub SetLocalErrorCode(ByVal eNewErrorCode As eDMSUpdateManagerErrorCodes, ByVal blnLeaveExistingErrorCodeUnchanged As Boolean)
 
-        If blnLeaveExistingErrorCodeUnchanged AndAlso mLocalErrorCode <> eDMSUpdateManagerErrorCodes.NoError Then
-            ' An error code is already defined; do not change it
-        Else
-            mLocalErrorCode = eNewErrorCode
+		If blnLeaveExistingErrorCodeUnchanged AndAlso mLocalErrorCode <> eDMSUpdateManagerErrorCodes.NoError Then
+			' An error code is already defined; do not change it
+		Else
+			mLocalErrorCode = eNewErrorCode
 
-            If eNewErrorCode = eDMSUpdateManagerErrorCodes.NoError Then
-                If MyBase.ErrorCode = clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.LocalizedError Then
-                    MyBase.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.NoError)
-                End If
-            Else
-                MyBase.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.LocalizedError)
-            End If
-        End If
+			If eNewErrorCode = eDMSUpdateManagerErrorCodes.NoError Then
+				If MyBase.ErrorCode = eProcessFoldersErrorCodes.LocalizedError Then
+					MyBase.SetBaseClassErrorCode(eProcessFoldersErrorCodes.NoError)
+				End If
+			Else
+				MyBase.SetBaseClassErrorCode(eProcessFoldersErrorCodes.LocalizedError)
+			End If
+		End If
 
-    End Sub
+	End Sub
 
     Private Function TrimSuffix(strText As String, strSuffix As String) As String
         If strText.Length >= strSuffix.Length Then
