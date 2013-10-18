@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="clsDMSUpdateManager.vb" />
     <Compile Include="clsParseCommandLine.vb" />
+    <Compile Include="clsProcessFilesOrFoldersBase.vb" />
     <Compile Include="clsProcessFoldersBaseClass.vb" />
     <Compile Include="clsXmlSettingsFileAccessor.vb" />
     <Compile Include="modMain.vb" />

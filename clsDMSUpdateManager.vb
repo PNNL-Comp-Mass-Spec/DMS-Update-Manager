@@ -15,7 +15,7 @@ Public Class clsDMSUpdateManager
 	Inherits clsProcessFoldersBaseClass
 
 	Public Sub New()
-		mFileDate = "October 16, 2013"
+		mFileDate = "October 17, 2013"
 		InitializeLocalVariables()
 	End Sub
 
