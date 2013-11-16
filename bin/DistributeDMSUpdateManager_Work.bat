@@ -101,8 +101,8 @@ copy %1 \\Proto-10\DMS_Programs\AnalysisToolManager\
 
 
 
-copy %1 \\Peaks1\DMS_Programs\AnalysisToolManager2\
-copy %1 \\Peaks2\DMS_Programs\AnalysisToolManager2\
+rem Offline: copy %1 \\Peaks1\DMS_Programs\AnalysisToolManager2\
+rem Offline: copy %1 \\Peaks2\DMS_Programs\AnalysisToolManager2\
 
 copy %1 \\Pub-11\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-12\DMS_Programs\AnalysisToolManager2\
