@@ -1,4 +1,6 @@
+@echo off
 
+echo Sequest clusters
 copy %1 \\SeqCluster1\DMS_Programs\AnalysisToolManager\
 copy %1 \\SeqCluster2\DMS_Programs\AnalysisToolManager\
 copy %1 \\SeqCluster3\DMS_Programs\AnalysisToolManager\
@@ -8,6 +10,7 @@ copy %1 \\SeqCluster5\DMS_Programs\AnalysisToolManager\
 rem Offline: copy %1 \\Peaks1\DMS_Programs\AnalysisToolManager1\
 rem Offline: copy %1 \\Peaks2\DMS_Programs\AnalysisToolManager1\
 
+echo Pub-11 through Pub-29
 copy %1 \\Pub-11\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-12\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-15\DMS_Programs\AnalysisToolManager1\
@@ -22,11 +25,13 @@ copy %1 \\Pub-26\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-27\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-28\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-29\DMS_Programs\AnalysisToolManager1\
+
+echo Pub-30 through Pub-49
 copy %1 \\Pub-30\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-31\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-32\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-33\DMS_Programs\AnalysisToolManager1\
-copy %1 \\Pub-34\DMS_Programs\AnalysisToolManager1\
+rem Offline: copy %1 \\Pub-34\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-35\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-36\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-37\DMS_Programs\AnalysisToolManager1\
@@ -42,6 +47,8 @@ copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-48\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager1\
+
+echo Pub-50 through Pub-69
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager1\
@@ -62,6 +69,8 @@ copy %1 \\Pub-66\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-67\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-68\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-69\DMS_Programs\AnalysisToolManager1\
+
+echo Pub-70 through Pub-89, plus mallard
 copy %1 \\Pub-70\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-71\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-72\DMS_Programs\AnalysisToolManager1\
@@ -82,7 +91,9 @@ copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager1\
+copy %1 \\mallard\DMS_Programs\AnalysisToolManager1\
 
+echo Mash-01 through Mash-06
 copy %1 \\mash-01\DMS_Programs\AnalysisToolManager\
 copy %1 \\mash-02\DMS_Programs\AnalysisToolManager\
 copy %1 \\mash-03\DMS_Programs\AnalysisToolManager\
@@ -90,19 +101,22 @@ copy %1 \\mash-04\DMS_Programs\AnalysisToolManager\
 rem Offline: copy %1 \\mash-05\DMS_Programs\AnalysisToolManager\
 copy %1 \\mash-06\DMS_Programs\AnalysisToolManager\
 
-copy %1 \\Proto-3\DMS_Programs\AnalysisToolManager\
-copy %1 \\Proto-4\DMS_Programs\AnalysisToolManager\
-copy %1 \\Proto-5\DMS_Programs\AnalysisToolManager\
-copy %1 \\Proto-7\DMS_Programs\AnalysisToolManager\
-copy %1 \\Proto-8\DMS_Programs\AnalysisToolManager\
-copy %1 \\Proto-9\DMS_Programs\AnalysisToolManager\
-copy %1 \\Proto-10\DMS_Programs\AnalysisToolManager\
+echo Proto-3 through Proto-10
+copy %1 \\Proto-3\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Proto-4\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Proto-5\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Proto-6\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Proto-7\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Proto-8\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Proto-9\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Proto-10\DMS_Programs\AnalysisToolManager1\
 
 
 
 
 rem Offline: copy %1 \\Peaks1\DMS_Programs\AnalysisToolManager2\
 rem Offline: copy %1 \\Peaks2\DMS_Programs\AnalysisToolManager2\
+echo Pub-11 through Pub-29
 
 copy %1 \\Pub-11\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-12\DMS_Programs\AnalysisToolManager2\
@@ -118,11 +132,13 @@ copy %1 \\Pub-26\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-27\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-28\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-29\DMS_Programs\AnalysisToolManager2\
+
+echo Pub-30 through Pub-49
 copy %1 \\Pub-30\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-31\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-32\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-33\DMS_Programs\AnalysisToolManager2\
-copy %1 \\Pub-34\DMS_Programs\AnalysisToolManager2\
+rem Offline: copy %1 \\Pub-34\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-35\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-36\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-37\DMS_Programs\AnalysisToolManager2\
@@ -138,6 +154,8 @@ copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-48\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager2\
+
+echo Pub-50 through Pub-69
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager2\
@@ -158,6 +176,8 @@ copy %1 \\Pub-66\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-67\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-68\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-69\DMS_Programs\AnalysisToolManager2\
+
+echo Pub-70 through Pub-89, plus mallard
 copy %1 \\Pub-70\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-71\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-72\DMS_Programs\AnalysisToolManager2\
@@ -178,14 +198,22 @@ copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager2\
+copy %1 \\mallard\DMS_Programs\AnalysisToolManager2\
 
-
-
+echo Proto-3 through Proto-10
+copy %1 \\Proto-3\DMS_Programs\AnalysisToolManager2\
+copy %1 \\Proto-4\DMS_Programs\AnalysisToolManager2\
+copy %1 \\Proto-5\DMS_Programs\AnalysisToolManager2\
+copy %1 \\Proto-6\DMS_Programs\AnalysisToolManager2\
+copy %1 \\Proto-7\DMS_Programs\AnalysisToolManager2\
+copy %1 \\Proto-8\DMS_Programs\AnalysisToolManager2\
+copy %1 \\Proto-9\DMS_Programs\AnalysisToolManager2\
+copy %1 \\Proto-10\DMS_Programs\AnalysisToolManager2\
 
 
 copy %1 \\Pub-32\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-33\DMS_Programs\AnalysisToolManager3\
-copy %1 \\Pub-34\DMS_Programs\AnalysisToolManager3\
+rem Offline: copy %1 \\Pub-34\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-35\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-36\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-37\DMS_Programs\AnalysisToolManager3\
@@ -201,6 +229,8 @@ copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-48\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager3\
+
+echo Pub-50 through Pub-69
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager3\
@@ -221,6 +251,8 @@ copy %1 \\Pub-66\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-67\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-68\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-69\DMS_Programs\AnalysisToolManager3\
+
+echo Pub-70 through Pub-89, plus mallard
 copy %1 \\Pub-70\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-71\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-72\DMS_Programs\AnalysisToolManager3\
@@ -241,13 +273,12 @@ copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager3\
-
-
+copy %1 \\mallard\DMS_Programs\AnalysisToolManager3\
 
 
 copy %1 \\Pub-32\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-33\DMS_Programs\AnalysisToolManager4\
-copy %1 \\Pub-34\DMS_Programs\AnalysisToolManager4\
+rem Offline: copy %1 \\Pub-34\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-35\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-36\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-37\DMS_Programs\AnalysisToolManager4\
@@ -263,6 +294,8 @@ copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-48\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager4\
+
+echo Pub-50 through Pub-69
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager4\
@@ -283,6 +316,8 @@ copy %1 \\Pub-66\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-67\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-68\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-69\DMS_Programs\AnalysisToolManager4\
+
+echo Pub-70 through Pub-89, plus mallard
 copy %1 \\Pub-70\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-71\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-72\DMS_Programs\AnalysisToolManager4\
@@ -303,8 +338,7 @@ copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager4\
-
-
+copy %1 \\mallard\DMS_Programs\AnalysisToolManager4\
 
 
 copy %1 \\Pub-36\DMS_Programs\AnalysisToolManager5\
@@ -317,6 +351,8 @@ copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-48\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager5\
+
+echo Pub-50 through Pub-69
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager5\
@@ -337,6 +373,8 @@ copy %1 \\Pub-66\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-67\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-68\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-69\DMS_Programs\AnalysisToolManager5\
+
+echo Pub-70 through Pub-89, plus mallard
 copy %1 \\Pub-70\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-71\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-72\DMS_Programs\AnalysisToolManager5\
@@ -357,8 +395,7 @@ copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager5\
-
-
+copy %1 \\mallard\DMS_Programs\AnalysisToolManager5\
 
 
 copy %1 \\Pub-36\DMS_Programs\AnalysisToolManager6\
@@ -371,6 +408,8 @@ copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-48\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager6\
+
+echo Pub-50 through Pub-69
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager6\
@@ -391,6 +430,8 @@ copy %1 \\Pub-66\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-67\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-68\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-69\DMS_Programs\AnalysisToolManager6\
+
+echo Pub-70 through Pub-89, plus mallard
 copy %1 \\Pub-70\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-71\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-72\DMS_Programs\AnalysisToolManager6\
@@ -411,8 +452,7 @@ copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager6\
-
-
+copy %1 \\mallard\DMS_Programs\AnalysisToolManager6\
 
 
 copy %1 \\Pub-36\DMS_Programs\AnalysisToolManager7\
@@ -425,6 +465,8 @@ copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-48\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager7\
+
+echo Pub-50 through Pub-69
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager7\
@@ -445,6 +487,8 @@ copy %1 \\Pub-66\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-67\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-68\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-69\DMS_Programs\AnalysisToolManager7\
+
+echo Pub-70 through Pub-89, plus mallard
 copy %1 \\Pub-70\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-71\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-72\DMS_Programs\AnalysisToolManager7\
@@ -465,8 +509,7 @@ copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager7\
-
-
+copy %1 \\mallard\DMS_Programs\AnalysisToolManager7\
 
 
 copy %1 \\Pub-36\DMS_Programs\AnalysisToolManager8\
@@ -479,6 +522,8 @@ copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-47\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-48\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager8\
+
+echo Pub-50 through Pub-69
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager8\
@@ -499,6 +544,8 @@ copy %1 \\Pub-66\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-67\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-68\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-69\DMS_Programs\AnalysisToolManager8\
+
+echo Pub-70 through Pub-89, plus mallard
 copy %1 \\Pub-70\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-71\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-72\DMS_Programs\AnalysisToolManager8\
@@ -519,9 +566,11 @@ copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager8\
+copy %1 \\mallard\DMS_Programs\AnalysisToolManager8\
 
 
 :CTM
+echo Mash-01 through Mash-06, CaptureTaskManager
 copy %1 \\mash-01\DMS_Programs\CaptureTaskManager\
 copy %1 \\mash-02\DMS_Programs\CaptureTaskManager\
 copy %1 \\mash-03\DMS_Programs\CaptureTaskManager\
@@ -530,6 +579,7 @@ rem Offline: copy %1 \\mash-05\DMS_Programs\CaptureTaskManager\
 copy %1 \\mash-06\DMS_Programs\CaptureTaskManager\
 
 
+echo Proto-3 through Proto-10, CaptureTaskManager
 copy %1 \\proto-3\DMS_Programs\CaptureTaskManager\
 copy %1 \\proto-4\DMS_Programs\CaptureTaskManager\
 copy %1 \\proto-5\DMS_Programs\CaptureTaskManager\
@@ -538,12 +588,14 @@ copy %1 \\proto-8\DMS_Programs\CaptureTaskManager\
 copy %1 \\proto-9\DMS_Programs\CaptureTaskManager\
 copy %1 \\proto-10\DMS_Programs\CaptureTaskManager\
 
+echo Proto-3 through Proto-10, CaptureTaskManager2
 copy %1 \\proto-3\DMS_Programs\CaptureTaskManager_2\
 copy %1 \\proto-5\DMS_Programs\CaptureTaskManager_2\
 copy %1 \\proto-7\DMS_Programs\CaptureTaskManager_2\
 copy %1 \\proto-9\DMS_Programs\CaptureTaskManager_2\
 copy %1 \\proto-10\DMS_Programs\CaptureTaskManager_2\
 
+echo Pub-50 through Pub-69, CaptureTaskManager
 copy %1 \\Pub-50\DMS_Programs\CaptureTaskManager\
 copy %1 \\pub-51\DMS_Programs\CaptureTaskManager\
 copy %1 \\pub-52\DMS_Programs\CaptureTaskManager\
@@ -565,6 +617,7 @@ copy %1 \\pub-67\DMS_Programs\CaptureTaskManager\
 copy %1 \\pub-68\DMS_Programs\CaptureTaskManager\
 copy %1 \\pub-69\DMS_Programs\CaptureTaskManager\
 
+echo Pub-50 through Pub-69, CaptureTaskManager_2
 copy %1 \\Pub-50\DMS_Programs\CaptureTaskManager_2\
 copy %1 \\pub-51\DMS_Programs\CaptureTaskManager_2\
 copy %1 \\pub-52\DMS_Programs\CaptureTaskManager_2\

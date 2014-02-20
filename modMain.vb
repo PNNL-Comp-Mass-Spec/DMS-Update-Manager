@@ -12,7 +12,9 @@
 ' 
 
 Module modMain
-	Public Const PROGRAM_DATE As String = "October 16, 2013"
+	Public Const PROGRAM_DATE As String = "February 19, 2014"
+
+	Private Const USE_REBOOT_COMMAND_FILES As Boolean = False
 
 	' Either mSourceFolderPath and mTargetFolderPath must be specified, or mParameterFilePath needs to be specified
 	Private mSourceFolderPath As String			' Option A
@@ -71,9 +73,12 @@ Module modMain
 					End If
                 End If
 
-                ' Note: This call will only have an effect if the parameter file defined by mParameterFilePath has an entry like this:
-                ' <item key="RebootCommandFolderPath" value="\\gigasax\DMS_Programs\AnalysisToolManagerReboot" />
-                mDMSUpdateManager.CheckForRebootOrShutdownFile(mPreviewMode)
+				If USE_REBOOT_COMMAND_FILES Then
+					' Note: This call will only have an effect if the parameter file defined by mParameterFilePath has an entry like this:
+					' <item key="RebootCommandFolderPath" value="\\gigasax\DMS_Programs\AnalysisToolManagerReboot" />
+					mDMSUpdateManager.CheckForRebootOrShutdownFile(mPreviewMode)
+				End If
+                
 
 			End If
 
