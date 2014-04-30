@@ -7,20 +7,20 @@ copy %1 \\SeqCluster3\DMS_Programs\AnalysisToolManager\
 copy %1 \\SeqCluster4\DMS_Programs\AnalysisToolManager\
 copy %1 \\SeqCluster5\DMS_Programs\AnalysisToolManager\
 
-rem Offline: copy %1 \\Peaks1\DMS_Programs\AnalysisToolManager1\
-rem Offline: copy %1 \\Peaks2\DMS_Programs\AnalysisToolManager1\
+rem Decommissioned: copy %1 \\Peaks1\DMS_Programs\AnalysisToolManager1\
+rem Decommissioned: copy %1 \\Peaks2\DMS_Programs\AnalysisToolManager1\
 
 echo Pub-11 through Pub-29
-copy %1 \\Pub-11\DMS_Programs\AnalysisToolManager1\
-copy %1 \\Pub-12\DMS_Programs\AnalysisToolManager1\
-copy %1 \\Pub-15\DMS_Programs\AnalysisToolManager1\
-copy %1 \\Pub-16\DMS_Programs\AnalysisToolManager1\
-copy %1 \\Pub-20\DMS_Programs\AnalysisToolManager1\
-copy %1 \\Pub-21\DMS_Programs\AnalysisToolManager1\
-copy %1 \\Pub-22\DMS_Programs\AnalysisToolManager1\
-copy %1 \\Pub-23\DMS_Programs\AnalysisToolManager1\
+rem Decommissioned: copy %1 \\Pub-11\DMS_Programs\AnalysisToolManager1\
+rem Decommissioned: copy %1 \\Pub-12\DMS_Programs\AnalysisToolManager1\
+rem Decommissioned: copy %1 \\Pub-15\DMS_Programs\AnalysisToolManager1\
+rem Decommissioned: copy %1 \\Pub-16\DMS_Programs\AnalysisToolManager1\
+rem Decommissioned: copy %1 \\Pub-20\DMS_Programs\AnalysisToolManager1\
+rem Decommissioned: copy %1 \\Pub-21\DMS_Programs\AnalysisToolManager1\
+rem Decommissioned: copy %1 \\Pub-22\DMS_Programs\AnalysisToolManager1\
+rem Decommissioned: copy %1 \\Pub-23\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-24\DMS_Programs\AnalysisToolManager1\
-copy %1 \\Pub-25\DMS_Programs\AnalysisToolManager1\
+rem Decommissioned: copy %1 \\Pub-25\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-26\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-27\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-28\DMS_Programs\AnalysisToolManager1\
@@ -31,16 +31,16 @@ copy %1 \\Pub-30\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-31\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-32\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-33\DMS_Programs\AnalysisToolManager1\
-rem Offline: copy %1 \\Pub-34\DMS_Programs\AnalysisToolManager1\
-copy %1 \\Pub-35\DMS_Programs\AnalysisToolManager1\
+rem Decommissioned: copy %1 \\Pub-34\DMS_Programs\AnalysisToolManager1\
+rem Decommissioned: copy %1 \\Pub-35\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-36\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-37\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-38\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-39\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-40\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-41\DMS_Programs\AnalysisToolManager1\
-rem Offline: copy %1 \\Pub-42\DMS_Programs\AnalysisToolManager1\
-rem Offline: copy %1 \\Pub-43\DMS_Programs\AnalysisToolManager1\
+rem Decommissioned: copy %1 \\Pub-42\DMS_Programs\AnalysisToolManager1\
+rem Decommissioned: copy %1 \\Pub-43\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-44\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-45\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager1\
@@ -94,12 +94,12 @@ copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager1\
 copy %1 \\mallard\DMS_Programs\AnalysisToolManager1\
 
 echo Mash-01 through Mash-06
-copy %1 \\mash-01\DMS_Programs\AnalysisToolManager\
-copy %1 \\mash-02\DMS_Programs\AnalysisToolManager\
-copy %1 \\mash-03\DMS_Programs\AnalysisToolManager\
-copy %1 \\mash-04\DMS_Programs\AnalysisToolManager\
-rem Offline: copy %1 \\mash-05\DMS_Programs\AnalysisToolManager\
-copy %1 \\mash-06\DMS_Programs\AnalysisToolManager\
+rem Decommissioned: copy %1 \\mash-01\DMS_Programs\AnalysisToolManager\
+rem Decommissioned: copy %1 \\mash-02\DMS_Programs\AnalysisToolManager\
+rem Decommissioned: copy %1 \\mash-03\DMS_Programs\AnalysisToolManager\
+rem Decommissioned: copy %1 \\mash-04\DMS_Programs\AnalysisToolManager\
+rem Decommissioned: copy %1 \\mash-05\DMS_Programs\AnalysisToolManager\
+rem Decommissioned: copy %1 \\mash-06\DMS_Programs\AnalysisToolManager\
 
 echo Proto-3 through Proto-10
 copy %1 \\Proto-3\DMS_Programs\AnalysisToolManager1\
@@ -114,20 +114,9 @@ copy %1 \\Proto-10\DMS_Programs\AnalysisToolManager1\
 
 
 
-rem Offline: copy %1 \\Peaks1\DMS_Programs\AnalysisToolManager2\
-rem Offline: copy %1 \\Peaks2\DMS_Programs\AnalysisToolManager2\
 echo Pub-11 through Pub-29
 
-copy %1 \\Pub-11\DMS_Programs\AnalysisToolManager2\
-copy %1 \\Pub-12\DMS_Programs\AnalysisToolManager2\
-copy %1 \\Pub-15\DMS_Programs\AnalysisToolManager2\
-copy %1 \\Pub-16\DMS_Programs\AnalysisToolManager2\
-copy %1 \\Pub-20\DMS_Programs\AnalysisToolManager2\
-copy %1 \\Pub-21\DMS_Programs\AnalysisToolManager2\
-copy %1 \\Pub-22\DMS_Programs\AnalysisToolManager2\
-copy %1 \\Pub-23\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-24\DMS_Programs\AnalysisToolManager2\
-copy %1 \\Pub-25\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-26\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-27\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-28\DMS_Programs\AnalysisToolManager2\
@@ -138,16 +127,16 @@ copy %1 \\Pub-30\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-31\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-32\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-33\DMS_Programs\AnalysisToolManager2\
-rem Offline: copy %1 \\Pub-34\DMS_Programs\AnalysisToolManager2\
-copy %1 \\Pub-35\DMS_Programs\AnalysisToolManager2\
+rem Decommissioned: copy %1 \\Pub-34\DMS_Programs\AnalysisToolManager2\
+rem Decommissioned: copy %1 \\Pub-35\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-36\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-37\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-38\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-39\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-40\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-41\DMS_Programs\AnalysisToolManager2\
-rem Offline: copy %1 \\Pub-42\DMS_Programs\AnalysisToolManager2\
-rem Offline: copy %1 \\Pub-43\DMS_Programs\AnalysisToolManager2\
+rem Decommissioned: copy %1 \\Pub-42\DMS_Programs\AnalysisToolManager2\
+rem Decommissioned: copy %1 \\Pub-43\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-44\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-45\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager2\
@@ -221,8 +210,8 @@ copy %1 \\Pub-38\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-39\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-40\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-41\DMS_Programs\AnalysisToolManager3\
-rem Offline: copy %1 \\Pub-42\DMS_Programs\AnalysisToolManager3\
-rem Offline: copy %1 \\Pub-43\DMS_Programs\AnalysisToolManager3\
+rem Decommissioned: copy %1 \\Pub-42\DMS_Programs\AnalysisToolManager3\
+rem Decommissioned: copy %1 \\Pub-43\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-44\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-45\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager3\
@@ -286,8 +275,8 @@ copy %1 \\Pub-38\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-39\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-40\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-41\DMS_Programs\AnalysisToolManager4\
-rem Offline: copy %1 \\Pub-42\DMS_Programs\AnalysisToolManager4\
-rem Offline: copy %1 \\Pub-43\DMS_Programs\AnalysisToolManager4\
+rem Decommissioned: copy %1 \\Pub-42\DMS_Programs\AnalysisToolManager4\
+rem Decommissioned: copy %1 \\Pub-43\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-44\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-45\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager4\
@@ -571,12 +560,12 @@ copy %1 \\mallard\DMS_Programs\AnalysisToolManager8\
 
 :CTM
 echo Mash-01 through Mash-06, CaptureTaskManager
-copy %1 \\mash-01\DMS_Programs\CaptureTaskManager\
-copy %1 \\mash-02\DMS_Programs\CaptureTaskManager\
-copy %1 \\mash-03\DMS_Programs\CaptureTaskManager\
-copy %1 \\mash-04\DMS_Programs\CaptureTaskManager\
-rem Offline: copy %1 \\mash-05\DMS_Programs\CaptureTaskManager\
-copy %1 \\mash-06\DMS_Programs\CaptureTaskManager\
+rem Decommissioned: copy %1 \\mash-01\DMS_Programs\CaptureTaskManager\
+rem Decommissioned: copy %1 \\mash-02\DMS_Programs\CaptureTaskManager\
+rem Decommissioned: copy %1 \\mash-03\DMS_Programs\CaptureTaskManager\
+rem Decommissioned: copy %1 \\mash-04\DMS_Programs\CaptureTaskManager\
+rem Decommissioned: copy %1 \\mash-05\DMS_Programs\CaptureTaskManager\
+rem Decommissioned: copy %1 \\mash-06\DMS_Programs\CaptureTaskManager\
 
 
 echo Proto-3 through Proto-10, CaptureTaskManager
