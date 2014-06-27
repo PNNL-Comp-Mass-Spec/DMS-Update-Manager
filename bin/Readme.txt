@@ -2,6 +2,8 @@ The DMS Update Manager program synchronizes the files in Analysis Manager folder
 
 Special files:
 	_PushDir_.txt
+	_PushAMSubDir_.txt
+
 	_DeleteSubDir_.txt
 	_DeleteAMSubDir_.txt
 

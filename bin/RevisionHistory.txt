@@ -1,5 +1,8 @@
 DMS Update Manager Change Log
 
+Version 1.1.5290; June 26, 2014
+	- Added support for _AMSubDir_.txt flag files
+
 Version 1.1.5037; October 16, 2013
 	- Now making sure that duplicate warning messages for skipped files appear a minimum of 24 hours apart
 

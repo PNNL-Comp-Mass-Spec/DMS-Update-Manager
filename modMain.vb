@@ -12,7 +12,7 @@
 ' 
 
 Module modMain
-	Public Const PROGRAM_DATE As String = "February 19, 2014"
+	Public Const PROGRAM_DATE As String = "June 26, 2014"
 
 	Private Const USE_REBOOT_COMMAND_FILES As Boolean = False
 
@@ -79,7 +79,6 @@ Module modMain
 					mDMSUpdateManager.CheckForRebootOrShutdownFile(mPreviewMode)
 				End If
                 
-
 			End If
 
 		Catch ex As Exception
@@ -152,14 +151,25 @@ Module modMain
 			Console.WriteLine()
             Console.WriteLine("Use /L to log details of the updated files.")
             Console.WriteLine("Use /V to preview the files that would be updated.")
-            Console.WriteLine()
-
-            Console.WriteLine("Program written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA) in 2009")
+			Console.WriteLine()
+			Console.WriteLine("These special flags affect how files are processed")
+			Console.WriteLine("Append the flags to the source file name to use them")
+			Console.WriteLine("  " & clsDMSUpdateManager.ROLLBACK_SUFFIX & " - Rolls back newer target files to match the source")
+			Console.WriteLine("  " & clsDMSUpdateManager.DELETE_SUFFIX & " - Deletes the target file")
+			Console.WriteLine()
+			Console.WriteLine("These special flag files affect how folders are processed")
+			Console.WriteLine("To use them, create an empty file with the given name in a source folder")
+			Console.WriteLine("  " & clsDMSUpdateManager.PUSH_DIR_FLAG & " - Pushes the directory to the parent of the target folder")
+			Console.WriteLine("  " & clsDMSUpdateManager.PUSH_AM_SUBDIR_FLAG & " - Pushes the directory to the target folder as a subfolder")
+			Console.WriteLine("  " & clsDMSUpdateManager.DELETE_SUBDIR_FLAG & " - Deletes the directory from the parent of the target, but only if the directory is empty")
+			Console.WriteLine("  " & clsDMSUpdateManager.DELETE_AM_SUBDIR_FLAG & " - Deletes the directory from below the target, but only if it is empty")
+			Console.WriteLine()
+			Console.WriteLine("Program written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA) in 2009")
             Console.WriteLine("Version: " & GetAppVersion())
             Console.WriteLine()
 
 			Console.WriteLine("E-mail: matthew.monroe@pnnl.gov or matt@alchemistmatt.com")
-            Console.WriteLine("Website: http://ncrr.pnl.gov/ or http://omics.pnl.gov")
+			Console.WriteLine("Website: http://panomics.pnnl.gov/ or http://omics.pnl.gov")
 			Console.WriteLine()
 
             ' Delay for 750 msec in case the user double clicked this file from within Windows Explorer (or started the program via a shortcut)

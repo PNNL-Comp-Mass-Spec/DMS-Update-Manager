@@ -51,7 +51,8 @@ copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager1\
 echo Pub-50 through Pub-69
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager1\
-copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager1\
+echo WARNING: Skipping Pub-52 since was offline in June 2014
+rem Offline: copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager1\
@@ -70,7 +71,7 @@ copy %1 \\Pub-67\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-68\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-69\DMS_Programs\AnalysisToolManager1\
 
-echo Pub-70 through Pub-89, plus mallard
+echo Pub-70 through Pub-93, plus mallard
 copy %1 \\Pub-70\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-71\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-72\DMS_Programs\AnalysisToolManager1\
@@ -91,6 +92,11 @@ copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Pub-90\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Pub-91\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Pub-92\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Pub-93\DMS_Programs\AnalysisToolManager1\
+
 copy %1 \\mallard\DMS_Programs\AnalysisToolManager1\
 
 echo Mash-01 through Mash-06
@@ -147,7 +153,8 @@ copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager2\
 echo Pub-50 through Pub-69
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager2\
-copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager2\
+echo WARNING: Skipping Pub-52 since was offline in June 2014
+rem Offline: copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager2\
@@ -166,7 +173,7 @@ copy %1 \\Pub-67\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-68\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-69\DMS_Programs\AnalysisToolManager2\
 
-echo Pub-70 through Pub-89, plus mallard
+echo Pub-70 through Pub-93, plus mallard
 copy %1 \\Pub-70\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-71\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-72\DMS_Programs\AnalysisToolManager2\
@@ -187,6 +194,10 @@ copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager2\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager2\
+copy %1 \\Pub-90\DMS_Programs\AnalysisToolManager2\
+copy %1 \\Pub-91\DMS_Programs\AnalysisToolManager2\
+copy %1 \\Pub-92\DMS_Programs\AnalysisToolManager2\
+copy %1 \\Pub-93\DMS_Programs\AnalysisToolManager2\
 copy %1 \\mallard\DMS_Programs\AnalysisToolManager2\
 
 echo Proto-3 through Proto-10
@@ -222,7 +233,8 @@ copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager3\
 echo Pub-50 through Pub-69
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager3\
-copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager3\
+echo WARNING: Skipping Pub-52 since was offline in June 2014
+rem Offline: copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager3\
@@ -241,7 +253,7 @@ copy %1 \\Pub-67\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-68\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-69\DMS_Programs\AnalysisToolManager3\
 
-echo Pub-70 through Pub-89, plus mallard
+echo Pub-70 through Pub-93, plus mallard
 copy %1 \\Pub-70\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-71\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-72\DMS_Programs\AnalysisToolManager3\
@@ -262,6 +274,11 @@ copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager3\
+copy %1 \\Pub-90\DMS_Programs\AnalysisToolManager4\
+copy %1 \\Pub-91\DMS_Programs\AnalysisToolManager4\
+copy %1 \\Pub-92\DMS_Programs\AnalysisToolManager4\
+copy %1 \\Pub-93\DMS_Programs\AnalysisToolManager4\
+
 copy %1 \\mallard\DMS_Programs\AnalysisToolManager3\
 
 
@@ -287,7 +304,8 @@ copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager4\
 echo Pub-50 through Pub-69
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager4\
-copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager4\
+echo WARNING: Skipping Pub-52 since was offline in June 2014
+rem Offline: copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager4\
@@ -306,7 +324,7 @@ copy %1 \\Pub-67\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-68\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-69\DMS_Programs\AnalysisToolManager4\
 
-echo Pub-70 through Pub-89, plus mallard
+echo Pub-70 through Pub-93, plus mallard
 copy %1 \\Pub-70\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-71\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-72\DMS_Programs\AnalysisToolManager4\
@@ -327,6 +345,11 @@ copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager4\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager4\
+copy %1 \\Pub-90\DMS_Programs\AnalysisToolManager4\
+copy %1 \\Pub-91\DMS_Programs\AnalysisToolManager4\
+copy %1 \\Pub-92\DMS_Programs\AnalysisToolManager4\
+copy %1 \\Pub-93\DMS_Programs\AnalysisToolManager4\
+
 copy %1 \\mallard\DMS_Programs\AnalysisToolManager4\
 
 
@@ -344,7 +367,8 @@ copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager5\
 echo Pub-50 through Pub-69
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager5\
-copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager5\
+echo WARNING: Skipping Pub-52 since was offline in June 2014
+rem Offline: copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager5\
@@ -363,7 +387,7 @@ copy %1 \\Pub-67\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-68\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-69\DMS_Programs\AnalysisToolManager5\
 
-echo Pub-70 through Pub-89, plus mallard
+echo Pub-70 through Pub-93, plus mallard
 copy %1 \\Pub-70\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-71\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-72\DMS_Programs\AnalysisToolManager5\
@@ -384,6 +408,10 @@ copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager5\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager5\
+copy %1 \\Pub-90\DMS_Programs\AnalysisToolManager5\
+copy %1 \\Pub-91\DMS_Programs\AnalysisToolManager5\
+copy %1 \\Pub-92\DMS_Programs\AnalysisToolManager5\
+copy %1 \\Pub-93\DMS_Programs\AnalysisToolManager5\
 copy %1 \\mallard\DMS_Programs\AnalysisToolManager5\
 
 
@@ -401,7 +429,8 @@ copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager6\
 echo Pub-50 through Pub-69
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager6\
-copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager6\
+echo WARNING: Skipping Pub-52 since was offline in June 2014
+rem Offline: copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager6\
@@ -420,7 +449,7 @@ copy %1 \\Pub-67\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-68\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-69\DMS_Programs\AnalysisToolManager6\
 
-echo Pub-70 through Pub-89, plus mallard
+echo Pub-70 through Pub-93, plus mallard
 copy %1 \\Pub-70\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-71\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-72\DMS_Programs\AnalysisToolManager6\
@@ -441,6 +470,11 @@ copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager6\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager6\
+copy %1 \\Pub-90\DMS_Programs\AnalysisToolManager6\
+copy %1 \\Pub-91\DMS_Programs\AnalysisToolManager6\
+copy %1 \\Pub-92\DMS_Programs\AnalysisToolManager6\
+copy %1 \\Pub-93\DMS_Programs\AnalysisToolManager6\
+
 copy %1 \\mallard\DMS_Programs\AnalysisToolManager6\
 
 
@@ -458,7 +492,8 @@ copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager7\
 echo Pub-50 through Pub-69
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager7\
-copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager7\
+echo WARNING: Skipping Pub-52 since was offline in June 2014
+rem Offline: copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager7\
@@ -477,7 +512,7 @@ copy %1 \\Pub-67\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-68\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-69\DMS_Programs\AnalysisToolManager7\
 
-echo Pub-70 through Pub-89, plus mallard
+echo Pub-70 through Pub-93, plus mallard
 copy %1 \\Pub-70\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-71\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-72\DMS_Programs\AnalysisToolManager7\
@@ -498,6 +533,11 @@ copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager7\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager7\
+copy %1 \\Pub-90\DMS_Programs\AnalysisToolManager7\
+copy %1 \\Pub-91\DMS_Programs\AnalysisToolManager7\
+copy %1 \\Pub-92\DMS_Programs\AnalysisToolManager7\
+copy %1 \\Pub-93\DMS_Programs\AnalysisToolManager7\
+
 copy %1 \\mallard\DMS_Programs\AnalysisToolManager7\
 
 
@@ -515,7 +555,8 @@ copy %1 \\Pub-49\DMS_Programs\AnalysisToolManager8\
 echo Pub-50 through Pub-69
 copy %1 \\Pub-50\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-51\DMS_Programs\AnalysisToolManager8\
-copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager8\
+echo WARNING: Skipping Pub-52 since was offline in June 2014
+rem Offline: copy %1 \\Pub-52\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-53\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-54\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-55\DMS_Programs\AnalysisToolManager8\
@@ -534,7 +575,7 @@ copy %1 \\Pub-67\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-68\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-69\DMS_Programs\AnalysisToolManager8\
 
-echo Pub-70 through Pub-89, plus mallard
+echo Pub-70 through Pub-93, plus mallard
 copy %1 \\Pub-70\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-71\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-72\DMS_Programs\AnalysisToolManager8\
@@ -555,6 +596,11 @@ copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager8\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager8\
+copy %1 \\Pub-90\DMS_Programs\AnalysisToolManager8\
+copy %1 \\Pub-91\DMS_Programs\AnalysisToolManager8\
+copy %1 \\Pub-92\DMS_Programs\AnalysisToolManager8\
+copy %1 \\Pub-93\DMS_Programs\AnalysisToolManager8\
+
 copy %1 \\mallard\DMS_Programs\AnalysisToolManager8\
 
 
@@ -587,7 +633,8 @@ copy %1 \\proto-10\DMS_Programs\CaptureTaskManager_2\
 echo Pub-50 through Pub-69, CaptureTaskManager
 copy %1 \\Pub-50\DMS_Programs\CaptureTaskManager\
 copy %1 \\pub-51\DMS_Programs\CaptureTaskManager\
-copy %1 \\pub-52\DMS_Programs\CaptureTaskManager\
+echo WARNING: Skipping Pub-52 since was offline in June 2014
+rem Offline: copy %1 \\pub-52\DMS_Programs\CaptureTaskManager\
 copy %1 \\pub-53\DMS_Programs\CaptureTaskManager\
 copy %1 \\pub-54\DMS_Programs\CaptureTaskManager\
 copy %1 \\pub-55\DMS_Programs\CaptureTaskManager\
@@ -609,7 +656,8 @@ copy %1 \\pub-69\DMS_Programs\CaptureTaskManager\
 echo Pub-50 through Pub-69, CaptureTaskManager_2
 copy %1 \\Pub-50\DMS_Programs\CaptureTaskManager_2\
 copy %1 \\pub-51\DMS_Programs\CaptureTaskManager_2\
-copy %1 \\pub-52\DMS_Programs\CaptureTaskManager_2\
+echo WARNING: Skipping Pub-52 since was offline in June 2014
+rem Offline: copy %1 \\pub-52\DMS_Programs\CaptureTaskManager_2\
 copy %1 \\pub-53\DMS_Programs\CaptureTaskManager_2\
 copy %1 \\pub-54\DMS_Programs\CaptureTaskManager_2\
 copy %1 \\pub-55\DMS_Programs\CaptureTaskManager_2\
