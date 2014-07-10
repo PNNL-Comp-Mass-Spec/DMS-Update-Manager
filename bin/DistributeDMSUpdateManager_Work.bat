@@ -274,10 +274,10 @@ copy %1 \\Pub-86\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-87\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-88\DMS_Programs\AnalysisToolManager3\
 copy %1 \\Pub-89\DMS_Programs\AnalysisToolManager3\
-copy %1 \\Pub-90\DMS_Programs\AnalysisToolManager4\
-copy %1 \\Pub-91\DMS_Programs\AnalysisToolManager4\
-copy %1 \\Pub-92\DMS_Programs\AnalysisToolManager4\
-copy %1 \\Pub-93\DMS_Programs\AnalysisToolManager4\
+copy %1 \\Pub-90\DMS_Programs\AnalysisToolManager3\
+copy %1 \\Pub-91\DMS_Programs\AnalysisToolManager3\
+copy %1 \\Pub-92\DMS_Programs\AnalysisToolManager3\
+copy %1 \\Pub-93\DMS_Programs\AnalysisToolManager3\
 
 copy %1 \\mallard\DMS_Programs\AnalysisToolManager3\
 
