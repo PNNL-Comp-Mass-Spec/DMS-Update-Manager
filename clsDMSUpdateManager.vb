@@ -17,7 +17,7 @@ Public Class clsDMSUpdateManager
 	Inherits clsProcessFoldersBaseClass
 
 	Public Sub New()
-		mFileDate = "June 26, 2014"
+        mFileDate = "July 10, 2015"
 		InitializeLocalVariables()
 	End Sub
 
@@ -250,25 +250,44 @@ Public Class clsDMSUpdateManager
 
 		Dim objCopiedFile As IO.FileInfo
 
+        Dim existingFileInfo As String
+
+        If objTargetFile.Exists Then
+            existingFileInfo = "Old: " & objTargetFile.LastWriteTimeUtc.ToString("yyyy-MM-dd hh:mm:ss tt") & " and " & objTargetFile.Length & " bytes"
+        Else
+            existingFileInfo = String.Empty
+        End If
+
+        Dim updatedFileInfo = "New: " & objSourceFile.LastWriteTimeUtc.ToString("yyyy-MM-dd hh:mm:ss tt") & " and " & objSourceFile.Length & " bytes"
+
 		If mPreviewMode Then
-			ShowMessage("Preview: Update file: " & objSourceFile.Name & "; " & strCopyReason, False)
-		Else
-			ShowMessage("Update file: " & objSourceFile.Name & "; " & strCopyReason)
+            ShowMessage("Preview: Update file: " & objSourceFile.Name & "; " & strCopyReason, False)
+            If objTargetFile.Exists Then
+                ShowMessage("                      " & existingFileInfo)
+            End If
+            ShowMessage("                      " & updatedFileInfo)
+        Else
 
-			Try
-				objCopiedFile = objSourceFile.CopyTo(objTargetFile.FullName, True)
+            ShowMessage("Update file: " & objSourceFile.Name & "; " & strCopyReason)
+            If objTargetFile.Exists Then
+                ShowMessage("             " & existingFileInfo)
+            End If
+            ShowMessage("             " & updatedFileInfo)
 
-				If objCopiedFile.Length <> objSourceFile.Length Then
-					ShowErrorMessage("Copy of " & objSourceFile.Name & " failed; sizes differ", True)
-				ElseIf objCopiedFile.LastWriteTimeUtc <> objSourceFile.LastWriteTimeUtc Then
-					ShowErrorMessage("Copy of " & objSourceFile.Name & " failed; modification times differ", True)
-				Else
-					intFileUpdateCount += 1
-				End If
+            Try
+                objCopiedFile = objSourceFile.CopyTo(objTargetFile.FullName, True)
 
-			Catch ex As Exception
-				ShowErrorMessage("Error copying " & objSourceFile.Name & ": " & ex.Message, True)
-			End Try
+                If objCopiedFile.Length <> objSourceFile.Length Then
+                    ShowErrorMessage("Copy of " & objSourceFile.Name & " failed; sizes differ", True)
+                ElseIf objCopiedFile.LastWriteTimeUtc <> objSourceFile.LastWriteTimeUtc Then
+                    ShowErrorMessage("Copy of " & objSourceFile.Name & " failed; modification times differ", True)
+                Else
+                    intFileUpdateCount += 1
+                End If
+
+            Catch ex As Exception
+                ShowErrorMessage("Error copying " & objSourceFile.Name & ": " & ex.Message, True)
+            End Try
 
 		End If
 
@@ -621,68 +640,82 @@ Public Class clsDMSUpdateManager
 
 		For Each objSourceFile As IO.FileInfo In fiFilesInSource
 
-			Try
-				Dim strFileNameLCase = objSourceFile.Name.ToLower()
-				Dim blnSkipFile = False
+            Dim retryCount = 2
+            Dim errorLogged = False
 
-				' Make sure this file is not in mFilesToIgnore
-				For intIndex = 0 To mFilesToIgnoreCount - 1
-					If strFileNameLCase = mFilesToIgnore(intIndex).ToLower Then
-						' Skip file
-						blnSkipFile = True
-						Exit For
-					End If
-				Next intIndex
+            While retryCount >= 0
 
-				If strFileNameLCase = PUSH_DIR_FLAG.ToLower() Then
-					blnSkipFile = True
-				ElseIf strFileNameLCase = PUSH_AM_SUBDIR_FLAG.ToLower() Then
-					blnSkipFile = True
-				ElseIf strFileNameLCase = DELETE_SUBDIR_FLAG.ToLower() Then
-					blnSkipFile = True
-				ElseIf strFileNameLCase = DELETE_AM_SUBDIR_FLAG.ToLower() Then
-					blnSkipFile = True
-				End If
+                Try
+                    Dim strFileNameLCase = objSourceFile.Name.ToLower()
+                    Dim blnSkipFile = False
 
-				If blnSkipFile Then
-					Continue For
-				End If
+                    ' Make sure this file is not in mFilesToIgnore
+                    For intIndex = 0 To mFilesToIgnoreCount - 1
+                        If strFileNameLCase = mFilesToIgnore(intIndex).ToLower Then
+                            ' Skip file
+                            blnSkipFile = True
+                            Exit For
+                        End If
+                    Next intIndex
 
-				' See if file ends with ROLLBACK_SUFFIX
-				If objSourceFile.Name.EndsWith(ROLLBACK_SUFFIX) Then
-					' This is a Rollback file
-					' Do not copy this file
-					' However, do look for a corresponding file that does not have .rollback and copy it if the target file has a different date or size
+                    If strFileNameLCase = PUSH_DIR_FLAG.ToLower() Then
+                        blnSkipFile = True
+                    ElseIf strFileNameLCase = PUSH_AM_SUBDIR_FLAG.ToLower() Then
+                        blnSkipFile = True
+                    ElseIf strFileNameLCase = DELETE_SUBDIR_FLAG.ToLower() Then
+                        blnSkipFile = True
+                    ElseIf strFileNameLCase = DELETE_AM_SUBDIR_FLAG.ToLower() Then
+                        blnSkipFile = True
+                    End If
 
-					ProcessRollbackFile(objSourceFile, diTargetFolder.FullName, intFileUpdateCount, blnProcessingSubFolder)
+                    If blnSkipFile Then
+                        Continue For
+                    End If
 
-				ElseIf objSourceFile.Name.EndsWith(DELETE_SUFFIX) Then
-					' This is a Delete file
-					' Do not copy this file
-					' However, do look for a corresponding file that does not have .delete and delete that file in the target folder
+                    ' See if file ends with ROLLBACK_SUFFIX
+                    If objSourceFile.Name.EndsWith(ROLLBACK_SUFFIX) Then
+                        ' This is a Rollback file
+                        ' Do not copy this file
+                        ' However, do look for a corresponding file that does not have .rollback and copy it if the target file has a different date or size
 
-					ProcessDeleteFile(objSourceFile, diTargetFolder.FullName)
+                        ProcessRollbackFile(objSourceFile, diTargetFolder.FullName, intFileUpdateCount, blnProcessingSubFolder)
 
-				Else
-					' Make sure a corresponding .Delete file does not exist in fiFilesInSource
-					If Not lstDeleteFiles.Contains(strFileNameLCase) Then
+                    ElseIf objSourceFile.Name.EndsWith(DELETE_SUFFIX) Then
+                        ' This is a Delete file
+                        ' Do not copy this file
+                        ' However, do look for a corresponding file that does not have .delete and delete that file in the target folder
 
-						If mOverwriteNewerFiles Then
-							eDateComparisonMode = eDateComparisonModeConstants.OverwriteNewerTargetIfDifferentSize
-						Else
-							eDateComparisonMode = eDateComparisonModeConstants.RetainNewerTargetIfDifferentSize
-						End If
+                        ProcessDeleteFile(objSourceFile, diTargetFolder.FullName)
 
-						CopyFileIfNeeded(objSourceFile, diTargetFolder.FullName, intFileUpdateCount, eDateComparisonMode, blnProcessingSubFolder)
+                    Else
+                        ' Make sure a corresponding .Delete file does not exist in fiFilesInSource
+                        If Not lstDeleteFiles.Contains(strFileNameLCase) Then
 
-					End If
+                            If mOverwriteNewerFiles Then
+                                eDateComparisonMode = eDateComparisonModeConstants.OverwriteNewerTargetIfDifferentSize
+                            Else
+                                eDateComparisonMode = eDateComparisonModeConstants.RetainNewerTargetIfDifferentSize
+                            End If
 
-				End If
+                            CopyFileIfNeeded(objSourceFile, diTargetFolder.FullName, intFileUpdateCount, eDateComparisonMode, blnProcessingSubFolder)
 
-			Catch ex As Exception
-				ShowErrorMessage("Error synchronizing " & objSourceFile.Name & ": " & ex.Message, True)
-			End Try
+                        End If
 
+                    End If
+
+                    Exit While
+
+                Catch ex As Exception
+                    If Not errorLogged Then
+                        ShowErrorMessage("Error synchronizing " & objSourceFile.Name & ": " & ex.Message, True)
+                        errorLogged = True
+                    End If
+
+                    retryCount -= 1
+                    Threading.Thread.Sleep(100)
+                End Try
+
+            End While
 		Next
 
 		If intFileUpdateCount > 0 Then
@@ -717,7 +750,7 @@ Public Class clsDMSUpdateManager
 			End If
 
 			If blnPushNewSubfolders AndAlso objSourceSubFolder.GetFiles(PUSH_DIR_FLAG).Length > 0 Then
-				blnProcessSubfolder = True
+                blnProcessSubfolder = True
 			End If
 
 			If blnProcessSubfolder Then

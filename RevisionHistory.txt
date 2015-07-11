@@ -1,5 +1,8 @@
 DMS Update Manager Change Log
 
+Version 1.1.5669; July 10, 2015
+	- Now logging the size and modification times of the old and the new file when updating
+
 Version 1.1.5290; June 26, 2014
 	- Added support for _AMSubDir_.txt flag files
 

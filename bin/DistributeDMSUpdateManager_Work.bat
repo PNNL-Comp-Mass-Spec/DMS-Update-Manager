@@ -1,26 +1,23 @@
 @echo off
 
+echo This file is obsolete
+echo Instead use DistributeDMSUpdateManager.bat which copies the .exe to paths like
+echo \\pnl\projects\OmicsSW\DMS_Programs\CaptureTaskManagerDistribution\AnalysisToolManager1\
+echo.
+echo This allows the managers to update their fellow managers
+
+Goto Done
+
 echo Sequest clusters
-copy %1 \\SeqCluster1\DMS_Programs\AnalysisToolManager\
-copy %1 \\SeqCluster2\DMS_Programs\AnalysisToolManager\
-copy %1 \\SeqCluster3\DMS_Programs\AnalysisToolManager\
-copy %1 \\SeqCluster4\DMS_Programs\AnalysisToolManager\
-copy %1 \\SeqCluster5\DMS_Programs\AnalysisToolManager\
+rem copy %1 \\SeqCluster1\DMS_Programs\AnalysisToolManager\
+rem copy %1 \\SeqCluster2\DMS_Programs\AnalysisToolManager\
+rem copy %1 \\SeqCluster3\DMS_Programs\AnalysisToolManager\
+rem copy %1 \\SeqCluster4\DMS_Programs\AnalysisToolManager\
+rem copy %1 \\SeqCluster5\DMS_Programs\AnalysisToolManager\
 
-rem Decommissioned: copy %1 \\Peaks1\DMS_Programs\AnalysisToolManager1\
-rem Decommissioned: copy %1 \\Peaks2\DMS_Programs\AnalysisToolManager1\
-
-echo Pub-11 through Pub-29
-rem Decommissioned: copy %1 \\Pub-11\DMS_Programs\AnalysisToolManager1\
-rem Decommissioned: copy %1 \\Pub-12\DMS_Programs\AnalysisToolManager1\
-rem Decommissioned: copy %1 \\Pub-15\DMS_Programs\AnalysisToolManager1\
-rem Decommissioned: copy %1 \\Pub-16\DMS_Programs\AnalysisToolManager1\
-rem Decommissioned: copy %1 \\Pub-20\DMS_Programs\AnalysisToolManager1\
-rem Decommissioned: copy %1 \\Pub-21\DMS_Programs\AnalysisToolManager1\
-rem Decommissioned: copy %1 \\Pub-22\DMS_Programs\AnalysisToolManager1\
-rem Decommissioned: copy %1 \\Pub-23\DMS_Programs\AnalysisToolManager1\
+echo Pub-24 through Pub-29
 copy %1 \\Pub-24\DMS_Programs\AnalysisToolManager1\
-rem Decommissioned: copy %1 \\Pub-25\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Pub-25\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-26\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-27\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-28\DMS_Programs\AnalysisToolManager1\
@@ -31,16 +28,16 @@ copy %1 \\Pub-30\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-31\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-32\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-33\DMS_Programs\AnalysisToolManager1\
-rem Decommissioned: copy %1 \\Pub-34\DMS_Programs\AnalysisToolManager1\
-rem Decommissioned: copy %1 \\Pub-35\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Pub-34\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Pub-35\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-36\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-37\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-38\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-39\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-40\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-41\DMS_Programs\AnalysisToolManager1\
-rem Decommissioned: copy %1 \\Pub-42\DMS_Programs\AnalysisToolManager1\
-rem Decommissioned: copy %1 \\Pub-43\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Pub-42\DMS_Programs\AnalysisToolManager1\
+copy %1 \\Pub-43\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-44\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-45\DMS_Programs\AnalysisToolManager1\
 copy %1 \\Pub-46\DMS_Programs\AnalysisToolManager1\
@@ -676,3 +673,4 @@ copy %1 \\pub-67\DMS_Programs\CaptureTaskManager_2\
 copy %1 \\pub-68\DMS_Programs\CaptureTaskManager_2\
 copy %1 \\pub-69\DMS_Programs\CaptureTaskManager_2\
 
+:Done

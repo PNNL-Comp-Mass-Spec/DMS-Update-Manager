@@ -7,12 +7,12 @@
 ' Program started January 16, 2009
 '
 ' E-mail: matthew.monroe@pnnl.gov or matt@alchemistmatt.com
-' Website: http://ncrr.pnnl.gov/ or http://www.sysbio.org/resources/staff/
+' Website: http://omics.pnl.gov/ or http://www.sysbio.org/resources/staff/ or http://panomics.pnnl.gov/
 ' -------------------------------------------------------------------------------
 ' 
 
 Module modMain
-	Public Const PROGRAM_DATE As String = "June 26, 2014"
+    Public Const PROGRAM_DATE As String = "July 10, 2015"
 
 	Private Const USE_REBOOT_COMMAND_FILES As Boolean = False
 
@@ -98,7 +98,7 @@ Module modMain
 		' Returns True if no problems; otherwise, returns false
 
 		Dim strValue As String = String.Empty
-		Dim strValidParameters() As String = New String() {"S", "T", "P", "L", "V"}
+        Dim strValidParameters() As String = New String() {"S", "T", "P", "L", "V", "Preview"}
 
 		Try
 			' Make sure no invalid parameters are present
@@ -110,8 +110,9 @@ Module modMain
 					If .RetrieveValueForParameter("S", strValue) Then mSourceFolderPath = strValue
 					If .RetrieveValueForParameter("T", strValue) Then mTargetFolderPath = strValue
 					If .RetrieveValueForParameter("P", strValue) Then mParameterFilePath = strValue
-					If .RetrieveValueForParameter("L", strValue) Then mLogMessagesToFile = True
-					If .RetrieveValueForParameter("V", strValue) Then mPreviewMode = True
+                    If .IsParameterPresent("L") Then mLogMessagesToFile = True
+                    If .IsParameterPresent("V") Then mPreviewMode = True
+                    If .IsParameterPresent("Preview") Then mPreviewMode = True
 				End With
 
 				Return True
@@ -169,7 +170,7 @@ Module modMain
             Console.WriteLine()
 
 			Console.WriteLine("E-mail: matthew.monroe@pnnl.gov or matt@alchemistmatt.com")
-			Console.WriteLine("Website: http://panomics.pnnl.gov/ or http://omics.pnl.gov")
+			Console.WriteLine("Website: http://omics.pnl.gov/ or http://panomics.pnnl.gov/")
 			Console.WriteLine()
 
             ' Delay for 750 msec in case the user double clicked this file from within Windows Explorer (or started the program via a shortcut)
