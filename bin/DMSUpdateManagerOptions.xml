@@ -2,7 +2,7 @@
 <sections>
   <section name="DMSUpdateManager">
     <item key="OverwriteNewerFiles" value="False" />
-    <item key="SourceFolderPath" value="\\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution_NewDecon2LS" />
+    <item key="SourceFolderPath" value="F:\My Documents\Projects\DataMining\DMS_Managers\DMS_Update_Manager\bin\AnalysisToolManagerDistribution" />
     <item key="TargetFolderPath" value=".\DMS_Programs\AnalysisToolManager1" />
     <item key="CopySubdirectoriesToParentFolder" value="True" />
     <item key="FilesToIgnore" value="AnalysisManagerProg.exe.config, Utils.pyc, Global.pyc" />

@@ -1,5 +1,9 @@
 DMS Update Manager Change Log
 
+Version 1.1.5864; January 21, 2016
+	- Add file suffix .checkjava to skip .jar files in use by Java
+	- Removed reboot/shutdown logic since no longer used
+
 Version 1.1.5669; July 10, 2015
 	- Now logging the size and modification times of the old and the new file when updating
 

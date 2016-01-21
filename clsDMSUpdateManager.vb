@@ -1,7 +1,10 @@
 ﻿Option Strict On
 
+Imports System.ComponentModel
 Imports System.IO
+Imports System.Management
 Imports System.Reflection
+Imports System.Text
 Imports System.Threading
 
 ''' <summary>
@@ -19,7 +22,7 @@ Public Class clsDMSUpdateManager
     Inherits clsProcessFoldersBaseClass
 
     Public Sub New()
-        mFileDate = "January 18, 2016"
+        mFileDate = "January 21, 2016"
         InitializeLocalVariables()
     End Sub
 
@@ -40,6 +43,7 @@ Public Class clsDMSUpdateManager
 
     Public Const ROLLBACK_SUFFIX As String = ".rollback"
     Public Const DELETE_SUFFIX As String = ".delete"
+    Public Const CHECK_JAVA_SUFFIX As String = ".checkjava"
 
     Public Const PUSH_DIR_FLAG As String = "_PushDir_.txt"
     Public Const PUSH_AM_SUBDIR_FLAG As String = "_AMSubDir_.txt"
@@ -529,11 +533,17 @@ Public Class clsDMSUpdateManager
 
         Dim fiFilesInSource = diSourceFolder.GetFiles()
 
-        ' Populate a SortedList object the with the names of any .delete files in fiFilesInSource
+        ' Populate a List object the with the names of any .delete files in fiFilesInSource
         Dim lstDeleteFiles = New List(Of String)(fiFilesInSource.Length)
         lstDeleteFiles.AddRange(From fiSourceFile In fiFilesInSource
                                 Where fiSourceFile.Name.EndsWith(DELETE_SUFFIX, StringComparison.InvariantCultureIgnoreCase)
                                 Select TrimSuffix(fiSourceFile.Name, DELETE_SUFFIX).ToLower())
+
+        ' Populate a List object the with the names of any .checkjava files in fiFilesInSource
+        Dim lstCheckJavaFiles = New List(Of String)(fiFilesInSource.Length)
+        lstCheckJavaFiles.AddRange(From fiSourceFile In fiFilesInSource
+                                   Where fiSourceFile.Name.EndsWith(CHECK_JAVA_SUFFIX, StringComparison.InvariantCultureIgnoreCase)
+                                   Select TrimSuffix(fiSourceFile.Name, CHECK_JAVA_SUFFIX).ToLower())
 
         For Each fiSourceFile As FileInfo In fiFilesInSource
 
@@ -584,6 +594,10 @@ Public Class clsDMSUpdateManager
 
                         ProcessDeleteFile(fiSourceFile, diTargetFolder.FullName)
 
+                    ElseIf fiSourceFile.Name.EndsWith(CHECK_JAVA_SUFFIX, StringComparison.InvariantCultureIgnoreCase) Then
+                        ' This is a .checkjava file
+                        ' Do not copy this file
+
                     Else
                         ' Make sure this file does not match a corresponding .delete file
                         If Not lstDeleteFiles.Contains(strFileNameLCase) Then
@@ -594,13 +608,21 @@ Public Class clsDMSUpdateManager
                                 eDateComparisonMode = eDateComparisonModeConstants.RetainNewerTargetIfDifferentSize
                             End If
 
+                            If lstCheckJavaFiles.Contains(strFileNameLCase) Then
+                                If JarFileInUseByJava(fiSourceFile) Then
+                                    ' Jar file is in use; move on to the next file
+                                    Continue For
+                                End If
+                            End If
+
                             CopyFileIfNeeded(fiSourceFile, diTargetFolder.FullName, intFileUpdateCount, eDateComparisonMode, blnProcessingSubFolder)
 
                         End If
 
                     End If
 
-                    Exit While
+                    ' File processed; move on to the next file
+                    Continue For
 
                 Catch ex As Exception
                     If Not errorLogged Then
@@ -656,6 +678,61 @@ Public Class clsDMSUpdateManager
         Next
 
         Return True
+    End Function
+
+    Private Function JarFileInUseByJava(fiSourceFile As FileInfo) As Boolean
+
+        Dim INCLUDE_PROGRAM_PATH = False
+
+        Try
+            For Each oProcess As Process In Process.GetProcesses()
+                Dim processNameLcase = oProcess.ProcessName.ToLower()
+
+                If Not processNameLcase.Contains("java") Then
+                    Continue For
+                End If
+
+                Try
+                    Dim commandLine = GetCommandLine(oProcess, INCLUDE_PROGRAM_PATH)
+
+                    If commandLine.ToLower().Contains(fiSourceFile.Name.ToLower()) Then
+                        ShowMessage("Skipping " & fiSourceFile.Name & " because currently in use by Java")
+                        Return True
+                    End If
+
+                Catch ex As Win32Exception
+                    ' Skip the process if permission denied
+                    ' Otherwise, re-throw the exception
+                    If CUInt(ex.ErrorCode) <> &H80004005UI Then
+                        Throw
+                    End If
+                End Try
+
+            Next
+
+        Catch ex As Exception
+            ShowErrorMessage("Error looking for java using " & fiSourceFile.Name & ": " & ex.Message, True)
+        End Try
+
+        Return False
+
+    End Function
+
+    Private Function GetCommandLine(oProcess As Process, includeProgramPath As Boolean) As String
+        Dim commandLine = New StringBuilder()
+
+        If includeProgramPath Then
+            commandLine.Append(oProcess.MainModule.FileName)
+            commandLine.Append(" ")
+        End If
+
+        Dim result = New ManagementObjectSearcher("SELECT CommandLine FROM Win32_Process WHERE ProcessId = " & oProcess.Id)
+
+        For Each item In result.Get()
+            commandLine.Append(item("CommandLine"))
+        Next
+
+        Return commandLine.ToString()
     End Function
 
     Private Sub ProcessDeleteFile(fiDeleteFile As FileInfo, strTargetFolderPath As String)
