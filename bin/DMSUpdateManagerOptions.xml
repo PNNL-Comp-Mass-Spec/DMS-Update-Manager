@@ -5,7 +5,6 @@
     <item key="SourceFolderPath" value="\\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution_NewDecon2LS" />
     <item key="TargetFolderPath" value=".\DMS_Programs\AnalysisToolManager1" />
     <item key="CopySubdirectoriesToParentFolder" value="True" />
-    <item key="RebootCommandFolderPath" value="\\gigasax\DMS_Programs\AnalysisToolManagerReboot" />
     <item key="FilesToIgnore" value="AnalysisManagerProg.exe.config, Utils.pyc, Global.pyc" />
     <item key="LogMessages" value="True" />
   </section>

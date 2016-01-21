@@ -77,9 +77,6 @@ Public Class clsDMSUpdateManager
     Protected mSourceFolderPath As String
     Protected mTargetFolderPath As String
 
-    ' This path defines the folder to examine to look for a file named ComputerName_RebootNow.txt or ComputerName_ShutdownNow.txt
-    Protected mRebootCommandFolderPath As String
-
     ' List of files that will not be copied
     ' The names must be full filenames (no wildcards)
     Protected mFilesToIgnoreCount As Integer
@@ -122,17 +119,6 @@ Public Class clsDMSUpdateManager
         End Set
     End Property
 
-    Public Property RebootCommandFolderPath() As String
-        Get
-            Return mRebootCommandFolderPath
-        End Get
-        Set(value As String)
-            If Not value Is Nothing Then
-                mRebootCommandFolderPath = value
-            End If
-        End Set
-    End Property
-
     Public Property SourceFolderPath() As String
         Get
             If mSourceFolderPath Is Nothing Then
@@ -162,91 +148,6 @@ Public Class clsDMSUpdateManager
         End If
 
     End Sub
-
-    Public Sub CheckForRebootOrShutdownFile(blnPreview As Boolean)
-        CheckForRebootOrShutdownFile(mRebootCommandFolderPath, blnPreview)
-    End Sub
-
-    ''' <summary>
-    ''' Look for a file named MachineName_RebootNow.txt or MachineName_ShutdownNow.txt in strSourceFolder
-    ''' If strSourceFolder is empty, then does not do anything
-    ''' </summary>
-    ''' <param name="strSourceFolder"></param>
-    ''' <remarks></remarks>
-    Public Sub CheckForRebootOrShutdownFile(strSourceFolder As String, blnPreview As Boolean)
-
-        Dim blnMatchFound As Boolean
-
-        If strSourceFolder Is Nothing OrElse strSourceFolder.Length = 0 Then
-            If blnPreview Then
-                Console.WriteLine("SourceFolder to look for the RebootNow.txt file is empty; will not look for the file")
-            End If
-        Else
-            blnMatchFound = CheckForRebootOrShutdownFileWork(strSourceFolder, "_RebootNow.txt", MentalisUtils.RestartOptions.Reboot, blnPreview)
-
-            If Not blnMatchFound Then
-                CheckForRebootOrShutdownFileWork(strSourceFolder, "_ShutdownNow.txt", MentalisUtils.RestartOptions.ShutDown, blnPreview)
-            End If
-        End If
-
-    End Sub
-
-    Protected Function CheckForRebootOrShutdownFileWork(strSourceFolder As String,
-        strTargetFileSuffix As String,
-        eAction As MentalisUtils.RestartOptions,
-        blnPreview As Boolean) As Boolean
-
-        Dim ioFileInfo As FileInfo
-        Dim strFilePathToFind As String
-        Dim strNewPath As String
-        Dim strComputer As String
-
-        Try
-            strComputer = Environment.MachineName.ToString()
-            strFilePathToFind = Path.Combine(strSourceFolder, strComputer & strTargetFileSuffix)
-
-            Console.WriteLine("Looking for " & strFilePathToFind)
-            ioFileInfo = New FileInfo(strFilePathToFind)
-
-            If Not ioFileInfo.Exists Then Return False
-
-            Console.WriteLine("Found file: " & strFilePathToFind)
-
-            If Not blnPreview Then
-                strNewPath = strFilePathToFind & ".done"
-
-                Try
-                    If File.Exists(strNewPath) Then
-                        File.Delete(strNewPath)
-                        Thread.Sleep(500)
-                    End If
-                Catch ex As Exception
-                    Console.WriteLine("Error deleting file " & strNewPath & ": " & ex.Message)
-                End Try
-
-                Try
-                    ioFileInfo.MoveTo(strNewPath)
-                    Thread.Sleep(500)
-                Catch ex As Exception
-                    Console.WriteLine("Error renaming " & Path.GetFileName(strFilePathToFind) & " to " & Path.GetFileName(strNewPath) & ": " & ex.Message)
-                End Try
-
-            End If
-
-            If blnPreview Then
-                Console.WriteLine("Preview: Call LogoffOrRebootMachine with command " & eAction.ToString)
-            Else
-                LogoffOrRebootMachine(eAction, True)
-            End If
-
-        Catch ex As Exception
-            Console.WriteLine("Error in CheckForRebootOrShutdownFileWork: " & ex.Message)
-
-        End Try
-
-        Return False
-
-    End Function
 
     Protected Sub CopyFile(ByRef objSourceFile As FileInfo, ByRef objTargetFile As FileInfo, ByRef intFileUpdateCount As Integer, strCopyReason As String)
 
@@ -376,7 +277,6 @@ Public Class clsDMSUpdateManager
 
         mSourceFolderPath = String.Empty
         mTargetFolderPath = String.Empty
-        mRebootCommandFolderPath = String.Empty
 
         mFilesToIgnoreCount = 0
         ReDim mFilesToIgnore(9)
@@ -448,7 +348,6 @@ Public Class clsDMSUpdateManager
 
                     mSourceFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "SourceFolderPath", mSourceFolderPath)
                     mTargetFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "TargetFolderPath", mTargetFolderPath)
-                    mRebootCommandFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "RebootCommandFolderPath", mRebootCommandFolderPath)
 
                     strFilesToIgnore = objSettingsFile.GetParam(OPTIONS_SECTION, "FilesToIgnore", String.Empty)
                     Try
@@ -762,20 +661,6 @@ Public Class clsDMSUpdateManager
 
         Return True
     End Function
-
-    Private Sub LogoffOrRebootMachine(eAction As MentalisUtils.RestartOptions, blnForce As Boolean)
-
-        ' Typical values for eAction are:
-        ' RestartOptions.LogOff
-        ' RestartOptions.PowerOff
-        ' RestartOptions.Reboot
-        ' RestartOptions.ShutDown
-        ' RestartOptions.Suspend
-        ' RestartOptions.Hibernate
-
-        MentalisUtils.WindowsController.ExitWindows(eAction, blnForce)
-
-    End Sub
 
     Private Sub ProcessDeleteFile(ByRef objDeleteFile As FileInfo, strTargetFolderPath As String)
         Dim objTargetFile As FileInfo

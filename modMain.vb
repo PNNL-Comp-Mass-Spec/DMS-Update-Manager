@@ -17,8 +17,6 @@ Imports System.Threading
 Module modMain
     Public Const PROGRAM_DATE As String = "January 18, 2016"
 
-    Private Const USE_REBOOT_COMMAND_FILES As Boolean = False
-
     ' Either mSourceFolderPath and mTargetFolderPath must be specified, or mParameterFilePath needs to be specified
     Private mSourceFolderPath As String         ' Option A
     Private mTargetFolderPath As String         ' Option A
@@ -74,12 +72,6 @@ Module modMain
                     If intReturnCode <> 0 Then
                         Console.WriteLine("Error while processing: " & mDMSUpdateManager.GetErrorMessage())
                     End If
-                End If
-
-                If USE_REBOOT_COMMAND_FILES Then
-                    ' Note: This call will only have an effect if the parameter file defined by mParameterFilePath has an entry like this:
-                    ' <item key="RebootCommandFolderPath" value="\\gigasax\DMS_Programs\AnalysisToolManagerReboot" />
-                    mDMSUpdateManager.CheckForRebootOrShutdownFile(mPreviewMode)
                 End If
 
             End If
