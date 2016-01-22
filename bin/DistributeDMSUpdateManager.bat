@@ -31,17 +31,16 @@ xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToo
 xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution_NewDecon2LS\CaptureTaskManager\
 xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution_NewDecon2LS\CaptureTaskManager_2\
 
-xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\CaptureTaskManagerDistribution\AnalysisToolManager1\
-xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\CaptureTaskManagerDistribution\AnalysisToolManager2\
-xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\CaptureTaskManagerDistribution\AnalysisToolManager3\
-xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\CaptureTaskManagerDistribution\AnalysisToolManager4\
-xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\CaptureTaskManagerDistribution\AnalysisToolManager5\
-xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\CaptureTaskManagerDistribution\AnalysisToolManager6\
-xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\CaptureTaskManagerDistribution\AnalysisToolManager7\
-xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\CaptureTaskManagerDistribution\AnalysisToolManager8\
-xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\CaptureTaskManagerDistribution\CaptureTaskManager\
-xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\CaptureTaskManagerDistribution\CaptureTaskManager_2\
+xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution\AnalysisToolManager1\
+xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution\AnalysisToolManager2\
+xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution\AnalysisToolManager3\
+xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution\AnalysisToolManager4\
+xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution\AnalysisToolManager5\
+xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution\AnalysisToolManager6\
+xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution\AnalysisToolManager7\
+xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution\AnalysisToolManager8\
 
+xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution_x86
 
 @echo off
 pause
