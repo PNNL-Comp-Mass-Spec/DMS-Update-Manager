@@ -685,6 +685,7 @@ Public Class clsDMSUpdateManager
         Dim INCLUDE_PROGRAM_PATH = False
 
         Try
+
             For Each oProcess As Process In Process.GetProcesses()
                 Dim processNameLcase = oProcess.ProcessName.ToLower()
 
@@ -698,20 +699,27 @@ Public Class clsDMSUpdateManager
                     If commandLine.ToLower().Contains(fiSourceFile.Name.ToLower()) Then
                         ShowMessage("Skipping " & fiSourceFile.Name & " because currently in use by Java")
                         Return True
+                    Else
+                        If (String.IsNullOrWhiteSpace(commandLine)) Then
+                            ShowMessage("Skipping " & fiSourceFile.Name & " because empty Java command line (permissions issue?)")
+                            Return True
+                        End If
+
+                        ShowMessage("Command line for java process ID " & oProcess.Id & ": " & commandLine)
                     End If
 
-                Catch ex As Win32Exception
-                    ' Skip the process if permission denied
-                    ' Otherwise, re-throw the exception
-                    If CUInt(ex.ErrorCode) <> &H80004005UI Then
-                        Throw
-                    End If
+                Catch ex As Exception
+                    ' Skip the process; possibly permission denied
+
+                    ShowMessage("Skipping " & fiSourceFile.Name & " because exception: " & ex.Message)
+                    Return True
+
                 End Try
 
             Next
 
         Catch ex As Exception
-            ShowErrorMessage("Error looking for java using " & fiSourceFile.Name & ": " & ex.Message, True)
+            ShowErrorMessage("Error looking for Java using " & fiSourceFile.Name & ": " & ex.Message, True)
         End Try
 
         Return False
