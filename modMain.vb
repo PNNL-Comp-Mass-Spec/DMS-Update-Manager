@@ -15,7 +15,7 @@ Imports System.Threading
 ' 
 
 Module modMain
-    Public Const PROGRAM_DATE As String = "January 21, 2016"
+    Public Const PROGRAM_DATE As String = "April 25, 2016"
 
     ' Either mSourceFolderPath and mTargetFolderPath must be specified, or mParameterFilePath needs to be specified
     Private mSourceFolderPath As String         ' Option A
