@@ -1,9 +1,9 @@
 ﻿Option Strict On
 
-Imports System.ComponentModel
 Imports System.IO
 Imports System.Management
 Imports System.Reflection
+Imports System.Runtime.InteropServices
 Imports System.Text
 Imports System.Threading
 
@@ -16,13 +16,13 @@ Imports System.Threading
 ''' Program started January 16, 2009
 ''' --
 ''' E-mail: matthew.monroe@pnnl.gov or matt@alchemistmatt.com
-''' Website: http://ncrr.pnnl.gov/ or http://www.sysbio.org/resources/staff/
+''' Website: http://omics.pnl.gov/ or http://panomics.pnnl.gov/")
 ''' </remarks>
 Public Class clsDMSUpdateManager
     Inherits clsProcessFoldersBaseClass
 
     Public Sub New()
-        mFileDate = "January 21, 2016"
+        mFileDate = "May 4, 2016"
         InitializeLocalVariables()
     End Sub
 
@@ -35,7 +35,7 @@ Public Class clsDMSUpdateManager
         UnspecifiedError = -1
     End Enum
 
-    Protected Enum eDateComparisonModeConstants
+    Private Enum eDateComparisonModeConstants
         RetainNewerTargetIfDifferentSize = 0
         OverwriteNewerTargetIfDifferentSize = 2
         CopyIfSizeOrDateDiffers = 3
@@ -60,10 +60,10 @@ Public Class clsDMSUpdateManager
 #Region "Classwide Variables"
 
     ' When true, then messages will be displayed and logged showing the files that would be copied
-    Protected mPreviewMode As Boolean
+    Private mPreviewMode As Boolean
 
     ' If False, then will not overwrite files in the target folder that are newer than files in the source folder
-    Protected mOverwriteNewerFiles As Boolean
+    Private mOverwriteNewerFiles As Boolean
 
     ' When mCopySubdirectoriesToParentFolder=True, then will copy any subdirectories of the source folder into a subdirectory off the parent folder of the target folder
     ' For example:
@@ -76,18 +76,18 @@ Public Class clsDMSUpdateManager
     '   When sync'ing the MASIC folders, will recursively sync additional folders that match
     '   If the source folder contains file _PushDir_.txt or _AMSubDir_.txt then the directory will be copied to the target even if it doesn't exist there
 
-    Protected mCopySubdirectoriesToParentFolder As Boolean
+    Private mCopySubdirectoriesToParentFolder As Boolean
 
     ' The following is the path that lists the files that will be copied to the target folder
-    Protected mSourceFolderPath As String
-    Protected mTargetFolderPath As String
+    Private mSourceFolderPath As String
+    Private mTargetFolderPath As String
 
     ' List of files that will not be copied
     ' The names must be full filenames (no wildcards)
-    Protected mFilesToIgnoreCount As Integer
-    Protected mFilesToIgnore() As String
+    Private mFilesToIgnoreCount As Integer
+    Private mFilesToIgnore() As String
 
-    Protected mLocalErrorCode As eDMSUpdateManagerErrorCodes
+    Private mLocalErrorCode As eDMSUpdateManagerErrorCodes
 #End Region
 
 #Region "Properties"
@@ -100,6 +100,7 @@ Public Class clsDMSUpdateManager
             mCopySubdirectoriesToParentFolder = value
         End Set
     End Property
+
     Public ReadOnly Property LocalErrorCode() As eDMSUpdateManagerErrorCodes
         Get
             Return mLocalErrorCode
@@ -154,31 +155,22 @@ Public Class clsDMSUpdateManager
 
     End Sub
 
-    Protected Sub CopyFile(fiSourceFile As FileInfo, fiTargetFile As FileInfo, ByRef intFileUpdateCount As Integer, strCopyReason As String)
+    Private Sub CopyFile(fiSourceFile As FileInfo, fiTargetFile As FileInfo, ByRef fileUpdateCount As Integer, strCopyReason As String)
 
         Dim existingFileInfo As String
 
         If fiTargetFile.Exists Then
-            existingFileInfo = "Old: " & fiTargetFile.LastWriteTimeUtc.ToString("yyyy-MM-dd hh:mm:ss tt") & " and " & fiTargetFile.Length & " bytes"
+            existingFileInfo = "Old: " & GetFileDateAndSize(fiTargetFile)
         Else
             existingFileInfo = String.Empty
         End If
 
-        Dim updatedFileInfo = "New: " & fiSourceFile.LastWriteTimeUtc.ToString("yyyy-MM-dd hh:mm:ss tt") & " and " & fiSourceFile.Length & " bytes"
+        Dim updatedFileInfo = "New: " & GetFileDateAndSize(fiSourceFile)
 
         If mPreviewMode Then
-            ShowMessage("Preview: Update file: " & fiSourceFile.Name & "; " & strCopyReason, False)
-            If fiTargetFile.Exists Then
-                ShowMessage("                      " & existingFileInfo)
-            End If
-            ShowMessage("                      " & updatedFileInfo)
+            ShowOldAndNewFileInfo("Preview: Update file: ", fiSourceFile, fiTargetFile, existingFileInfo, updatedFileInfo, strCopyReason, False)
         Else
-
-            ShowMessage("Update file: " & fiSourceFile.Name & "; " & strCopyReason)
-            If fiTargetFile.Exists Then
-                ShowMessage("             " & existingFileInfo)
-            End If
-            ShowMessage("             " & updatedFileInfo)
+            ShowOldAndNewFileInfo("Update file: ", fiSourceFile, fiTargetFile, existingFileInfo, updatedFileInfo, strCopyReason, True)
 
             Try
                 Dim fiCopiedFile = fiSourceFile.CopyTo(fiTargetFile.FullName, True)
@@ -188,7 +180,7 @@ Public Class clsDMSUpdateManager
                 ElseIf fiCopiedFile.LastWriteTimeUtc <> fiSourceFile.LastWriteTimeUtc Then
                     ShowErrorMessage("Copy of " & fiSourceFile.Name & " failed; modification times differ", True)
                 Else
-                    intFileUpdateCount += 1
+                    fileUpdateCount += 1
                 End If
 
             Catch ex As Exception
@@ -199,22 +191,32 @@ Public Class clsDMSUpdateManager
 
     End Sub
 
+    ''' <summary>
+    ''' Compare the source file to the target file and update it if they differ
+    ''' </summary>
+    ''' <param name="fiSourceFile">Source file</param>
+    ''' <param name="strTargetFolderPath">Target folder</param>
+    ''' <param name="fileUpdateCount">Number of files that have been updated (Input/output)</param>
+    ''' <param name="eDateComparisonMode">Date comparison mode</param>
+    ''' <param name="blnProcessingSubFolder">True if processing a subfolder</param>
+    ''' <param name="fileIsInUse">True when the file is in use by another process (log a message if the source and target files differ)</param>
+    ''' <param name="fileUsageMessage">Message to log when the file is in use and the source and targets differ</param>
+    ''' <returns>True if the file was updated, otherwise false</returns>
+    ''' <remarks></remarks>
+    Private Function CopyFileIfNeeded(
+       fiSourceFile As FileInfo,
+       strTargetFolderPath As String,
+       ByRef fileUpdateCount As Integer,
+       eDateComparisonMode As eDateComparisonModeConstants,
+       blnProcessingSubFolder As Boolean,
+       Optional fileIsInUse As Boolean = False,
+       Optional fileUsageMessage As String = "") As Boolean
 
-    Protected Function CopyFileIfNeeded(ByRef fiSourceFile As FileInfo, strTargetFolderPath As String,
-       ByRef intFileUpdateCount As Integer, eDateComparisonMode As eDateComparisonModeConstants,
-       blnProcessingSubFolder As Boolean) As Boolean
+        Dim strTargetFilePath = Path.Combine(strTargetFolderPath, fiSourceFile.Name)
+        Dim fiTargetFile = New FileInfo(strTargetFilePath)
 
-        Dim blnNeedToCopy As Boolean
-        Dim strCopyReason As String
-
-        Dim strTargetFilePath As String
-        Dim fiTargetFile As FileInfo
-
-        strTargetFilePath = Path.Combine(strTargetFolderPath, fiSourceFile.Name)
-        fiTargetFile = New FileInfo(strTargetFilePath)
-
-        strCopyReason = String.Empty
-        blnNeedToCopy = False
+        Dim strCopyReason = String.Empty
+        Dim blnNeedToCopy = False
 
         If Not fiTargetFile.Exists Then
             ' File not present in the target; copy it now
@@ -262,7 +264,18 @@ Public Class clsDMSUpdateManager
         End If
 
         If blnNeedToCopy Then
-            CopyFile(fiSourceFile, fiTargetFile, intFileUpdateCount, strCopyReason)
+            If fileIsInUse Then
+                ' Do not update this file; it is in use
+                If String.IsNullOrWhiteSpace(fileUsageMessage) Then
+                    ShowMessage("Skipping " & fiSourceFile.Name & " because currently in use (by an unknown process)")
+                Else
+                    ShowMessage(fileUsageMessage)
+                End If
+
+                Return False
+            End If
+
+            CopyFile(fiSourceFile, fiTargetFile, fileUpdateCount, strCopyReason)
             Return True
         Else
             Return False
@@ -289,7 +302,7 @@ Public Class clsDMSUpdateManager
     End Sub
 
     Public Overrides Function GetErrorMessage() As String
-        ' Returns "" if no error
+        ' Returns an empty string if no error
 
         Dim strErrorMessage As String
 
@@ -297,7 +310,7 @@ Public Class clsDMSUpdateManager
            MyBase.ErrorCode = eProcessFoldersErrorCodes.NoError Then
             Select Case mLocalErrorCode
                 Case eDMSUpdateManagerErrorCodes.NoError
-                    strErrorMessage = ""
+                    strErrorMessage = String.Empty
                 Case eDMSUpdateManagerErrorCodes.UnspecifiedError
                     strErrorMessage = "Unspecified localized error"
                 Case Else
@@ -311,14 +324,15 @@ Public Class clsDMSUpdateManager
         Return strErrorMessage
     End Function
 
+    Private Shared Function GetFileDateAndSize(fiFileInfo As FileInfo) As String
+        Return fiFileInfo.LastWriteTimeUtc.ToString("yyyy-MM-dd hh:mm:ss tt") & " and " & fiFileInfo.Length & " bytes"
+    End Function
+
     Private Function LoadParameterFileSettings(strParameterFilePath As String) As Boolean
 
         Const OPTIONS_SECTION = "DMSUpdateManager"
 
         Dim objSettingsFile = New XmlSettingsFileAccessor()
-
-        Dim strFilesToIgnore As String
-        Dim strIgnoreList() As String
 
         Try
 
@@ -352,10 +366,10 @@ Public Class clsDMSUpdateManager
                     mSourceFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "SourceFolderPath", mSourceFolderPath)
                     mTargetFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "TargetFolderPath", mTargetFolderPath)
 
-                    strFilesToIgnore = objSettingsFile.GetParam(OPTIONS_SECTION, "FilesToIgnore", String.Empty)
+                    Dim strFilesToIgnore = objSettingsFile.GetParam(OPTIONS_SECTION, "FilesToIgnore", String.Empty)
                     Try
                         If strFilesToIgnore.Length > 0 Then
-                            strIgnoreList = strFilesToIgnore.Split(","c)
+                            Dim strIgnoreList = strFilesToIgnore.Split(","c)
 
                             For Each strFile As String In strIgnoreList
                                 AddFileToIgnore(strFile.Trim)
@@ -383,10 +397,27 @@ Public Class clsDMSUpdateManager
         Return UpdateFolder(strInputFolderPath, strParameterFilePath)
     End Function
 
+    Private Sub ShowOldAndNewFileInfo(
+      messagePrefix As String,
+      fiSourceFile As FileInfo,
+      fiTargetFile As FileInfo,
+      existingFileInfo As String,
+      updatedFileInfo As String,
+      strCopyReason As String,
+      logToFile As Boolean)
+
+        Dim spacePad = New String(" "c, messagePrefix.Length)
+
+        ShowMessage(messagePrefix & fiSourceFile.Name & "; " & strCopyReason, logToFile)
+        If fiTargetFile.Exists Then
+            ShowMessage(spacePad & existingFileInfo)
+        End If
+        ShowMessage(spacePad & updatedFileInfo)
+
+    End Sub
+
     Public Function UpdateFolder(strTargetFolderPath As String, strParameterFilePath As String) As Boolean
         ' Returns True if success, False if failure
-
-        Dim blnSuccess As Boolean
 
         SetLocalErrorCode(eDMSUpdateManagerErrorCodes.NoError)
 
@@ -432,23 +463,24 @@ Public Class clsDMSUpdateManager
             MyBase.mProgressStepDescription = "Updating " & diTargetFolder.Name & ControlChars.NewLine & " using " & diSourceFolder.FullName
             MyBase.ResetProgress()
 
-            blnSuccess = UpdateFolderWork(diSourceFolder.FullName, diTargetFolder.FullName, blnPushNewSubfolders:=False, blnProcessingSubFolder:=False)
+            Dim success = UpdateFolderWork(diSourceFolder.FullName, diTargetFolder.FullName, blnPushNewSubfolders:=False, blnProcessingSubFolder:=False)
 
             If mCopySubdirectoriesToParentFolder Then
-                blnSuccess = UpdateFolderCopyToParent(diTargetFolder, diSourceFolder)
+                success = UpdateFolderCopyToParent(diTargetFolder, diSourceFolder)
             End If
+
+            Return success
 
         Catch ex As Exception
             HandleException("Error in UpdateFolder", ex)
+            Return False
         End Try
-
-        Return blnSuccess
 
     End Function
 
-    Protected Function UpdateFolderCopyToParent(diTargetFolder As DirectoryInfo, diSourceFolder As DirectoryInfo) As Boolean
+    Private Function UpdateFolderCopyToParent(diTargetFolder As DirectoryInfo, diSourceFolder As DirectoryInfo) As Boolean
 
-        Dim blnSuccess As Boolean
+        Dim successOverall = True
 
         For Each diSourceSubFolder As DirectoryInfo In diSourceFolder.GetDirectories()
 
@@ -501,21 +533,16 @@ Public Class clsDMSUpdateManager
             End If
 
             If blnProcessSubfolder Then
-                blnSuccess = UpdateFolderWork(diSourceSubFolder.FullName, strTargetSubFolderPath, blnPushNewSubfolders:=True, blnProcessingSubFolder:=True)
+                Dim success = UpdateFolderWork(diSourceSubFolder.FullName, strTargetSubFolderPath, blnPushNewSubfolders:=True, blnProcessingSubFolder:=True)
+                If Not success Then successOverall = False
             End If
         Next
 
-        Return blnSuccess
+        Return successOverall
 
     End Function
 
-    Protected Function UpdateFolderWork(strSourceFolderPath As String, strTargetFolderPath As String, blnPushNewSubfolders As Boolean, blnProcessingSubFolder As Boolean) As Boolean
-
-        Dim strStatusMessage As String
-
-        Dim intFileUpdateCount As Integer
-
-        Dim eDateComparisonMode As eDateComparisonModeConstants
+    Private Function UpdateFolderWork(strSourceFolderPath As String, strTargetFolderPath As String, blnPushNewSubfolders As Boolean, blnProcessingSubFolder As Boolean) As Boolean
 
         MyBase.mProgressStepDescription = "Updating " & strTargetFolderPath & ControlChars.NewLine & " using " & strSourceFolderPath
         ShowMessage(MyBase.mProgressStepDescription, False)
@@ -529,7 +556,7 @@ Public Class clsDMSUpdateManager
         ' Obtain a list of files in the source folder
         Dim diSourceFolder = New DirectoryInfo(strSourceFolderPath)
 
-        intFileUpdateCount = 0
+        Dim fileUpdateCount = 0
 
         Dim fiFilesInSource = diSourceFolder.GetFiles()
 
@@ -579,13 +606,16 @@ Public Class clsDMSUpdateManager
                         Continue For
                     End If
 
+                    Dim fileIsInUse = False
+                    Dim fileUsageMessage As String = String.Empty
+
                     ' See if file ends with one of the special suffix flags
                     If fiSourceFile.Name.EndsWith(ROLLBACK_SUFFIX, StringComparison.InvariantCultureIgnoreCase) Then
                         ' This is a Rollback file
                         ' Do not copy this file
                         ' However, do look for a corresponding file that does not have .rollback and copy it if the target file has a different date or size
 
-                        ProcessRollbackFile(fiSourceFile, diTargetFolder.FullName, intFileUpdateCount, blnProcessingSubFolder)
+                        ProcessRollbackFile(fiSourceFile, diTargetFolder.FullName, fileUpdateCount, blnProcessingSubFolder)
 
                     ElseIf fiSourceFile.Name.EndsWith(DELETE_SUFFIX, StringComparison.InvariantCultureIgnoreCase) Then
                         ' This is a Delete file
@@ -602,6 +632,8 @@ Public Class clsDMSUpdateManager
                         ' Make sure this file does not match a corresponding .delete file
                         If Not lstDeleteFiles.Contains(strFileNameLCase) Then
 
+                            Dim eDateComparisonMode As eDateComparisonModeConstants
+
                             If mOverwriteNewerFiles Then
                                 eDateComparisonMode = eDateComparisonModeConstants.OverwriteNewerTargetIfDifferentSize
                             Else
@@ -609,13 +641,10 @@ Public Class clsDMSUpdateManager
                             End If
 
                             If lstCheckJavaFiles.Contains(strFileNameLCase) Then
-                                If JarFileInUseByJava(fiSourceFile) Then
-                                    ' Jar file is in use; move on to the next file
-                                    Continue For
-                                End If
+                                fileIsInUse = JarFileInUseByJava(fiSourceFile, fileUsageMessage)
                             End If
 
-                            CopyFileIfNeeded(fiSourceFile, diTargetFolder.FullName, intFileUpdateCount, eDateComparisonMode, blnProcessingSubFolder)
+                            CopyFileIfNeeded(fiSourceFile, diTargetFolder.FullName, fileUpdateCount, eDateComparisonMode, blnProcessingSubFolder, fileIsInUse, fileUsageMessage)
 
                         End If
 
@@ -637,13 +666,13 @@ Public Class clsDMSUpdateManager
             End While
         Next
 
-        If intFileUpdateCount > 0 Then
-            strStatusMessage = "Updated " & intFileUpdateCount & " file"
-            If intFileUpdateCount > 1 Then strStatusMessage &= "s"
+        If fileUpdateCount > 0 Then
+            Dim statusMessage = "Updated " & fileUpdateCount & " file"
+            If fileUpdateCount > 1 Then statusMessage &= "s"
 
-            strStatusMessage &= " using " & diSourceFolder.FullName & "\"
+            statusMessage &= " using " & diSourceFolder.FullName & "\"
 
-            ShowMessage(strStatusMessage, True, False)
+            ShowMessage(statusMessage, True, False)
         End If
 
         ' Process each subdirectory in the source folder
@@ -680,9 +709,10 @@ Public Class clsDMSUpdateManager
         Return True
     End Function
 
-    Private Function JarFileInUseByJava(fiSourceFile As FileInfo) As Boolean
+    Private Function JarFileInUseByJava(fiSourceFile As FileInfo, <Out()> ByRef jarFileUsageMessage As String) As Boolean
 
-        Dim INCLUDE_PROGRAM_PATH = False
+        Const INCLUDE_PROGRAM_PATH = False
+        jarFileUsageMessage = String.Empty
 
         Try
 
@@ -697,21 +727,22 @@ Public Class clsDMSUpdateManager
                     Dim commandLine = GetCommandLine(oProcess, INCLUDE_PROGRAM_PATH)
 
                     If commandLine.ToLower().Contains(fiSourceFile.Name.ToLower()) Then
-                        ShowMessage("Skipping " & fiSourceFile.Name & " because currently in use by Java")
+                        jarFileUsageMessage = "Skipping " & fiSourceFile.Name & " because currently in use by Java"
                         Return True
                     Else
                         If (String.IsNullOrWhiteSpace(commandLine)) Then
-                            ShowMessage("Skipping " & fiSourceFile.Name & " because empty Java command line (permissions issue?)")
+                            jarFileUsageMessage = "Skipping " & fiSourceFile.Name & " because empty Java command line (permissions issue?)"
                             Return True
                         End If
 
-                        ShowMessage("Command line for java process ID " & oProcess.Id & ": " & commandLine)
+                        ' Uncomment to debug:
+                        ' ShowMessage("Command line for java process ID " & oProcess.Id & ": " & commandLine)
                     End If
 
                 Catch ex As Exception
                     ' Skip the process; possibly permission denied
 
-                    ShowMessage("Skipping " & fiSourceFile.Name & " because exception: " & ex.Message)
+                    jarFileUsageMessage = "Skipping " & fiSourceFile.Name & " because exception: " & ex.Message
                     Return True
 
                 End Try
@@ -763,18 +794,15 @@ Public Class clsDMSUpdateManager
         End If
     End Sub
 
-    Private Sub ProcessRollbackFile(fiRollbackFile As FileInfo, strTargetFolderPath As String, ByRef intFileUpdateCount As Integer, blnProcessingSubFolder As Boolean)
-        Dim fiSourceFile As FileInfo
-        Dim strSourceFilePath As String
-        Dim blnCopied As Boolean
+    Private Sub ProcessRollbackFile(fiRollbackFile As FileInfo, strTargetFolderPath As String, ByRef fileUpdateCount As Integer, blnProcessingSubFolder As Boolean)
 
-        strSourceFilePath = TrimSuffix(fiRollbackFile.FullName, ROLLBACK_SUFFIX)
+        Dim strSourceFilePath = TrimSuffix(fiRollbackFile.FullName, ROLLBACK_SUFFIX)
 
-        fiSourceFile = New FileInfo(strSourceFilePath)
+        Dim fiSourceFile = New FileInfo(strSourceFilePath)
 
         If fiSourceFile.Exists() Then
-            blnCopied = CopyFileIfNeeded(fiSourceFile, strTargetFolderPath, intFileUpdateCount, eDateComparisonModeConstants.CopyIfSizeOrDateDiffers, blnProcessingSubFolder)
-            If blnCopied Then
+            Dim copied = CopyFileIfNeeded(fiSourceFile, strTargetFolderPath, fileUpdateCount, eDateComparisonModeConstants.CopyIfSizeOrDateDiffers, blnProcessingSubFolder)
+            If copied Then
                 ShowMessage("Rolled back file " & fiSourceFile.Name & " to version from " & fiSourceFile.LastWriteTimeUtc.ToLocalTime() & " with size " & (fiSourceFile.Length / 1024.0).ToString("0.0") & " KB")
             End If
         Else
@@ -812,4 +840,5 @@ Public Class clsDMSUpdateManager
             Return strText
         End If
     End Function
+
 End Class

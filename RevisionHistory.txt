@@ -1,5 +1,8 @@
 DMS Update Manager Change Log
 
+Version 1.1.5968; May 4, 2016
+	- No longer logging that a .jar file is in use if the .jar file doesn't actually need to be updated
+
 Version 1.1.5959; April 25, 2016
 	- Update to .NET 4.5.1
 
