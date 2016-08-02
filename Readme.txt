@@ -10,6 +10,7 @@ Special files:
 Special file suffixes:
 	.rollback
 	.delete
+	.checkjava
 
 
 The DMSUpdateManager.exe should be placed in the same folder as AnalysisManagerProg.exe or CaptureTaskManager.exe and then
@@ -96,3 +97,7 @@ Conversely, to delete a subfolder, place file _DeleteSubDir_.txt or file
 _DeleteAMSubDir_.txt in the subfolder.  Note that the folder will only be deleted
 if it is empty.  To assure it is empty, rename all of the files in the source folder
 to end in .delete
+
+
+The .checkjava special suffix tells the Update Manager to check for running java processes before overwriting the file.
+

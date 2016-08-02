@@ -88,6 +88,13 @@ Public Class clsDMSUpdateManager
     Private mFilesToIgnore() As String
 
     Private mLocalErrorCode As eDMSUpdateManagerErrorCodes
+
+    ' Store the results of the WMI query getting running processes with command line data
+    Private mProcessesDict As Dictionary(Of UInt32, String)
+
+    ' Filter the queried results for each call to this function.
+    Private mProcessesMatchingTarget As Dictionary(Of UInt32, String)
+    Private mLastFolderPath As String
 #End Region
 
 #Region "Properties"
@@ -264,7 +271,7 @@ Public Class clsDMSUpdateManager
         End If
 
         If blnNeedToCopy Then
-            If fileIsInUse Then
+            If fileIsInUse AndAlso fiTargetFile.Exists Then
                 ' Do not update this file; it is in use
                 If String.IsNullOrWhiteSpace(fileUsageMessage) Then
                     ShowMessage("Skipping " & fiSourceFile.Name & " because currently in use (by an unknown process)")
@@ -298,6 +305,21 @@ Public Class clsDMSUpdateManager
         ReDim mFilesToIgnore(9)
 
         mLocalErrorCode = eDMSUpdateManagerErrorCodes.NoError
+
+        Dim thisExe As String = System.Reflection.Assembly.GetExecutingAssembly().Location
+        mProcessesDict = New Dictionary(Of UInt32, String)
+        Dim results = New ManagementObjectSearcher("SELECT ProcessId, CommandLine FROM Win32_Process")
+
+        For Each item In results.Get()
+            Dim cmd As String = DirectCast(item("CommandLine"), String)
+            ' Only store the processes that have non-empty command lines and are not referring to the current executable
+            If (Not String.IsNullOrWhiteSpace(cmd)) AndAlso (Not cmd.Contains(thisExe)) Then
+                mProcessesDict.Add(DirectCast(item("ProcessId"), UInt32), cmd)
+            End If
+        Next
+
+        mProcessesMatchingTarget = New Dictionary(Of UInt32, String)
+        mLastFolderPath = thisExe ' Use something that will always be ignored; in this case, the path to this executable
 
     End Sub
 
@@ -615,7 +637,13 @@ Public Class clsDMSUpdateManager
                         ' Do not copy this file
                         ' However, do look for a corresponding file that does not have .rollback and copy it if the target file has a different date or size
 
-                        ProcessRollbackFile(fiSourceFile, diTargetFolder.FullName, fileUpdateCount, blnProcessingSubFolder)
+                        If lstCheckJavaFiles.Contains(TrimSuffix(strFileNameLCase, ROLLBACK_SUFFIX)) Then
+                            fileIsInUse = JarFileInUseByJava(fiSourceFile, fileUsageMessage)
+                        Else
+                            fileIsInUse = TargetFolderInUseByProcess(diTargetFolder.FullName, fiSourceFile, fileUsageMessage)
+                        End If
+
+                        ProcessRollbackFile(fiSourceFile, diTargetFolder.FullName, fileUpdateCount, blnProcessingSubFolder, fileIsInUse, fileUsageMessage)
 
                     ElseIf fiSourceFile.Name.EndsWith(DELETE_SUFFIX, StringComparison.InvariantCultureIgnoreCase) Then
                         ' This is a Delete file
@@ -642,6 +670,8 @@ Public Class clsDMSUpdateManager
 
                             If lstCheckJavaFiles.Contains(strFileNameLCase) Then
                                 fileIsInUse = JarFileInUseByJava(fiSourceFile, fileUsageMessage)
+                            Else
+                                fileIsInUse = TargetFolderInUseByProcess(diTargetFolder.FullName, fiSourceFile, fileUsageMessage)
                             End If
 
                             CopyFileIfNeeded(fiSourceFile, diTargetFolder.FullName, fileUpdateCount, eDateComparisonMode, blnProcessingSubFolder, fileIsInUse, fileUsageMessage)
@@ -774,6 +804,41 @@ Public Class clsDMSUpdateManager
         Return commandLine.ToString()
     End Function
 
+    Private Function TargetFolderInUseByProcess(strTargetFolderPath As String, fiSourceFile As FileInfo, <Out()> ByRef folderUsageMessage As String) As Boolean
+
+        folderUsageMessage = String.Empty
+
+        Try
+            Dim processCount = GetNumTargetFolderProcesses(strTargetFolderPath)
+
+            If processCount > 0 Then
+                folderUsageMessage = "Skipping " & fiSourceFile.Name & " because folder is in use by " & processCount & " processes on system."
+                Return True
+            End If
+
+        Catch ex As Exception
+            'folderUsageMessage = "Skipping " & fiSourceFile.Name & " because exception: " & ex.Message
+            ShowErrorMessage("Error looking for Process using " & fiSourceFile.Name & ": " & ex.Message, True)
+        End Try
+
+        Return False
+    End Function
+
+    Private Function GetNumTargetFolderProcesses(strTargetFolderPath As String) As Int32
+
+        ' Filter the queried results for each call to this function.
+        If strTargetFolderPath.Contains(mLastFolderPath) Then ' .Equals would exclude this safety from functioning for things like system.data.sqlite; .Contains means we exclude all subfolders of a folder with a running process.
+            Return mProcessesMatchingTarget.Count
+        End If
+        mProcessesMatchingTarget.Clear()
+        mLastFolderPath = strTargetFolderPath
+        For Each item In mProcessesDict.Where(Function(x) x.Value.Contains(strTargetFolderPath))
+            mProcessesMatchingTarget.Add(item.Key, item.Value)
+            'Console.WriteLine("CmdLine: " & item.Value)
+        Next
+        Return mProcessesMatchingTarget.Count
+    End Function
+
     Private Sub ProcessDeleteFile(fiDeleteFile As FileInfo, strTargetFolderPath As String)
 
         Dim strTargetFilePath = Path.Combine(strTargetFolderPath, TrimSuffix(fiDeleteFile.Name, DELETE_SUFFIX))
@@ -794,14 +859,15 @@ Public Class clsDMSUpdateManager
         End If
     End Sub
 
-    Private Sub ProcessRollbackFile(fiRollbackFile As FileInfo, strTargetFolderPath As String, ByRef fileUpdateCount As Integer, blnProcessingSubFolder As Boolean)
+    Private Sub ProcessRollbackFile(fiRollbackFile As FileInfo, strTargetFolderPath As String, ByRef fileUpdateCount As Integer, blnProcessingSubFolder As Boolean, Optional fileIsInUse As Boolean = False,
+       Optional fileUsageMessage As String = "")
 
         Dim strSourceFilePath = TrimSuffix(fiRollbackFile.FullName, ROLLBACK_SUFFIX)
 
         Dim fiSourceFile = New FileInfo(strSourceFilePath)
 
         If fiSourceFile.Exists() Then
-            Dim copied = CopyFileIfNeeded(fiSourceFile, strTargetFolderPath, fileUpdateCount, eDateComparisonModeConstants.CopyIfSizeOrDateDiffers, blnProcessingSubFolder)
+            Dim copied = CopyFileIfNeeded(fiSourceFile, strTargetFolderPath, fileUpdateCount, eDateComparisonModeConstants.CopyIfSizeOrDateDiffers, blnProcessingSubFolder, fileIsInUse, fileUsageMessage)
             If copied Then
                 ShowMessage("Rolled back file " & fiSourceFile.Name & " to version from " & fiSourceFile.LastWriteTimeUtc.ToLocalTime() & " with size " & (fiSourceFile.Length / 1024.0).ToString("0.0") & " KB")
             End If
