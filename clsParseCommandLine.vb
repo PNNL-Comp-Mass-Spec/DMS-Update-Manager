@@ -449,7 +449,7 @@ Public Class clsParseCommandLine
 
             If blnCaseSensitive Then
                 If mSwitches.ContainsKey(strKey) Then
-                    strValue = CStr(mSwitches(strKey))
+                    strValue = mSwitches(strKey)
                     Return True
                 Else
                     Return False

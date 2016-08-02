@@ -1,8 +1,15 @@
 DMS Update Manager Change Log
 
+Version 1.2.6058; August 2, 2016
+	- Updated check of folders in use by other processes to use ExecutablePath from WMI instead of CommandLine for checking the .exe location
+		- Command line may have a relative path to the exe, while ExecutablePath is always the full path
+	- Fix bug in UpdateFolderWork deleting target folders with flag file _DeleteSubDir_.txt
+	- Honor PreviewMode when deleting files marked with .delete
+	- Refactor to remove redundant code
+
 Version 1.2.6057; August 1, 2016
 	- Added the "Jar file in use" logic to the rollback logic
-	- Added new logic to check to command lines of currently running processes for the folder containing the file to be updated, skipping the file copy if there is a file/executable being used via command line
+	- Added new logic to check command lines of currently running processes for the folder containing the file to be updated, skipping the file copy if there is a file/executable in use in the target folder
 		- This will allow updating programs while they are in use on some pubs, without breaking the currently running jobs.
 	- Changed the "file in use" logic to allow copying a new file (i.e., doesn't exist in target folder) when the target folder is in use
 
