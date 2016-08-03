@@ -30,6 +30,8 @@ Public Class clsDMSUpdateManager
         mFilesToIgnore = New SortedSet(Of String)(StringComparer.InvariantCultureIgnoreCase)
         mProcessesDict = New Dictionary(Of UInt32, clsProcessInfo)
 
+        mExecutingExeName = Path.GetFileName(Assembly.GetExecutingAssembly().Location)
+
         InitializeLocalVariables()
     End Sub
 
@@ -102,6 +104,8 @@ Public Class clsDMSUpdateManager
     Private ReadOnly mFilesToIgnore As SortedSet(Of String)
 
     Private mLocalErrorCode As eDMSUpdateManagerErrorCodes
+
+    Private ReadOnly mExecutingExeName As String
 
     ' Store the results of the WMI query getting running processes with command line data
     ' Keys are Process ID
@@ -330,21 +334,33 @@ Public Class clsDMSUpdateManager
         End If
 
         If blnNeedToCopy Then
-            If itemInUse <> eItemInUseConstants.NotInUse AndAlso fiTargetFile.Exists Then
-                ' Do not update this file; it is in use (or another file in this folder is in use)
-                If String.IsNullOrWhiteSpace(fileUsageMessage) Then
-                    If itemInUse = eItemInUseConstants.FolderInUse Then
-                        ShowMessage("Skipping " & fiSourceFile.Name & " because folder " &
-                                    AbbreviatePath(fiTargetFile.DirectoryName) & " is in use (by an unknown process)")
-                    Else
-                        ShowMessage("Skipping " & fiSourceFile.Name & " in folder " &
-                                    AbbreviatePath(fiTargetFile.DirectoryName) & " because currently in use (by an unknown process)")
+            If fiTargetFile.Exists Then
+
+                If itemInUse <> eItemInUseConstants.NotInUse Then
+                    If fiTargetFile.Name = mExecutingExeName Then
+                        ' Update DMSUpdateManager.exe if it is not in the same folder as the starting folder
+                        If Not String.Equals(fiTargetFile.DirectoryName, mOutputFolderPath) Then
+                            itemInUse = eItemInUseConstants.NotInUse
+                        End If
                     End If
-                Else
-                    ShowMessage(fileUsageMessage)
                 End If
 
-                Return False
+                If itemInUse <> eItemInUseConstants.NotInUse Then
+                    ' Do not update this file; it is in use (or another file in this folder is in use)
+                    If String.IsNullOrWhiteSpace(fileUsageMessage) Then
+                        If itemInUse = eItemInUseConstants.FolderInUse Then
+                            ShowMessage("Skipping " & fiSourceFile.Name & " because folder " &
+                                AbbreviatePath(fiTargetFile.DirectoryName) & " is in use (by an unknown process)")
+                        Else
+                            ShowMessage("Skipping " & fiSourceFile.Name & " in folder " &
+                                AbbreviatePath(fiTargetFile.DirectoryName) & " because currently in use (by an unknown process)")
+                        End If
+                    Else
+                        ShowMessage(fileUsageMessage)
+                    End If
+
+                    Return False
+                End If
             End If
 
             CopyFile(fiSourceFile, fiTargetFile, fileUpdateCount, strCopyReason)
@@ -374,8 +390,8 @@ Public Class clsDMSUpdateManager
 
         mLocalErrorCode = eDMSUpdateManagerErrorCodes.NoError
 
-        Dim thisExe As String = Assembly.GetExecutingAssembly().Location
-        Dim vsHostName = Path.ChangeExtension(Path.GetFileName(thisExe), "vshost.exe").ToLower()
+        Dim executingExePath As String = Assembly.GetExecutingAssembly().Location
+        Dim vsHostName = Path.ChangeExtension(mExecutingExeName, "vshost.exe").ToLower()
 
         mProcessesDict.Clear()
         Dim results = New ManagementObjectSearcher("SELECT ProcessId, ExecutablePath, CommandLine FROM Win32_Process")
@@ -392,7 +408,7 @@ Public Class clsDMSUpdateManager
 
             ' Skip this process if it is the active DMSUpdateManager, or DMSUpdateManager.vshost.exe or cmd.exe
             Dim exeLCase = Path.GetFileName(processPath).ToLower()
-            If processPath.Contains(thisExe) OrElse exeLCase = vsHostName OrElse exeLCase = "cmd.exe" Then
+            If processPath.Contains(executingExePath) OrElse exeLCase = vsHostName OrElse exeLCase = "cmd.exe" Then
                 Continue For
             End If
 
@@ -408,8 +424,8 @@ Public Class clsDMSUpdateManager
         mProcessesMatchingTarget = New Dictionary(Of UInt32, String)
 
         ' Ignore checking for running processes in the first folder that we are updating
-        mLastFolderProcessesChecked = Path.GetDirectoryName(thisExe)
-        mLastFolderRunningProcessPath = Path.GetFileName(thisExe)
+        mLastFolderProcessesChecked = Path.GetDirectoryName(executingExePath)
+        mLastFolderRunningProcessPath = Path.GetFileName(executingExePath)
 
     End Sub
 
