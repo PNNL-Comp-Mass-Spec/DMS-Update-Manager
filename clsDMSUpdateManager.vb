@@ -28,7 +28,7 @@ Public Class clsDMSUpdateManager
         mFileDate = "August 2, 2016"
 
         mFilesToIgnore = New SortedSet(Of String)(StringComparer.InvariantCultureIgnoreCase)
-        mProcessesDict = New Dictionary(Of UInt32, udtProcessInfoType)
+        mProcessesDict = New Dictionary(Of UInt32, clsProcessInfo)
 
         InitializeLocalVariables()
     End Sub
@@ -68,17 +68,14 @@ Public Class clsDMSUpdateManager
 
 #Region "Structures"
 
-    Private Structure udtProcessInfoType
-        Public ExePath As String
-        Public CommandLine As String
-    End Structure
-
 #End Region
 
 #Region "Classwide Variables"
 
     ' When true, then messages will be displayed and logged showing the files that would be copied
     Private mPreviewMode As Boolean
+
+    Private mProcessesShown As Boolean = False
 
     ' If False, then will not overwrite files in the target folder that are newer than files in the source folder
     Private mOverwriteNewerFiles As Boolean
@@ -108,15 +105,19 @@ Public Class clsDMSUpdateManager
 
     ' Store the results of the WMI query getting running processes with command line data
     ' Keys are Process ID
-    ' Values udtProcessInfoType, tracking Path to the Exe for the process, and the Command Line used to start the process
-    ' (command line may have absolute path or relative path, depending on how the process was started)
-    Private ReadOnly mProcessesDict As Dictionary(Of UInt32, udtProcessInfoType)
+    ' Values are clsProcessInfo
+    Private ReadOnly mProcessesDict As Dictionary(Of UInt32, clsProcessInfo)
 
     ' Keys are process ID
     ' Values are the full command line for the process
     Private mProcessesMatchingTarget As Dictionary(Of UInt32, String)
 
-    Private mLastFolderPath As String
+    Private mLastFolderProcessesChecked As String
+    Private mLastFolderRunningProcessPath As String
+
+    Private mSourceFolderPathBase As String
+    Private mTargetFolderPathBase As String
+
 #End Region
 
 #Region "Properties"
@@ -172,6 +173,34 @@ Public Class clsDMSUpdateManager
 #End Region
 
     ''' <summary>
+    ''' Shorten folderPath if it starts with mTargetFolderPathBase
+    ''' </summary>
+    ''' <param name="fileOrFolderPath"></param>
+    ''' <returns></returns>
+    Private Function AbbreviatePath(fileOrFolderPath As String) As String
+        Return AbbreviatePath(fileOrFolderPath, mTargetFolderPathBase)
+    End Function
+
+    ''' <summary>
+    ''' Shorten folderPath if it starts with folderPathBase
+    ''' </summary>
+    ''' <param name="fileOrFolderPath"></param>
+    ''' <returns></returns>
+    Private Function AbbreviatePath(fileOrFolderPath As String, folderPathBase As String) As String
+        If fileOrFolderPath.StartsWith(folderPathBase) Then
+            If fileOrFolderPath.Length > folderPathBase.Length Then
+                Return fileOrFolderPath.Substring(folderPathBase.Length + 1)
+            Else
+                Return "."
+            End If
+
+        End If
+
+        Return fileOrFolderPath
+    End Function
+
+
+    ''' <summary>
     ''' Add a file to ignore from processing
     ''' </summary>
     ''' <param name="strFileName">Full filename (no wildcards)</param>
@@ -205,7 +234,7 @@ Public Class clsDMSUpdateManager
         Dim updatedFileInfo = "New: " & GetFileDateAndSize(fiSourceFile)
 
         If mPreviewMode Then
-            ShowOldAndNewFileInfo("Preview: Update file: ", fiSourceFile, fiTargetFile, existingFileInfo, updatedFileInfo, strCopyReason, False)
+            ShowOldAndNewFileInfo("Preview: Update file: ", fiSourceFile, fiTargetFile, existingFileInfo, updatedFileInfo, strCopyReason, True)
         Else
             ShowOldAndNewFileInfo("Update file: ", fiSourceFile, fiTargetFile, existingFileInfo, updatedFileInfo, strCopyReason, True)
 
@@ -305,9 +334,11 @@ Public Class clsDMSUpdateManager
                 ' Do not update this file; it is in use (or another file in this folder is in use)
                 If String.IsNullOrWhiteSpace(fileUsageMessage) Then
                     If itemInUse = eItemInUseConstants.FolderInUse Then
-                        ShowMessage("Skipping " & fiSourceFile.Name & " because folder " & fiTargetFile.DirectoryName & " is in use (by an unknown process)")
+                        ShowMessage("Skipping " & fiSourceFile.Name & " because folder " &
+                                    AbbreviatePath(fiTargetFile.DirectoryName) & " is in use (by an unknown process)")
                     Else
-                        ShowMessage("Skipping " & fiSourceFile.Name & " in folder " & fiTargetFile.DirectoryName & " because currently in use (by an unknown process)")
+                        ShowMessage("Skipping " & fiSourceFile.Name & " in folder " &
+                                    AbbreviatePath(fiTargetFile.DirectoryName) & " because currently in use (by an unknown process)")
                     End If
                 Else
                     ShowMessage(fileUsageMessage)
@@ -344,6 +375,8 @@ Public Class clsDMSUpdateManager
         mLocalErrorCode = eDMSUpdateManagerErrorCodes.NoError
 
         Dim thisExe As String = Assembly.GetExecutingAssembly().Location
+        Dim vsHostName = Path.ChangeExtension(Path.GetFileName(thisExe), "vshost.exe").ToLower()
+
         mProcessesDict.Clear()
         Dim results = New ManagementObjectSearcher("SELECT ProcessId, ExecutablePath, CommandLine FROM Win32_Process")
 
@@ -353,17 +386,30 @@ Public Class clsDMSUpdateManager
             Dim cmd = DirectCast(item("CommandLine"), String)
 
             ' Only store the processes that have non-empty command lines and are not referring to the current executable
-            If (Not String.IsNullOrWhiteSpace(cmd)) AndAlso (Not processPath.Contains(thisExe)) Then
-                Dim udtProcessInfo = New udtProcessInfoType
-                udtProcessInfo.ExePath = processPath
-                udtProcessInfo.CommandLine = cmd
-
-                mProcessesDict.Add(processID, udtProcessInfo)
+            If String.IsNullOrWhiteSpace(cmd) Then
+                Continue For
             End If
+
+            ' Skip this process if it is the active DMSUpdateManager, or DMSUpdateManager.vshost.exe or cmd.exe
+            Dim exeLCase = Path.GetFileName(processPath).ToLower()
+            If processPath.Contains(thisExe) OrElse exeLCase = vsHostName OrElse exeLCase = "cmd.exe" Then
+                Continue For
+            End If
+
+            Dim newProcess = New clsProcessInfo(processID, processPath, cmd)
+            If newProcess.FolderHierarchy.Count < 3 Then
+                ' Process running in the root folder or one below the root folder; ignore it
+                Continue For
+            End If
+            mProcessesDict.Add(processID, newProcess)
+
         Next
 
         mProcessesMatchingTarget = New Dictionary(Of UInt32, String)
-        mLastFolderPath = thisExe ' Use something that will always be ignored; in this case, the path to this executable
+
+        ' Ignore checking for running processes in the first folder that we are updating
+        mLastFolderProcessesChecked = Path.GetDirectoryName(thisExe)
+        mLastFolderRunningProcessPath = Path.GetFileName(thisExe)
 
     End Sub
 
@@ -544,8 +590,13 @@ Public Class clsDMSUpdateManager
             Dim diSourceFolder = New DirectoryInfo(mSourceFolderPath)
             Dim diTargetFolder = New DirectoryInfo(targetFolderPath)
 
+            mSourceFolderPathBase = diSourceFolder.Parent.FullName
+            mTargetFolderPathBase = diTargetFolder.Parent.FullName
+
             MyBase.mProgressStepDescription = "Updating " & diTargetFolder.Name & ControlChars.NewLine & " using " & diSourceFolder.FullName
             MyBase.ResetProgress()
+
+            ShowMessage("Updating " & diTargetFolder.FullName & ControlChars.NewLine & " using " & diSourceFolder.FullName, False)
 
             Dim success = UpdateFolderWork(diSourceFolder.FullName, diTargetFolder.FullName, blnPushNewSubfolders:=False, blnProcessingSubFolder:=False)
 
@@ -556,7 +607,7 @@ Public Class clsDMSUpdateManager
             Return success
 
         Catch ex As Exception
-            HandleException("Error in UpdateFolder", ex)
+            HandleException("Error in UpdateFolder: " & ex.Message, ex)
             Return False
         End Try
 
@@ -617,20 +668,24 @@ Public Class clsDMSUpdateManager
 
         If diTargetSubFolder.Exists Then
             Dim fileCount = diTargetSubFolder.GetFiles().Length
+            Dim folderCount = diTargetSubFolder.GetDirectories().Length
+
             If fileCount > 0 Then
-                ShowMessage("Folder flagged for deletion, but it is not empty (FileCount=" & fileCount & "): " & diTargetSubFolder.FullName)
+                ShowMessage("Folder flagged for deletion, but it is not empty (File Count  = " & fileCount & "): " & AbbreviatePath(diTargetSubFolder.FullName))
+            ElseIf folderCount > 0 Then
+                ShowMessage("Folder flagged for deletion, but it is not empty (Folder Count = " & folderCount & "): " & AbbreviatePath(diTargetSubFolder.FullName))
             Else
                 Try
                     If mPreviewMode Then
                         ShowMessage("Preview " & folderDescription & " delete: " & diTargetSubFolder.FullName)
                     Else
                         diTargetSubFolder.Delete(False)
-                        ShowMessage("Deleted " & folderDescription & diTargetSubFolder.FullName)
+                        ShowMessage("Deleted " & folderDescription & " " & diTargetSubFolder.FullName)
                     End If
 
                     Return True
                 Catch ex As Exception
-                    HandleException("Error removing empty " & folderDescription & " flagged with " & deleteFlag, ex)
+                    HandleException("Error removing empty " & folderDescription & " flagged with " & deleteFlag & " at " & diTargetSubFolder.FullName, ex)
                 End Try
             End If
         End If
@@ -645,7 +700,9 @@ Public Class clsDMSUpdateManager
       blnPushNewSubfolders As Boolean,
       blnProcessingSubFolder As Boolean) As Boolean
 
-        MyBase.mProgressStepDescription = "Updating " & strTargetFolderPath & ControlChars.NewLine & " using " & strSourceFolderPath
+        MyBase.mProgressStepDescription = "Updating " & AbbreviatePath(strTargetFolderPath) & ControlChars.NewLine &
+            " using " & AbbreviatePath(strSourceFolderPath, mSourceFolderPathBase)
+
         ShowMessage(MyBase.mProgressStepDescription, False)
 
         ' Make sure the target folder exists
@@ -829,16 +886,16 @@ Public Class clsDMSUpdateManager
             Dim processes = Process.GetProcesses().ToList()
             processes.Sort(New ProcessNameComparer)
 
-            If mPreviewMode Then
+            If mPreviewMode And Not mProcessesShown Then
                 Console.WriteLine()
-                ShowMessage("Examining running processes for Java")
+                ShowMessage("Examining running processes for Java", False)
             End If
 
             Dim lastProcess = String.Empty
 
             For Each oProcess As Process In processes
 
-                If mPreviewMode Then
+                If mPreviewMode And Not mProcessesShown Then
                     If oProcess.ProcessName <> lastProcess Then
                         Console.WriteLine(oProcess.ProcessName)
                     End If
@@ -852,7 +909,7 @@ Public Class clsDMSUpdateManager
                 Try
                     Dim commandLine = GetCommandLine(oProcess, INCLUDE_PROGRAM_PATH)
 
-                    If mPreviewMode Then
+                    If mPreviewMode And Not mProcessesShown Then
                         Console.WriteLine("  " & commandLine)
                     End If
 
@@ -879,8 +936,9 @@ Public Class clsDMSUpdateManager
 
             Next
 
-            If mPreviewMode Then
+            If mPreviewMode And Not mProcessesShown Then
                 Console.WriteLine()
+                mProcessesShown = True
             End If
 
         Catch ex As Exception
@@ -913,15 +971,45 @@ Public Class clsDMSUpdateManager
         folderUsageMessage = String.Empty
 
         Try
-            Dim firstProcessName As String = String.Empty
-            Dim processCount = GetNumTargetFolderProcesses(strTargetFolderPath, firstProcessName)
+            Dim firstProcessPath As String = String.Empty
+            Dim processCount = GetNumTargetFolderProcesses(strTargetFolderPath, firstProcessPath)
 
             If processCount > 0 Then
-                folderUsageMessage = "Skipping " & targetFileName & " because folder " & strTargetFolderPath & " is in use by "
-                If processCount = 1 Then
-                    folderUsageMessage &= firstProcessName
+                ' Example log message:
+                ' Skipping UIMFLibrary.dll because folder DeconTools is in use by process DeconConsole.exe
+
+                folderUsageMessage = "Skipping " & targetFileName & " because folder " & AbbreviatePath(strTargetFolderPath) & " is in use by "
+
+                Dim processPathToShow As String
+
+                If String.IsNullOrWhiteSpace(firstProcessPath) Then
+                    processPathToShow = "an unknown process"
                 Else
-                    folderUsageMessage &= processCount & " processes on this system"
+                    Dim diProcessFile = New FileInfo(firstProcessPath)
+
+                    If diProcessFile.DirectoryName = strTargetFolderPath Then
+                        processPathToShow = Path.GetFileName(firstProcessPath)
+
+                    ElseIf strTargetFolderPath.StartsWith(diProcessFile.DirectoryName) Then
+                        Dim relativePath = diProcessFile.Directory.Parent.FullName
+                        Dim pathPart As String
+                        If diProcessFile.DirectoryName.Length > relativePath.Length Then
+                            pathPart = diProcessFile.DirectoryName.Substring(relativePath.Length + 1)
+                        Else
+                            pathPart = diProcessFile.DirectoryName
+                        End If
+
+                        processPathToShow = Path.Combine(pathPart, Path.GetFileName(firstProcessPath))
+                    Else
+                        processPathToShow = firstProcessPath
+                    End If
+
+                End If
+
+                If processCount = 1 Then
+                    folderUsageMessage &= "process " & processPathToShow
+                Else
+                    folderUsageMessage &= processCount & " processes on this system, including " & processPathToShow
                 End If
 
                 Return True
@@ -938,37 +1026,78 @@ Public Class clsDMSUpdateManager
     ''' Determine the number of processes using files in the given folder
     ''' </summary>
     ''' <param name="strTargetFolderPath">Folder to examine</param>
-    ''' <param name="firstProcessName">Output parameter: first process using files in this folder; empty string if no processes</param>
+    ''' <param name="firstProcessPath">Output parameter: first process using files in this folder; empty string if no processes</param>
     ''' <returns>Count of processes using this folder</returns>
-    Private Function GetNumTargetFolderProcesses(strTargetFolderPath As String, <Out()> ByRef firstProcessName As String) As Integer
+    Private Function GetNumTargetFolderProcesses(strTargetFolderPath As String, <Out()> ByRef firstProcessPath As String) As Integer
 
-        firstProcessName = String.Empty
+        firstProcessPath = String.Empty
 
         ' Filter the queried results for each call to this function.
         ' Considered .Equals, but that would exclude this safety from functioning for things like system.data.sqlite
         ' .Contains is better since it will exclude all subfolders of a folder with a running process
-        If strTargetFolderPath.Contains(mLastFolderPath) Then
+
+        Dim targetFolderPathHierarchy = clsProcessInfo.GetFolderHierarchy(strTargetFolderPath)
+
+        If String.Equals(strTargetFolderPath, mLastFolderProcessesChecked, StringComparison.InvariantCultureIgnoreCase) Then
+            firstProcessPath = mLastFolderRunningProcessPath
             Return mProcessesMatchingTarget.Count
         End If
 
         mProcessesMatchingTarget.Clear()
-        mLastFolderPath = strTargetFolderPath
+        mLastFolderProcessesChecked = strTargetFolderPath
+        mLastFolderRunningProcessPath = String.Empty
 
-        For Each item In mProcessesDict.Where(Function(x) x.Value.ExePath.Contains(strTargetFolderPath))
-            mProcessesMatchingTarget.Add(item.Key, item.Value.CommandLine)
-            If String.IsNullOrWhiteSpace(firstProcessName) Then
-                firstProcessName = Path.GetFileName(item.Value.ExePath)
+        ' Look for running processes with a .exe in the target folder (or in a parent of the target folder)
+        ' Ignore cmd.exe
+        For Each item In mProcessesDict
+            Dim exeFolderHierarchy = item.Value.FolderHierarchy
+
+            If exeFolderHierarchy.Count > targetFolderPathHierarchy.Count Then
+                Continue For
             End If
-        Next
 
-        For Each item In mProcessesDict.Where(Function(x) x.Value.CommandLine.Contains(strTargetFolderPath))
-            If Not mProcessesMatchingTarget.ContainsKey(item.Key) Then
-                mProcessesMatchingTarget.Add(item.Key, item.Value.CommandLine)
-                If String.IsNullOrWhiteSpace(firstProcessName) Then
-                    firstProcessName = Path.GetFileName(item.Value.ExePath)
+            Dim treesMatch = True
+            For index = 0 To exeFolderHierarchy.Count - 1
+                If targetFolderPathHierarchy(index) <> exeFolderHierarchy(index) Then
+                    treesMatch = False
+                    Exit For
+                End If
+            Next
+            If Not treesMatch Then Continue For
+
+            mProcessesMatchingTarget.Add(item.Key, item.Value.CommandLine)
+            If String.IsNullOrWhiteSpace(firstProcessPath) Then
+                firstProcessPath = item.Value.ExePath
+                If String.IsNullOrWhiteSpace(firstProcessPath) Then
+                    firstProcessPath = item.Value.CommandLine
                 End If
             End If
+
         Next
+
+        ' Next examine the command line arguments of running processes
+        ' This can help check for .jar files that don't have a .checkjava flag file
+        For Each item In mProcessesDict
+
+            If item.Value.CommandLineArgs.IndexOf(strTargetFolderPath, StringComparison.InvariantCultureIgnoreCase) < 0 Then
+                Continue For
+            End If
+
+            If mProcessesMatchingTarget.ContainsKey(item.Key) Then Continue For
+
+            mProcessesMatchingTarget.Add(item.Key, item.Value.CommandLine)
+            If String.IsNullOrWhiteSpace(firstProcessPath) Then
+                firstProcessPath = item.Value.ExePath
+                If String.IsNullOrWhiteSpace(firstProcessPath) Then
+                    firstProcessPath = item.Value.CommandLine
+                End If
+            End If
+
+        Next
+
+        If mProcessesMatchingTarget.Count > 0 Then
+            mLastFolderRunningProcessPath = firstProcessPath
+        End If
 
         Return mProcessesMatchingTarget.Count
 
@@ -1028,7 +1157,15 @@ Public Class clsDMSUpdateManager
                                           eDateComparisonModeConstants.CopyIfSizeOrDateDiffers,
                                           blnProcessingSubFolder, itemInUse, fileUsageMessage)
             If copied Then
-                ShowMessage("Rolled back file " & fiSourceFile.Name &
+                Dim prefix As String
+
+                If mPreviewMode Then
+                    prefix = "Preview rollback of file "
+                Else
+                    prefix = "Rolled back file "
+                End If
+
+                ShowMessage(prefix & fiSourceFile.Name &
                             " to version from " & fiSourceFile.LastWriteTimeUtc.ToLocalTime() &
                             " with size " & (fiSourceFile.Length / 1024.0).ToString("0.0") & " KB")
             End If

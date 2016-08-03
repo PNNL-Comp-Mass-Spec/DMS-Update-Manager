@@ -68,6 +68,7 @@
     <Compile Include="clsParseCommandLine.vb" />
     <Compile Include="clsProcessFilesOrFoldersBase.vb" />
     <Compile Include="clsProcessFoldersBaseClass.vb" />
+    <Compile Include="clsProcessInfo.vb" />
     <Compile Include="clsXmlSettingsFileAccessor.vb" />
     <Compile Include="modMain.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
