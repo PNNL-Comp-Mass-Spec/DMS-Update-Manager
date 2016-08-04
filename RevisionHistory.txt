@@ -1,5 +1,9 @@
 DMS Update Manager Change Log
 
+Version 1.2.6060; August 4, 2016
+	- Show the ProcessId of the process using a folder and thus blocking updates of files in that folder
+	- Do not try to update the running instances of DMSUpdateManager.exe
+
 Version 1.2.6058; August 2, 2016
 	- Updated check of folders in use by other processes to use ExecutablePath from WMI instead of CommandLine for checking the .exe location
 		- Command line may have a relative path to the exe, while ExecutablePath is always the full path
