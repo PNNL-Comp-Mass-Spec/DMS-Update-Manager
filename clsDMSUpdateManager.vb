@@ -413,6 +413,13 @@ Public Class clsDMSUpdateManager
                 Continue For
             End If
 
+            ' If the ExecutablePath is null/empty, then replace it with the CommandLine string
+            ' Otherwise, the next check with throw an exception when the ExecutablePath is null (at the .ToLower() part of line)
+            ' We could also set it to an empty string, but using the CommandLine for pessimistic purposes
+            If String.IsNullOrWhiteSpace(processPath) Then
+                processPath = cmd
+            End If
+
             ' Skip this process if it is the active DMSUpdateManager, or DMSUpdateManager.vshost.exe or cmd.exe
             Dim exeLCase = Path.GetFileName(processPath).ToLower()
             If processPath.Contains(executingExePath) OrElse exeLCase = vsHostName OrElse exeLCase = "cmd.exe" Then
