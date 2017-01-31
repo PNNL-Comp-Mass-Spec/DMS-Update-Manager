@@ -8,7 +8,7 @@ Imports System.Text
 Imports System.Threading
 
 ''' <summary>
-'''  This program copies new and updated files from a source folder (master file folder) 
+''' This program copies new and updated files from a source folder (master file folder) 
 ''' to a target folder
 ''' </summary>
 ''' <remarks>
@@ -25,7 +25,7 @@ Public Class clsDMSUpdateManager
     ''' Constructor
     ''' </summary>
     Public Sub New()
-        mFileDate = "August 4, 2016"
+        mFileDate = "August 16, 2016"
 
         mFilesToIgnore = New SortedSet(Of String)(StringComparer.InvariantCultureIgnoreCase)
         mProcessesDict = New Dictionary(Of UInt32, clsProcessInfo)

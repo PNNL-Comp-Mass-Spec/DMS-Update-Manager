@@ -3,23 +3,24 @@
 Imports System.IO
 Imports System.Reflection
 Imports System.Threading
-' This program copies new and updated files from a source folder to a target folder
-'
-' -------------------------------------------------------------------------------
-' Written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA)
-' Program started January 16, 2009
-'
-' E-mail: matthew.monroe@pnnl.gov or matt@alchemistmatt.com
-' Website: http://omics.pnl.gov/ or http://www.sysbio.org/resources/staff/ or http://panomics.pnnl.gov/
-' -------------------------------------------------------------------------------
-' 
 
+''' <summary>
+''' This program copies new and updated files from a source folder to a target folder
+''' </summary>
+''' <remarks>
+''' Written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA)
+''' Program started January 16, 2009
+''' --
+''' E-mail: matthew.monroe@pnnl.gov or matt@alchemistmatt.com
+''' Website: http://omics.pnl.gov/ or http://www.sysbio.org/resources/staff/ or http://panomics.pnnl.gov/
+''' </remarks>
 Module modMain
-    Public Const PROGRAM_DATE As String = "August 2, 2016"
+    Public Const PROGRAM_DATE As String = "November 31, 2017"
 
     ' Either mSourceFolderPath and mTargetFolderPath must be specified, or mParameterFilePath needs to be specified
     Private mSourceFolderPath As String         ' Option A
     Private mTargetFolderPath As String         ' Option A
+
     Private mParameterFilePath As String        ' Option B
 
     Private mLogMessagesToFile As Boolean
@@ -30,11 +31,10 @@ Module modMain
     Public Function Main() As Integer
         ' Returns 0 if no error, error code if an error
 
-        Dim intReturnCode As Integer
+        Dim intReturnCode = 0
         Dim objParseCommandLine As New clsParseCommandLine
         Dim blnProceed As Boolean
 
-        intReturnCode = 0
         mSourceFolderPath = String.Empty
         mTargetFolderPath = String.Empty
         mParameterFilePath = String.Empty
