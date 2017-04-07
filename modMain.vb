@@ -15,7 +15,7 @@ Imports System.Threading
 ''' Website: http://omics.pnl.gov/ or http://www.sysbio.org/resources/staff/ or http://panomics.pnnl.gov/
 ''' </remarks>
 Module modMain
-    Public Const PROGRAM_DATE As String = "November 31, 2017"
+    Public Const PROGRAM_DATE As String = "April 7, 2017"
 
     ' Either mSourceFolderPath and mTargetFolderPath must be specified, or mParameterFilePath needs to be specified
     Private mSourceFolderPath As String         ' Option A

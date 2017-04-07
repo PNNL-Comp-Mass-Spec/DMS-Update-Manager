@@ -42,5 +42,7 @@ xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToo
 
 xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution_x86
 
+xcopy /d /y DMSUpdateManager.exe \\protoapps\DMS_Programs\DataPackage_Archive_Manager
+
 @echo off
 pause
