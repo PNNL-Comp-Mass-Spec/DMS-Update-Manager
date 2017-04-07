@@ -1,5 +1,12 @@
 DMS Update Manager Change Log
 
+Version 1.2.6306; April 7, 2017
+	- Update clsParseCommandLine
+	- Update to .NET 4.6.2
+
+Version 1.2.6072; August 16, 2016
+	- In the few cases where the ExecutablePath is not available for a process, use the CommandLine for the checks on the path.
+
 Version 1.2.6060; August 4, 2016
 	- Show the ProcessId of the process using a folder and thus blocking updates of files in that folder
 	- Do not try to update the running instances of DMSUpdateManager.exe
