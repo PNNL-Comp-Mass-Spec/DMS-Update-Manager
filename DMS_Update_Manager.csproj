@@ -46,16 +46,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="clsDMSUpdateManager.cs" />
-    <Compile Include="clsParseCommandLine.cs" />
     <Compile Include="clsProcessFilesOrFoldersBase.cs" />
     <Compile Include="clsProcessFoldersBaseClass.cs" />
     <Compile Include="clsProcessInfo.cs" />
-    <Compile Include="clsXmlSettingsFileAccessor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="PRISM-Library">
+      <Version>2.4.40</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

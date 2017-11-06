@@ -7,6 +7,7 @@ using System.Management;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using PRISM;
 
 namespace DMSUpdateManager
 {

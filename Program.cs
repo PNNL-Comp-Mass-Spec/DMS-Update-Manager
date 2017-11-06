@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using PRISM;
 
 namespace DMSUpdateManager
 {
