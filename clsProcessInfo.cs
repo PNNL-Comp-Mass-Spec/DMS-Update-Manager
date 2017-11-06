@@ -1,83 +1,95 @@
-﻿Imports System.IO
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
-Public Class clsProcessInfo
+namespace DMSUpdateManager
+{
+    public class clsProcessInfo
+    {
+        /// <summary>
+        /// Process ID
+        /// </summary>
+        /// <returns></returns>
+        public long ProcessID { get; }
 
-    ''' <summary>
-    ''' Process ID
-    ''' </summary>
-    ''' <returns></returns>
-    Public ReadOnly Property ProcessID As Long
+        /// <summary>
+        /// Full path to the .exe
+        /// </summary>
+        /// <returns></returns>
+        public string ExePath { get; }
 
-    ''' <summary>
-    ''' Full path to the .exe
-    ''' </summary>
-    ''' <returns></returns>
-    Public ReadOnly Property ExePath As String
+        /// <summary>
+        /// Parent folder of the .exe
+        /// </summary>
+        /// <returns></returns>
+        public string FolderPath { get; }
 
-    ''' <summary>
-    ''' Parent folder of the .exe
-    ''' </summary>
-    ''' <returns></returns>
-    Public ReadOnly Property FolderPath As String
+        /// <summary>
+        /// Command line, including the .exe and any command line arguments
+        /// </summary>
+        /// <returns></returns>
+        /// <remarks>May have absolute path or relative path to the Exe, depending on how the process was started</remarks>
+        public string CommandLine { get; }
 
-    ''' <summary>
-    ''' Command line, including the .exe and any command line arguments
-    ''' </summary>
-    ''' <returns></returns>
-    ''' <remarks>May have absolute path or relative path to the Exe, depending on how the process was started</remarks>
-    Public ReadOnly Property CommandLine As String
+        /// <summary>
+        /// Arguments portion of the command line
+        /// </summary>
+        /// <returns></returns>
+        public string CommandLineArgs { get; }
 
-    ''' <summary>
-    ''' Arguments portion of the command line
-    ''' </summary>
-    ''' <returns></returns>
-    Public ReadOnly Property CommandLineArgs As String
+        // ReSharper disable once CollectionNeverUpdated.Global
+        /// <summary>
+        /// FolderPath, split on path separators
+        /// </summary>
+        /// <returns></returns>
+        public List<string> FolderHierarchy { get; }
 
-    ' ReSharper disable once CollectionNeverUpdated.Global
-    ''' <summary>
-    ''' FolderPath, split on path separators
-    ''' </summary>
-    ''' <returns></returns>
-    Public ReadOnly Property FolderHierarchy As List(Of String)
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="lngProcessID">Process ID</param>
+        /// <param name="strExePath">Executable path</param>
+        /// <param name="strCommandLine">Command line</param>
+        public clsProcessInfo(long lngProcessID, string strExePath, string strCommandLine)
+        {
+            ProcessID = lngProcessID;
+            ExePath = strExePath;
+            CommandLine = strCommandLine;
 
-    ''' <summary>
-    ''' Constructor
-    ''' </summary>
-    ''' <param name="lngProcessID">Process ID</param>
-    ''' <param name="strExePath">Executable path</param>
-    ''' <param name="strCommandLine">Command line</param>
-    Public Sub New(lngProcessID As Long, strExePath As String, strCommandLine As String)
-        ProcessID = lngProcessID
-        ExePath = strExePath
-        CommandLine = strCommandLine
+            FolderPath = Path.GetDirectoryName(strExePath);
+            CommandLine = strCommandLine;
+            FolderHierarchy = GetFolderHierarchy(FolderPath);
 
-        FolderPath = Path.GetDirectoryName(strExePath)
-        CommandLine = strCommandLine
-        FolderHierarchy = GetFolderHierarchy(FolderPath)
+            var exeName = Path.GetFileName(ExePath);
+            var exeIndex = CommandLine.IndexOf(exeName, StringComparison.Ordinal);
 
-        Dim exeName = Path.GetFileName(ExePath)
-        Dim exeIndex = CommandLine.IndexOf(exeName, StringComparison.Ordinal)
+            if (exeIndex >= 0)
+            {
+                CommandLineArgs = CommandLine.Substring(exeIndex + exeName.Length);
+            }
+            else
+            {
+                CommandLineArgs = CommandLine;
+            }
+        }
 
-        If exeIndex >= 0 Then
-            CommandLineArgs = CommandLine.Substring(exeIndex + exeName.Length)
-        Else
-            CommandLineArgs = CommandLine
-        End If
+        public static List<string> GetFolderHierarchy(string folderPath)
+        {
+            var folderPathHierarchy = folderPath.Split(Path.DirectorySeparatorChar).ToList();
+            return folderPathHierarchy;
+        }
 
-    End Sub
-
-    Public Shared Function GetFolderHierarchy(folderPath As String) As List(Of String)
-        Dim folderPathHierarchy = folderPath.Split(Path.DirectorySeparatorChar).ToList()
-        Return folderPathHierarchy
-    End Function
-
-
-    Public Overrides Function ToString() As String
-        If CommandLine.Contains(ExePath) Then
-            Return CommandLine
-        Else
-            Return ExePath
-        End If
-    End Function
-
-End Class
+        public override string ToString()
+        {
+            if (CommandLine.Contains(ExePath))
+            {
+                return CommandLine;
+            }
+            else
+            {
+                return ExePath;
+            }
+        }
+    }
+}
