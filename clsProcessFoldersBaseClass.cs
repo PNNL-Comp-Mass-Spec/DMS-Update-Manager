@@ -22,7 +22,7 @@ namespace DMSUpdateManager
         /// <remarks></remarks>
         public clsProcessFoldersBaseClass()
         {
-            mFileDate = "October 17, 2013";
+            mFileDate = "November 20, 2013";
             mErrorCode = eProcessFoldersErrorCodes.NoError;
         }
 
@@ -40,23 +40,28 @@ namespace DMSUpdateManager
             UnspecifiedError = -1
         }
 
-        //' Copy the following to any derived classes
-        //'Public Enum eDerivedClassErrorCodes
-        //'    NoError = 0
-        //'    UnspecifiedError = -1
-        //'End Enum
+        // Copy the following to any derived classes
+        //enum eDerivedClassErrorCodes
+        //{
+        //    NoError = 0,
+        //    UnspecifiedError = -1
+        //}
 
         #endregion
 
         #region "Classwide Variables"
 
-        //'Private mLocalErrorCode As eDerivedClassErrorCodes
+        // Copy the following to any derived classes
+        //
+        //private eDerivedClassErrorCodes mLocalErrorCode;
 
-        //'Public ReadOnly Property LocalErrorCode() As eDerivedClassErrorCodes
-        //'    Get
-        //'        Return mLocalErrorCode
-        //'    End Get
-        //'End Property
+        //public eDerivedClassErrorCodes LocalErrorCode
+        //{
+        //    get
+        //    {
+        //        return mLocalErrorCode;
+        //    }
+        //}
 
         private eProcessFoldersErrorCodes mErrorCode;
 
@@ -83,15 +88,14 @@ namespace DMSUpdateManager
             //
             // Returns True if success, False if failure
 
-            DirectoryInfo ioFolder = default(DirectoryInfo);
-            bool blnSuccess = false;
+            bool blnSuccess;
 
             try
             {
                 // Make sure strInputFolderPath points to a valid folder
-                ioFolder = new DirectoryInfo(strInputFolderPath);
+                var diFolder = new DirectoryInfo(strInputFolderPath);
 
-                if (!ioFolder.Exists)
+                if (!diFolder.Exists)
                 {
                     if (ShowMessages)
                     {
@@ -109,19 +113,19 @@ namespace DMSUpdateManager
                     if (string.IsNullOrWhiteSpace(strOutputFolderPath))
                     {
                         // Define strOutputFolderPath based on strInputFolderPath
-                        strOutputFolderPath = ioFolder.FullName;
+                        strOutputFolderPath = diFolder.FullName;
                     }
 
                     // Make sure strOutputFolderPath points to a folder
-                    ioFolder = new DirectoryInfo(strOutputFolderPath);
+                    diFolder = new DirectoryInfo(strOutputFolderPath);
 
-                    if (!ioFolder.Exists)
+                    if (!diFolder.Exists)
                     {
                         // strOutputFolderPath points to a non-existent folder; attempt to create it
-                        ioFolder.Create();
+                        diFolder.Create();
                     }
 
-                    mOutputFolderPath = string.Copy(ioFolder.FullName);
+                    mOutputFolderPath = string.Copy(diFolder.FullName);
 
                     blnSuccess = true;
                 }
@@ -139,7 +143,7 @@ namespace DMSUpdateManager
         {
             // Returns String.Empty if no error
 
-            string strErrorMessage = null;
+            string strErrorMessage;
 
             switch (ErrorCode)
             {
@@ -196,17 +200,8 @@ namespace DMSUpdateManager
         {
             // Returns True if success, False if failure
 
-            bool blnSuccess = false;
-            int intMatchCount = 0;
-
-            string strCleanPath = null;
-            string strInputFolderToUse = null;
-            string strFolderNameMatchPattern = null;
-
-            DirectoryInfo ioInputFolderInfo = default(DirectoryInfo);
-
-            mAbortProcessing = false;
-            blnSuccess = true;
+            AbortProcessing = false;
+            var blnSuccess = true;
             try
             {
                 // Possibly reset the error code
@@ -223,13 +218,14 @@ namespace DMSUpdateManager
                 if ((strInputFolderPath != null) && (strInputFolderPath.Contains("*") | strInputFolderPath.Contains("?")))
                 {
                     // Copy the path into strCleanPath and replace any * or ? characters with _
-                    strCleanPath = strInputFolderPath.Replace("*", "_");
+                    var strCleanPath = strInputFolderPath.Replace("*", "_");
                     strCleanPath = strCleanPath.Replace("?", "_");
 
-                    ioInputFolderInfo = new DirectoryInfo(strCleanPath);
-                    if (ioInputFolderInfo.Parent.Exists)
+                    var diInputFolderInfo = new DirectoryInfo(strCleanPath);
+                    string strInputFolderToUse;
+                    if (diInputFolderInfo.Parent.Exists)
                     {
-                        strInputFolderToUse = ioInputFolderInfo.Parent.FullName;
+                        strInputFolderToUse = diInputFolderInfo.Parent.FullName;
                     }
                     else
                     {
@@ -238,12 +234,15 @@ namespace DMSUpdateManager
                     }
 
                     // Remove any directory information from strInputFolderPath
-                    strFolderNameMatchPattern = Path.GetFileName(strInputFolderPath);
+                    var strFolderNameMatchPattern = Path.GetFileName(strInputFolderPath);
 
                     // Process any matching folder in this folder
                     try
                     {
-                        ioInputFolderInfo = new DirectoryInfo(strInputFolderToUse);
+                        if (string.IsNullOrEmpty(strInputFolderToUse))
+                            throw new ArgumentNullException(strInputFolderPath);
+
+                        diInputFolderInfo = new DirectoryInfo(strInputFolderToUse);
                     }
                     catch (Exception ex)
                     {
@@ -252,13 +251,13 @@ namespace DMSUpdateManager
                         return false;
                     }
 
-                    intMatchCount = 0;
+                    var intMatchCount = 0;
 
-                    foreach (var ioFolderMatch in ioInputFolderInfo.GetDirectories(strFolderNameMatchPattern))
+                    foreach (var diFolder in diInputFolderInfo.GetDirectories(strFolderNameMatchPattern))
                     {
-                        blnSuccess = ProcessFolder(ioFolderMatch.FullName, strOutputFolderAlternatePath, strParameterFilePath, true);
+                        blnSuccess = ProcessFolder(diFolder.FullName, strOutputFolderAlternatePath, strParameterFilePath, true);
 
-                        if (!blnSuccess | mAbortProcessing)
+                        if (!blnSuccess | AbortProcessing)
                             break;
                         intMatchCount += 1;
 
@@ -338,29 +337,24 @@ namespace DMSUpdateManager
             // Calls ProcessFolders for all matching folders in strInputFolderPath
             // If intRecurseFoldersMaxLevels is <=0 then we recurse infinitely
 
-            string strCleanPath = null;
-            string strInputFolderToUse = null;
-            string strFolderNameMatchPattern = null;
-
-            DirectoryInfo ioFolderInfo = default(DirectoryInfo);
-
-            bool blnSuccess = false;
-            int intFolderProcessCount = 0;
-            int intFolderProcessFailCount = 0;
+            bool blnSuccess;
 
             // Examine strInputFolderPath to see if it contains a * or ?
             try
             {
+                DirectoryInfo diFolderInfo;
+                string strInputFolderToUse;
+                string strFolderNameMatchPattern;
                 if ((strInputFolderPath != null) && (strInputFolderPath.Contains("*") | strInputFolderPath.Contains("?")))
                 {
                     // Copy the path into strCleanPath and replace any * or ? characters with _
-                    strCleanPath = strInputFolderPath.Replace("*", "_");
+                    var strCleanPath = strInputFolderPath.Replace("*", "_");
                     strCleanPath = strCleanPath.Replace("?", "_");
 
-                    ioFolderInfo = new DirectoryInfo(strCleanPath);
-                    if (ioFolderInfo.Parent.Exists)
+                    diFolderInfo = new DirectoryInfo(strCleanPath);
+                    if (diFolderInfo.Parent != null && diFolderInfo.Parent.Exists)
                     {
-                        strInputFolderToUse = ioFolderInfo.Parent.FullName;
+                        strInputFolderToUse = diFolderInfo.Parent.FullName;
                     }
                     else
                     {
@@ -373,10 +367,13 @@ namespace DMSUpdateManager
                 }
                 else
                 {
-                    ioFolderInfo = new DirectoryInfo(strInputFolderPath);
-                    if (ioFolderInfo.Exists)
+                    if (string.IsNullOrEmpty(strInputFolderPath))
+                        throw new ArgumentNullException(strInputFolderPath);
+
+                    diFolderInfo = new DirectoryInfo(strInputFolderPath);
+                    if (diFolderInfo.Exists)
                     {
-                        strInputFolderToUse = ioFolderInfo.FullName;
+                        strInputFolderToUse = diFolderInfo.FullName;
                     }
                     else
                     {
@@ -393,9 +390,9 @@ namespace DMSUpdateManager
                     {
                         try
                         {
-                            ioFolderInfo = new DirectoryInfo(strOutputFolderAlternatePath);
-                            if (!ioFolderInfo.Exists)
-                                ioFolderInfo.Create();
+                            diFolderInfo = new DirectoryInfo(strOutputFolderAlternatePath);
+                            if (!diFolderInfo.Exists)
+                                diFolderInfo.Create();
                         }
                         catch (Exception ex)
                         {
@@ -406,9 +403,9 @@ namespace DMSUpdateManager
                     }
 
                     // Initialize some parameters
-                    mAbortProcessing = false;
-                    intFolderProcessCount = 0;
-                    intFolderProcessFailCount = 0;
+                    AbortProcessing = false;
+                    var intFolderProcessCount = 0;
+                    var intFolderProcessFailCount = 0;
 
                     // Call RecurseFoldersWork
                     blnSuccess = RecurseFoldersWork(strInputFolderToUse, strFolderNameMatchPattern, strParameterFilePath,
@@ -435,14 +432,14 @@ namespace DMSUpdateManager
         {
             // If intRecurseFoldersMaxLevels is <=0 then we recurse infinitely
 
-            DirectoryInfo ioInputFolderInfo = default(DirectoryInfo);
+            DirectoryInfo diInputFolderInfo;
 
-            string strOutputFolderPathToUse = null;
-            bool blnSuccess = false;
+            string strOutputFolderPathToUse;
+            bool blnSuccess;
 
             try
             {
-                ioInputFolderInfo = new DirectoryInfo(strInputFolderPath);
+                diInputFolderInfo = new DirectoryInfo(strInputFolderPath);
             }
             catch (Exception ex)
             {
@@ -456,7 +453,7 @@ namespace DMSUpdateManager
             {
                 if (!string.IsNullOrWhiteSpace(strOutputFolderAlternatePath))
                 {
-                    strOutputFolderAlternatePath = Path.Combine(strOutputFolderAlternatePath, ioInputFolderInfo.Name);
+                    strOutputFolderAlternatePath = Path.Combine(strOutputFolderAlternatePath, diInputFolderInfo.Name);
                     strOutputFolderPathToUse = string.Copy(strOutputFolderAlternatePath);
                 }
                 else
@@ -479,7 +476,7 @@ namespace DMSUpdateManager
                 if (intRecursionLevel == 1 & strFolderNameMatchPattern == "*")
                 {
                     // Need to process the current folder
-                    blnSuccess = ProcessFolder(ioInputFolderInfo.FullName, strOutputFolderPathToUse, strParameterFilePath, true);
+                    blnSuccess = ProcessFolder(diInputFolderInfo.FullName, strOutputFolderPathToUse, strParameterFilePath, true);
                     if (!blnSuccess)
                     {
                         intFolderProcessFailCount += 1;
@@ -492,19 +489,19 @@ namespace DMSUpdateManager
 
                 // Process any matching folder in this folder
                 blnSuccess = true;
-                foreach (var ioFolderMatch in ioInputFolderInfo.GetDirectories(strFolderNameMatchPattern))
+                foreach (var diFolderMatch in diInputFolderInfo.GetDirectories(strFolderNameMatchPattern))
                 {
-                    if (mAbortProcessing)
+                    if (AbortProcessing)
                         break;
 
                     if (strOutputFolderPathToUse.Length > 0)
                     {
-                        blnSuccess = ProcessFolder(ioFolderMatch.FullName, Path.Combine(strOutputFolderPathToUse, ioFolderMatch.Name),
+                        blnSuccess = ProcessFolder(diFolderMatch.FullName, Path.Combine(strOutputFolderPathToUse, diFolderMatch.Name),
                             strParameterFilePath, true);
                     }
                     else
                     {
-                        blnSuccess = ProcessFolder(ioFolderMatch.FullName, string.Empty, strParameterFilePath, true);
+                        blnSuccess = ProcessFolder(diFolderMatch.FullName, string.Empty, strParameterFilePath, true);
                     }
 
                     if (!blnSuccess)
@@ -525,16 +522,16 @@ namespace DMSUpdateManager
                 return false;
             }
 
-            if (!mAbortProcessing)
+            if (!AbortProcessing)
             {
                 // If intRecurseFoldersMaxLevels is <=0 then we recurse infinitely
                 //  otherwise, compare intRecursionLevel to intRecurseFoldersMaxLevels
                 if (intRecurseFoldersMaxLevels <= 0 || intRecursionLevel <= intRecurseFoldersMaxLevels)
                 {
                     // Call this function for each of the subfolders of ioInputFolderInfo
-                    foreach (var ioSubFolderInfo in ioInputFolderInfo.GetDirectories())
+                    foreach (var diSubFolderInfo in diInputFolderInfo.GetDirectories())
                     {
-                        blnSuccess = RecurseFoldersWork(ioSubFolderInfo.FullName, strFolderNameMatchPattern, strParameterFilePath,
+                        blnSuccess = RecurseFoldersWork(diSubFolderInfo.FullName, strFolderNameMatchPattern, strParameterFilePath,
                             strOutputFolderAlternatePath, ref intFolderProcessCount, ref intFolderProcessFailCount, intRecursionLevel + 1,
                             intRecurseFoldersMaxLevels);
                         if (!blnSuccess)
@@ -551,28 +548,36 @@ namespace DMSUpdateManager
             mErrorCode = eNewErrorCode;
         }
 
-        //' The following functions should be placed in any derived class
-        //' Cannot define as MustOverride since it contains a customized enumerated type (eDerivedClassErrorCodes) in the function declaration
+        // The following functions should be placed in any derived class
+        // Cannot define as MustOverride since it contains a customized enumerated type (eDerivedClassErrorCodes) in the function declaration
+        //
+        //private void SetLocalErrorCode(eDerivedClassErrorCodes eNewErrorCode)
+        //{
+        //    SetLocalErrorCode(eNewErrorCode, false);
+        //}
 
-        //'Private Sub SetLocalErrorCode(eNewErrorCode As eDerivedClassErrorCodes)
-        //'    SetLocalErrorCode(eNewErrorCode, False)
-        //'End Sub
+        //private void SetLocalErrorCode(eDerivedClassErrorCodes eNewErrorCode, bool blnLeaveExistingErrorCodeUnchanged)
+        //{
+        //    if (blnLeaveExistingErrorCodeUnchanged && mLocalErrorCode != eDerivedClassErrorCodes.NoError)
+        //    {
+        //        // An error code is already defined; do not change it
+        //    }
+        //    else
+        //    {
+        //        mLocalErrorCode = eNewErrorCode;
 
-        //'Private Sub SetLocalErrorCode(eNewErrorCode As eDerivedClassErrorCodes, blnLeaveExistingErrorCodeUnchanged As Boolean)
-        //'    If blnLeaveExistingErrorCodeUnchanged AndAlso mLocalErrorCode <> eDerivedClassErrorCodes.NoError Then
-        //'        ' An error code is already defined; do not change it
-        //'    Else
-        //'        mLocalErrorCode = eNewErrorCode
-
-        //'        If eNewErrorCode = eDerivedClassErrorCodes.NoError Then
-        //'            If MyBase.ErrorCode = clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.LocalizedError Then
-        //'                MyBase.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.NoError)
-        //'            End If
-        //'        Else
-        //'            MyBase.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.LocalizedError)
-        //'        End If
-        //'    End If
-
-        //'End Sub
+        //        if (eNewErrorCode == eDerivedClassErrorCodes.NoError)
+        //        {
+        //            if (base.ErrorCode == clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.LocalizedError)
+        //            {
+        //                base.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.NoError);
+        //            }
+        //        }
+        //        else
+        //        {
+        //            base.SetBaseClassErrorCode(clsProcessFoldersBaseClass.eProcessFoldersErrorCodes.LocalizedError);
+        //        }
+        //    }
+        //}
     }
 }

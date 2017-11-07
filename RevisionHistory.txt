@@ -1,5 +1,10 @@
 DMS Update Manager Change Log
 
+Version 1.2.6519; November 6, 2017
+	- Convert to C#
+	- Use PRISM-Library versions of clsParseCommandLine and XmlSettingsFileAccessor
+	- Synchronize clsProcessFilesOrFoldersBaseClass and clsProcessFoldersBaseClass with other projects
+
 Version 1.2.6306; April 7, 2017
 	- Update clsParseCommandLine
 	- Update to .NET 4.6.2

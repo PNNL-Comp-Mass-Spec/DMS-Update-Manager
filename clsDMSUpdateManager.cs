@@ -352,7 +352,7 @@ namespace DMSUpdateManager
                             }
                             strWarning += " since a newer version exists in the target; source=" + fiSourceFile.LastWriteTimeUtc.ToLocalTime() + ", target=" + fiTargetFile.LastWriteTimeUtc.ToLocalTime();
 
-                            ShowMessage(strWarning, intDuplicateHoldoffHours: 24);
+                            ShowMessage(strWarning, duplicateHoldoffHours: 24);
                             blnNeedToCopy = false;
                         }
                     }
@@ -969,7 +969,7 @@ namespace DMSUpdateManager
 
                 statusMessage += " using " + diSourceFolder.FullName + "\\";
 
-                ShowMessage(statusMessage, true, false);
+                ShowMessage(statusMessage, true);
             }
 
             // Process each subdirectory in the source folder
@@ -1351,7 +1351,7 @@ namespace DMSUpdateManager
             }
             else
             {
-                ShowMessage("Warning: Rollback file is present (" + fiRollbackFile.Name + ") but expected source file was not found: " + fiSourceFile.Name, intDuplicateHoldoffHours: 24);
+                ShowMessage("Warning: Rollback file is present (" + fiRollbackFile.Name + ") but expected source file was not found: " + fiSourceFile.Name, duplicateHoldoffHours: 24);
             }
         }
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using PRISM;
 
 namespace DMSUpdateManager
 {
@@ -16,7 +17,7 @@ namespace DMSUpdateManager
     /// Created in October 2013
     /// Last updated in October 2015
     /// </remarks>
-    public abstract class clsProcessFilesOrFoldersBase
+    public abstract class clsProcessFilesOrFoldersBase : clsEventNotifier
     {
         #region "Constants and Enums"
 
@@ -31,50 +32,30 @@ namespace DMSUpdateManager
 
         #region "Classwide Variables"
 
-        protected bool mShowMessages = true;
         protected string mFileDate;
 
-        protected bool mAbortProcessing;
-        protected bool mLogMessagesToFile;
         protected bool mLogFileUsesDateStamp = true;
         protected string mLogFilePath;
-
         protected StreamWriter mLogFile;
 
         // This variable is updated when CleanupFilePaths() is called
         protected string mOutputFolderPath;
 
-        // If blank, then mOutputFolderPath will be used; if mOutputFolderPath is also blank, then the log is created in the same folder as the executing assembly
-        protected string mLogFolderPath;
+        private string mLastMessage = "";
+        private DateTime mLastReportTime = DateTime.UtcNow;
+        private DateTime mLastErrorShown = DateTime.MinValue;
 
         public event ProgressResetEventHandler ProgressReset;
-
         public delegate void ProgressResetEventHandler();
 
-        public event ProgressChangedEventHandler ProgressChanged;
-
-        public delegate void ProgressChangedEventHandler(string taskDescription, float percentComplete);
-
-        // PercentComplete ranges from 0 to 100, but can contain decimal percentage values
         public event ProgressCompleteEventHandler ProgressComplete;
-
         public delegate void ProgressCompleteEventHandler();
-
-        public event ErrorEventEventHandler ErrorEvent;
-
-        public delegate void ErrorEventEventHandler(string strMessage);
-
-        public event WarningEventEventHandler WarningEvent;
-
-        public delegate void WarningEventEventHandler(string strMessage);
-
-        public event MessageEventEventHandler MessageEvent;
-
-        public delegate void MessageEventEventHandler(string strMessage);
 
         protected string mProgressStepDescription;
 
-        // Ranges from 0 to 100, but can contain decimal percentage values
+        /// <summary>
+        /// Percent complete, value between 0 and 100, but can contain decimal percentage values
+        /// </summary>
         protected float mProgressPercentComplete;
 
         /// <summary>
@@ -89,25 +70,15 @@ namespace DMSUpdateManager
 
         #region "Interface Functions"
 
-        public bool AbortProcessing
-        {
-            get { return mAbortProcessing; }
-            set { mAbortProcessing = value; }
-        }
+        public bool AbortProcessing { get; set; }
 
-        public string FileVersion
-        {
-            get { return GetVersionForExecutingAssembly(); }
-        }
+        public string FileVersion => GetVersionForExecutingAssembly();
 
-        public string FileDate
-        {
-            get { return mFileDate; }
-        }
+        public string FileDate => mFileDate;
 
         public string LogFilePath
         {
-            get { return mLogFilePath; }
+            get => mLogFilePath;
             set
             {
                 if (value == null)
@@ -116,34 +87,24 @@ namespace DMSUpdateManager
             }
         }
 
-        public string LogFolderPath
-        {
-            get { return mLogFolderPath; }
-            set { mLogFolderPath = value; }
-        }
+        /// <summary>
+        /// Log folder path (ignored if LogFilePath is rooted)
+        /// </summary>
+        /// <remarks>
+        /// If blank, mOutputFolderPath will be used; if mOutputFolderPath is also blank, the log is created in the same folder as the executing assembly
+        /// </remarks>
+        public string LogFolderPath { get; set; }
 
-        public bool LogMessagesToFile
-        {
-            get { return mLogMessagesToFile; }
-            set { mLogMessagesToFile = value; }
-        }
+        public bool LogMessagesToFile { get; set; }
 
-        public virtual string ProgressStepDescription
-        {
-            get { return mProgressStepDescription; }
-        }
+        public virtual string ProgressStepDescription => mProgressStepDescription;
 
-        // ProgressPercentComplete ranges from 0 to 100, but can contain decimal percentage values
-        public float ProgressPercentComplete
-        {
-            get { return Convert.ToSingle(Math.Round(mProgressPercentComplete, 2)); }
-        }
+        /// <summary>
+        /// Percent complete, value between 0 and 100, but can contain decimal percentage values
+        /// </summary>
+        public float ProgressPercentComplete => Convert.ToSingle(Math.Round(mProgressPercentComplete, 2));
 
-        public bool ShowMessages
-        {
-            get { return mShowMessages; }
-            set { mShowMessages = value; }
-        }
+        public bool ShowMessages { get; set; } = true;
 
         #endregion
 
@@ -151,12 +112,12 @@ namespace DMSUpdateManager
         /// Constructor
         /// </summary>
         /// <remarks></remarks>
-        public clsProcessFilesOrFoldersBase()
+        protected clsProcessFilesOrFoldersBase()
         {
             mProgressStepDescription = string.Empty;
 
             mOutputFolderPath = string.Empty;
-            mLogFolderPath = string.Empty;
+            LogFolderPath = string.Empty;
             mLogFilePath = string.Empty;
 
             mLogDataCache = new Dictionary<string, DateTime>();
@@ -164,14 +125,14 @@ namespace DMSUpdateManager
 
         public virtual void AbortProcessingNow()
         {
-            mAbortProcessing = true;
+            AbortProcessing = true;
         }
 
-        protected abstract void CleanupPaths(ref string strInputFileOrFolderPath, ref string strOutputFolderPath);
+        protected abstract void CleanupPaths(ref string inputFileOrFolderPath, ref string outputFolderPath);
 
         public void CloseLogFileNow()
         {
-            if ((mLogFile != null))
+            if (mLogFile != null)
             {
                 mLogFile.Close();
                 mLogFile = null;
@@ -184,35 +145,34 @@ namespace DMSUpdateManager
         /// <summary>
         /// Verifies that the specified .XML settings file exists in the user's local settings folder
         /// </summary>
-        /// <param name="strApplicationName">Application name</param>
-        /// <param name="strSettingsFileName">Settings file name</param>
+        /// <param name="applicationName">Application name</param>
+        /// <param name="settingsFileName">Settings file name</param>
         /// <returns></returns>
         /// <remarks></remarks>
-        public static bool CreateSettingsFileIfMissing(string strApplicationName, string strSettingsFileName)
+        public static bool CreateSettingsFileIfMissing(string applicationName, string settingsFileName)
         {
-            string strSettingsFilePathLocal = GetSettingsFilePathLocal(strApplicationName, strSettingsFileName);
+            var settingsFilePathLocal = GetSettingsFilePathLocal(applicationName, settingsFileName);
 
-            return CreateSettingsFileIfMissing(strSettingsFilePathLocal);
+            return CreateSettingsFileIfMissing(settingsFilePathLocal);
         }
 
         /// <summary>
         /// Verifies that the specified .XML settings file exists in the user's local settings folder
         /// </summary>
-        /// <param name="strSettingsFilePathLocal">Full path to the local settings file, for example C:\Users\username\AppData\Roaming\AppName\SettingsFileName.xml</param>
+        /// <param name="settingsFilePathLocal">Full path to the local settings file, for example C:\Users\username\AppData\Roaming\AppName\SettingsFileName.xml</param>
         /// <returns></returns>
         /// <remarks></remarks>
-        public static bool CreateSettingsFileIfMissing(string strSettingsFilePathLocal)
+        public static bool CreateSettingsFileIfMissing(string settingsFilePathLocal)
         {
             try
             {
-                if (!File.Exists(strSettingsFilePathLocal))
+                if (!File.Exists(settingsFilePathLocal))
                 {
-                    FileInfo fiMasterSettingsFile = default(FileInfo);
-                    fiMasterSettingsFile = new FileInfo(Path.Combine(GetAppFolderPath(), Path.GetFileName(strSettingsFilePathLocal)));
+                    var masterSettingsFile = new FileInfo(Path.Combine(GetAppFolderPath(), Path.GetFileName(settingsFilePathLocal)));
 
-                    if (fiMasterSettingsFile.Exists)
+                    if (masterSettingsFile.Exists)
                     {
-                        fiMasterSettingsFile.CopyTo(strSettingsFilePathLocal);
+                        masterSettingsFile.CopyTo(settingsFilePathLocal);
                     }
                 }
             }
@@ -231,37 +191,36 @@ namespace DMSUpdateManager
         /// <remarks></remarks>
         public static void GarbageCollectNow()
         {
-            const int intMaxWaitTimeMSec = 1000;
-            GarbageCollectNow(intMaxWaitTimeMSec);
+            const int maxWaitTimeMSec = 1000;
+            GarbageCollectNow(maxWaitTimeMSec);
         }
 
         /// <summary>
         /// Perform garbage collection
         /// </summary>
-        /// <param name="intMaxWaitTimeMSec"></param>
+        /// <param name="maxWaitTimeMSec"></param>
         /// <remarks></remarks>
-        public static void GarbageCollectNow(int intMaxWaitTimeMSec)
+        public static void GarbageCollectNow(int maxWaitTimeMSec)
         {
             const int THREAD_SLEEP_TIME_MSEC = 100;
 
-            int intTotalThreadWaitTimeMsec = 0;
-            if (intMaxWaitTimeMSec < 100)
-                intMaxWaitTimeMSec = 100;
-            if (intMaxWaitTimeMSec > 5000)
-                intMaxWaitTimeMSec = 5000;
+            if (maxWaitTimeMSec < 100)
+                maxWaitTimeMSec = 100;
+            if (maxWaitTimeMSec > 5000)
+                maxWaitTimeMSec = 5000;
 
             Thread.Sleep(100);
 
             try
             {
-                Thread gcThread = new Thread(GarbageCollectWaitForGC);
+                var gcThread = new Thread(GarbageCollectWaitForGC);
                 gcThread.Start();
 
-                intTotalThreadWaitTimeMsec = 0;
-                while (gcThread.IsAlive && intTotalThreadWaitTimeMsec < intMaxWaitTimeMSec)
+                var totalThreadWaitTimeMsec = 0;
+                while (gcThread.IsAlive && totalThreadWaitTimeMsec < maxWaitTimeMSec)
                 {
                     Thread.Sleep(THREAD_SLEEP_TIME_MSEC);
-                    intTotalThreadWaitTimeMsec += THREAD_SLEEP_TIME_MSEC;
+                    totalThreadWaitTimeMsec += THREAD_SLEEP_TIME_MSEC;
                 }
                 if (gcThread.IsAlive)
                     gcThread.Abort();
@@ -274,47 +233,39 @@ namespace DMSUpdateManager
 
         protected static void GarbageCollectWaitForGC()
         {
-            try
-            {
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-            }
-            catch
-            {
-                // Ignore errors here
-            }
+            clsProgRunner.GarbageCollectNow();
         }
 
         /// <summary>
         /// Returns the full path to the folder into which this application should read/write settings file information
         /// </summary>
-        /// <param name="strAppName"></param>
+        /// <param name="appName"></param>
         /// <returns></returns>
         /// <remarks>For example, C:\Users\username\AppData\Roaming\AppName</remarks>
-        public static string GetAppDataFolderPath(string strAppName)
+        public static string GetAppDataFolderPath(string appName)
         {
-            string strAppDataFolder = null;
+            string appDataFolder;
 
-            if (string.IsNullOrWhiteSpace(strAppName))
+            if (string.IsNullOrWhiteSpace(appName))
             {
-                strAppName = string.Empty;
+                appName = string.Empty;
             }
 
             try
             {
-                strAppDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), strAppName);
-                if (!Directory.Exists(strAppDataFolder))
+                appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appName);
+                if (!Directory.Exists(appDataFolder))
                 {
-                    Directory.CreateDirectory(strAppDataFolder);
+                    Directory.CreateDirectory(appDataFolder);
                 }
             }
             catch (Exception)
             {
                 // Error creating the folder, revert to using the system Temp folder
-                strAppDataFolder = Path.GetTempPath();
+                appDataFolder = Path.GetTempPath();
             }
 
-            return strAppDataFolder;
+            return appDataFolder;
         }
 
         /// <summary>
@@ -341,276 +292,197 @@ namespace DMSUpdateManager
         /// <summary>
         /// Returns the .NET assembly version followed by the program date
         /// </summary>
-        /// <param name="strProgramDate"></param>
+        /// <param name="programDate"></param>
         /// <returns></returns>
         /// <remarks></remarks>
-        public static string GetAppVersion(string strProgramDate)
+        public static string GetAppVersion(string programDate)
         {
-            return Assembly.GetExecutingAssembly().GetName().Version.ToString() + " (" + strProgramDate + ")";
+            return Assembly.GetExecutingAssembly().GetName().Version + " (" + programDate + ")";
         }
 
         public abstract string GetErrorMessage();
 
         private string GetVersionForExecutingAssembly()
         {
-            string strVersion = null;
+            string version;
 
             try
             {
-                strVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             }
             catch (Exception)
             {
-                strVersion = "??.??.??.??";
+                version = "??.??.??.??";
             }
 
-            return strVersion;
+            return version;
         }
 
         /// <summary>
         /// Returns the full path to this application's local settings file
         /// </summary>
-        /// <param name="strApplicationName"></param>
-        /// <param name="strSettingsFileName"></param>
+        /// <param name="applicationName"></param>
+        /// <param name="settingsFileName"></param>
         /// <returns></returns>
         /// <remarks>For example, C:\Users\username\AppData\Roaming\AppName\SettingsFileName.xml</remarks>
-        public static string GetSettingsFilePathLocal(string strApplicationName, string strSettingsFileName)
+        public static string GetSettingsFilePathLocal(string applicationName, string settingsFileName)
         {
-            return Path.Combine(GetAppDataFolderPath(strApplicationName), strSettingsFileName);
+            return Path.Combine(GetAppDataFolderPath(applicationName), settingsFileName);
         }
 
-        protected void HandleException(string strBaseMessage, Exception ex)
+        protected void HandleException(string baseMessage, Exception ex)
         {
-            if (string.IsNullOrWhiteSpace(strBaseMessage))
+            if (string.IsNullOrWhiteSpace(baseMessage))
             {
-                strBaseMessage = "Error";
+                baseMessage = "Error";
             }
 
             if (ShowMessages)
             {
                 // Note that ShowErrorMessage() will call LogMessage()
-                ShowErrorMessage(strBaseMessage + ": " + ex.Message, true);
+                ShowErrorMessage(baseMessage + ": " + ex.Message);
             }
             else
             {
-                LogMessage(strBaseMessage + ": " + ex.Message, eMessageTypeConstants.ErrorMsg);
-                throw new Exception(strBaseMessage, ex);
+                LogMessage(baseMessage + ": " + ex.Message, eMessageTypeConstants.ErrorMsg);
+                throw new Exception(baseMessage, ex);
             }
         }
 
-        protected void LogMessage(string strMessage)
+        private void InitializeLogFile(int duplicateHoldoffHours)
         {
-            LogMessage(strMessage, eMessageTypeConstants.Normal);
-        }
-
-        protected void LogMessage(string strMessage, eMessageTypeConstants eMessageType)
-        {
-            LogMessage(strMessage, eMessageType, intDuplicateHoldoffHours: 0);
-        }
-
-        protected void LogMessage(string strMessage, eMessageTypeConstants eMessageType, int intDuplicateHoldoffHours)
-        {
-            // Note that CleanupPaths() will update mOutputFolderPath, which is used here if mLogFolderPath is blank
-            // Thus, be sure to call CleanupPaths (or update mLogFolderPath) before the first call to LogMessage
-
-            string strMessageType = null;
-            bool blnOpeningExistingFile = false;
-
-            switch (eMessageType)
+            try
             {
-                case eMessageTypeConstants.Normal:
-                    strMessageType = "Normal";
-                    break;
-                case eMessageTypeConstants.ErrorMsg:
-                    strMessageType = "Error";
-                    break;
-                case eMessageTypeConstants.Warning:
-                    strMessageType = "Warning";
-                    break;
-                default:
-                    strMessageType = "Unknown";
-                    break;
-            }
-
-            if (mLogFile == null && mLogMessagesToFile)
-            {
-                try
+                if (string.IsNullOrWhiteSpace(mLogFilePath))
                 {
-                    if (string.IsNullOrWhiteSpace(mLogFilePath))
+                    // Auto-name the log file
+                    mLogFilePath = Path.GetFileNameWithoutExtension(GetAppPath());
+                    mLogFilePath += "_log";
+
+                    if (mLogFileUsesDateStamp)
                     {
-                        // Auto-name the log file
-                        mLogFilePath = Path.GetFileNameWithoutExtension(GetAppPath());
-                        mLogFilePath += "_log";
-
-                        if (mLogFileUsesDateStamp)
-                        {
-                            mLogFilePath += "_" + DateTime.Now.ToString("yyyy-MM-dd") + ".txt";
-                        }
-                        else
-                        {
-                            mLogFilePath += ".txt";
-                        }
-                    }
-
-                    try
-                    {
-                        if (mLogFolderPath == null)
-                            mLogFolderPath = string.Empty;
-
-                        if (string.IsNullOrWhiteSpace(mLogFolderPath))
-                        {
-                            // Log folder is undefined; use mOutputFolderPath if it is defined
-                            if (!string.IsNullOrWhiteSpace(mOutputFolderPath))
-                            {
-                                mLogFolderPath = string.Copy(mOutputFolderPath);
-                            }
-                        }
-
-                        if (mLogFolderPath.Length > 0)
-                        {
-                            // Create the log folder if it doesn't exist
-                            if (!Directory.Exists(mLogFolderPath))
-                            {
-                                Directory.CreateDirectory(mLogFolderPath);
-                            }
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        mLogFolderPath = string.Empty;
-                    }
-
-                    if (!Path.IsPathRooted(mLogFilePath) && mLogFolderPath.Length > 0)
-                    {
-                        mLogFilePath = Path.Combine(mLogFolderPath, mLogFilePath);
-                    }
-
-                    blnOpeningExistingFile = File.Exists(mLogFilePath);
-
-                    if ((blnOpeningExistingFile & mLogDataCache.Count == 0))
-                    {
-                        UpdateLogDataCache(mLogFilePath, DateTime.UtcNow.AddHours(-intDuplicateHoldoffHours));
-                    }
-
-                    mLogFile = new StreamWriter(new FileStream(mLogFilePath, FileMode.Append, FileAccess.Write, FileShare.Read));
-                    mLogFile.AutoFlush = true;
-
-                    if (!blnOpeningExistingFile)
-                    {
-                        mLogFile.WriteLine("Date" + "\t" + "Type" + "\t" + "Message");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Error creating the log file; set mLogMessagesToFile to false so we don't repeatedly try to create it
-                    mLogMessagesToFile = false;
-                    HandleException("Error opening log file", ex);
-                    // Note: do not exit this function if an exception occurs
-                }
-            }
-
-            if ((mLogFile != null))
-            {
-                bool blnWriteToLog = true;
-
-                string strLogKey = strMessageType + "_" + strMessage;
-                DateTime dtLastLogTime = default(DateTime);
-                bool blnMessageCached = false;
-
-                if (mLogDataCache.TryGetValue(strLogKey, out dtLastLogTime))
-                {
-                    blnMessageCached = true;
-                }
-                else
-                {
-                    blnMessageCached = false;
-                    dtLastLogTime = DateTime.UtcNow.AddHours(-(intDuplicateHoldoffHours + 1));
-                }
-
-                if (intDuplicateHoldoffHours > 0 && DateTime.UtcNow.Subtract(dtLastLogTime).TotalHours < intDuplicateHoldoffHours)
-                {
-                    blnWriteToLog = false;
-                }
-
-                if (blnWriteToLog)
-                {
-                    mLogFile.WriteLine(
-                        DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss tt") + "\t" + strMessageType + "\t" + strMessage);
-
-                    if (blnMessageCached)
-                    {
-                        mLogDataCache[strLogKey] = DateTime.UtcNow;
+                        mLogFilePath += "_" + DateTime.Now.ToString("yyyy-MM-dd") + ".txt";
                     }
                     else
                     {
-                        try
-                        {
-                            mLogDataCache.Add(strLogKey, DateTime.UtcNow);
+                        mLogFilePath += ".txt";
+                    }
+                }
 
-                            if (mLogDataCache.Count > MAX_LOGDATA_CACHE_SIZE)
-                            {
-                                TrimLogDataCache();
-                            }
-                        }
-                        catch (Exception)
+                try
+                {
+                    if (LogFolderPath == null)
+                        LogFolderPath = string.Empty;
+
+                    if (string.IsNullOrWhiteSpace(LogFolderPath))
+                    {
+                        // Log folder is undefined; use mOutputFolderPath if it is defined
+                        if (!string.IsNullOrWhiteSpace(mOutputFolderPath))
                         {
-                            // Ignore errors here
+                            LogFolderPath = string.Copy(mOutputFolderPath);
                         }
                     }
+
+                    if (LogFolderPath.Length > 0)
+                    {
+                        // Create the log folder if it doesn't exist
+                        if (!Directory.Exists(LogFolderPath))
+                        {
+                            Directory.CreateDirectory(LogFolderPath);
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    LogFolderPath = string.Empty;
+                }
+
+                if (!Path.IsPathRooted(mLogFilePath) && LogFolderPath.Length > 0)
+                {
+                    mLogFilePath = Path.Combine(LogFolderPath, mLogFilePath);
+                }
+
+                var openingExistingFile = File.Exists(mLogFilePath);
+
+                if (openingExistingFile & mLogDataCache.Count == 0)
+                {
+                    UpdateLogDataCache(mLogFilePath, DateTime.UtcNow.AddHours(-duplicateHoldoffHours));
+                }
+
+                mLogFile = new StreamWriter(new FileStream(mLogFilePath, FileMode.Append, FileAccess.Write, FileShare.Read))
+                {
+                    AutoFlush = true
+                };
+
+                if (!openingExistingFile)
+                {
+                    mLogFile.WriteLine("Date\tType\tMessage");
                 }
             }
-
-            RaiseMessageEvent(strMessage, eMessageType);
+            catch (Exception ex)
+            {
+                // Error creating the log file; set mLogMessagesToFile to false so we don't repeatedly try to create it
+                LogMessagesToFile = false;
+                HandleException("Error opening log file", ex);
+                // Note: do not exit this function if an exception occurs
+            }
         }
 
-        string strLastMessage = string.Empty;
-        DateTime dtLastReportTime = DateTime.MinValue;
-
-        private void RaiseMessageEvent(string strMessage, eMessageTypeConstants eMessageType)
+        /// <summary>
+        /// Log a message then raise a Status, Warning, or Error event
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="eMessageType"></param>
+        /// <param name="duplicateHoldoffHours"></param>
+        /// <remarks>
+        /// Note that CleanupPaths() will update mOutputFolderPath, which is used here if mLogFolderPath is blank
+        /// Thus, be sure to call CleanupPaths (or update mLogFolderPath) before the first call to LogMessage
+        /// </remarks>
+        protected void LogMessage(string message, eMessageTypeConstants eMessageType = eMessageTypeConstants.Normal, int duplicateHoldoffHours = 0)
         {
-            if (!string.IsNullOrWhiteSpace(strMessage))
+
+            if (mLogFile == null && LogMessagesToFile)
             {
-                if (string.Equals(strMessage, strLastMessage) &&
-                    DateTime.UtcNow.Subtract(dtLastReportTime).TotalSeconds < 0.5)
+                InitializeLogFile(duplicateHoldoffHours);
+            }
+
+            if (mLogFile != null)
+            {
+                WriteToLogFile(message, eMessageType, duplicateHoldoffHours);
+            }
+
+            RaiseMessageEvent(message, eMessageType);
+        }
+
+        private void RaiseMessageEvent(string message, eMessageTypeConstants eMessageType)
+        {
+            if (string.IsNullOrWhiteSpace(message)) return;
+
+            if (string.Equals(message, mLastMessage) && DateTime.UtcNow.Subtract(mLastReportTime).TotalSeconds < 0.5)
+            {
+                // Duplicate message; do not raise any events
+            }
+            else
+            {
+                mLastReportTime = DateTime.UtcNow;
+                mLastMessage = string.Copy(message);
+
+                switch (eMessageType)
                 {
-                    // Duplicate message; do not raise any events
-                }
-                else
-                {
-                    dtLastReportTime = DateTime.UtcNow;
-                    strLastMessage = string.Copy(strMessage);
+                    case eMessageTypeConstants.Normal:
+                        OnStatusEvent(message);
+                        break;
+                    case eMessageTypeConstants.Warning:
+                        OnWarningEvent(message);
 
-                    switch (eMessageType)
-                    {
-                        case eMessageTypeConstants.Normal:
-                            if (MessageEvent != null)
-                            {
-                                MessageEvent(strMessage);
-                            }
+                        break;
+                    case eMessageTypeConstants.ErrorMsg:
+                        OnErrorEvent(message);
 
-                            break;
-                        case eMessageTypeConstants.Warning:
-                            if (WarningEvent != null)
-                            {
-                                WarningEvent(strMessage);
-                            }
-
-                            break;
-                        case eMessageTypeConstants.ErrorMsg:
-                            if (ErrorEvent != null)
-                            {
-                                ErrorEvent(strMessage);
-                            }
-
-                            break;
-                        default:
-                            if (MessageEvent != null)
-                            {
-                                MessageEvent(strMessage);
-                            }
-
-                            break;
-                    }
+                        break;
+                    default:
+                        OnStatusEvent(message);
+                        break;
                 }
             }
         }
@@ -618,118 +490,63 @@ namespace DMSUpdateManager
         protected void ResetProgress()
         {
             mProgressPercentComplete = 0;
-            if (ProgressReset != null)
-            {
-                ProgressReset();
-            }
+            ProgressReset?.Invoke();
         }
 
-        protected void ResetProgress(string strProgressStepDescription)
+        protected void ResetProgress(string progressStepDescription)
         {
-            UpdateProgress(strProgressStepDescription, 0);
-            if (ProgressReset != null)
-            {
-                ProgressReset();
-            }
+            UpdateProgress(progressStepDescription, 0);
+            ProgressReset?.Invoke();
         }
 
-        protected void ShowErrorMessage(string strMessage)
+        protected void ShowErrorMessage(string message, int duplicateHoldoffHours)
         {
-            ShowErrorMessage(strMessage, blnAllowLogToFile: true);
+            ShowErrorMessage(message, allowLogToFile: true, duplicateHoldoffHours: duplicateHoldoffHours);
         }
 
-        protected void ShowErrorMessage(string strMessage, bool blnAllowLogToFile)
+        protected void ShowErrorMessage(string message, bool allowLogToFile = true, int duplicateHoldoffHours = 0)
         {
-            ShowErrorMessage(strMessage, blnAllowLogToFile, intDuplicateHoldoffHours: 0);
-        }
-
-        protected void ShowErrorMessage(string strMessage, int intDuplicateHoldoffHours)
-        {
-            ShowErrorMessage(strMessage, blnAllowLogToFile: true, intDuplicateHoldoffHours: intDuplicateHoldoffHours);
-        }
-
-        protected void ShowErrorMessage(string strMessage, bool blnAllowLogToFile, int intDuplicateHoldoffHours)
-        {
-            const string strSeparator = "------------------------------------------------------------------------------";
-
-            Console.WriteLine();
-            Console.WriteLine(strSeparator);
-            Console.WriteLine(strMessage);
-            Console.WriteLine(strSeparator);
-            Console.WriteLine();
-
-            if (blnAllowLogToFile)
+            if (allowLogToFile)
             {
                 // Note that LogMessage will call RaiseMessageEvent
-                LogMessage(strMessage, eMessageTypeConstants.ErrorMsg, intDuplicateHoldoffHours);
+                LogMessage(message, eMessageTypeConstants.ErrorMsg, duplicateHoldoffHours);
             }
             else
             {
-                RaiseMessageEvent(strMessage, eMessageTypeConstants.ErrorMsg);
+                RaiseMessageEvent(message, eMessageTypeConstants.ErrorMsg);
             }
         }
 
-        protected void ShowMessage(string strMessage)
+        protected void ShowMessage(string message, int duplicateHoldoffHours)
         {
-            ShowMessage(strMessage, blnAllowLogToFile: true, blnPrecedeWithNewline: false, intDuplicateHoldoffHours: 0);
+            ShowMessage(message, allowLogToFile: true, duplicateHoldoffHours: duplicateHoldoffHours);
         }
 
-        protected void ShowMessage(string strMessage, int intDuplicateHoldoffHours)
+        protected void ShowMessage(
+            string message,
+            bool allowLogToFile = true,
+            int duplicateHoldoffHours = 0,
+            eMessageTypeConstants eMessageType = eMessageTypeConstants.Normal)
         {
-            ShowMessage(strMessage, blnAllowLogToFile: true, blnPrecedeWithNewline: false, intDuplicateHoldoffHours: intDuplicateHoldoffHours);
-        }
-
-        protected void ShowMessage(string strMessage, bool blnAllowLogToFile)
-        {
-            ShowMessage(strMessage, blnAllowLogToFile, blnPrecedeWithNewline: false, intDuplicateHoldoffHours: 0);
-        }
-
-        protected void ShowMessage(string strMessage, bool blnAllowLogToFile, bool blnPrecedeWithNewline)
-        {
-            ShowMessage(strMessage, blnAllowLogToFile, blnPrecedeWithNewline, intDuplicateHoldoffHours: 0);
-        }
-
-        protected void ShowMessage(string strMessage, bool blnAllowLogToFile, bool blnPrecedeWithNewline, int intDuplicateHoldoffHours)
-        {
-            ShowMessage(strMessage, blnAllowLogToFile, blnPrecedeWithNewline, intDuplicateHoldoffHours, eMessageTypeConstants.Normal);
-        }
-
-        protected void ShowMessage(string strMessage, bool blnAllowLogToFile, bool blnPrecedeWithNewline, int intDuplicateHoldoffHours,
-            eMessageTypeConstants eMessageType)
-        {
-            if (blnPrecedeWithNewline)
-            {
-                Console.WriteLine();
-            }
-            Console.WriteLine(strMessage);
-
-            if (blnAllowLogToFile)
+            if (allowLogToFile)
             {
                 // Note that LogMessage will call RaiseMessageEvent
-                LogMessage(strMessage, eMessageType, intDuplicateHoldoffHours);
+                LogMessage(message, eMessageType, duplicateHoldoffHours);
             }
             else
             {
-                RaiseMessageEvent(strMessage, eMessageType);
+                RaiseMessageEvent(message, eMessageType);
             }
         }
 
-        protected void ShowWarning(string strMessage)
+        protected void ShowWarning(string message, int duplicateHoldoffHours = 0)
         {
-            ShowMessage(strMessage, blnAllowLogToFile: true, blnPrecedeWithNewline: false, intDuplicateHoldoffHours: 0,
-                eMessageType: eMessageTypeConstants.Warning);
+            ShowMessage(message, allowLogToFile: true, duplicateHoldoffHours: duplicateHoldoffHours, eMessageType: eMessageTypeConstants.Warning);
         }
 
-        protected void ShowWarning(string strMessage, int intDuplicateHoldoffHours)
+        protected void ShowWarning(string message, bool allowLogToFile)
         {
-            ShowMessage(strMessage, blnAllowLogToFile: true, blnPrecedeWithNewline: false, intDuplicateHoldoffHours: intDuplicateHoldoffHours,
-                eMessageType: eMessageTypeConstants.Warning);
-        }
-
-        protected void ShowWarning(string strMessage, bool blnAllowLogToFile)
-        {
-            ShowMessage(strMessage, blnAllowLogToFile, blnPrecedeWithNewline: false, intDuplicateHoldoffHours: 0,
-                eMessageType: eMessageTypeConstants.Warning);
+            ShowMessage(message, allowLogToFile, duplicateHoldoffHours: 0, eMessageType: eMessageTypeConstants.Warning);
         }
 
         private void TrimLogDataCache()
@@ -742,24 +559,24 @@ namespace DMSUpdateManager
                 // Remove entries from mLogDataCache so that the list count is 80% of MAX_LOGDATA_CACHE_SIZE
 
                 // First construct a list of dates that we can sort to determine the datetime threshold for removal
-                List<System.DateTime> lstDates = (from entry in mLogDataCache select entry.Value).ToList();
+                var lstDates = (from entry in mLogDataCache select entry.Value).ToList();
 
                 // Sort by date
                 lstDates.Sort();
 
-                var intThresholdIndex = Convert.ToInt32(Math.Floor(mLogDataCache.Count - MAX_LOGDATA_CACHE_SIZE * 0.8));
-                if (intThresholdIndex < 0)
-                    intThresholdIndex = 0;
+                var thresholdIndex = Convert.ToInt32(Math.Floor(mLogDataCache.Count - MAX_LOGDATA_CACHE_SIZE * 0.8));
+                if (thresholdIndex < 0)
+                    thresholdIndex = 0;
 
-                var dtThreshold = lstDates[intThresholdIndex];
+                var threshold = lstDates[thresholdIndex];
 
                 // Construct a list of keys to be removed
-                List<string> lstKeys = (from entry in mLogDataCache where entry.Value <= dtThreshold select entry.Key).ToList();
+                var lstKeys = (from entry in mLogDataCache where entry.Value <= threshold select entry.Key).ToList();
 
                 // Remove each of the keys
-                foreach (var strKey in lstKeys)
+                foreach (var key in lstKeys)
                 {
-                    mLogDataCache.Remove(strKey);
+                    mLogDataCache.Remove(key);
                 }
             }
             catch (Exception)
@@ -768,48 +585,48 @@ namespace DMSUpdateManager
             }
         }
 
-        DateTime dtLastErrorShown = DateTime.MinValue;
-
-        private void UpdateLogDataCache(string strLogFilePath, DateTime dtDateThresholdToStore)
+        private void UpdateLogDataCache(string logFilePath, DateTime dateThresholdToStore)
         {
-            var reParseLine = new Regex("^([^\\t]+)\\t([^\\t]+)\\t(.+)", RegexOptions.Compiled);
+            var reParseLine = new Regex(@"^([^\t]+)\t([^\t]+)\t(.+)", RegexOptions.Compiled);
 
             try
             {
                 mLogDataCache.Clear();
 
-                using (var srLogFile = new StreamReader(new FileStream(strLogFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
+                using (var srLogFile = new StreamReader(new FileStream(logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
                 {
-                    while (srLogFile.Peek() > -1)
+                    while (!srLogFile.EndOfStream)
                     {
-                        var strLineIn = srLogFile.ReadLine();
-                        var reMatch = reParseLine.Match(strLineIn);
+                        var lineIn = srLogFile.ReadLine();
+                        if (string.IsNullOrEmpty(lineIn))
+                            continue;
 
-                        if (reMatch.Success)
+                        var reMatch = reParseLine.Match(lineIn);
+
+                        if (!reMatch.Success)
+                            continue;
+
+                        if (DateTime.TryParse(reMatch.Groups[1].Value, out var logTime))
                         {
-                            DateTime dtLogTime = default(DateTime);
-                            if (DateTime.TryParse(reMatch.Groups[1].Value, out dtLogTime))
+                            logTime = logTime.ToUniversalTime();
+                            if (logTime >= dateThresholdToStore)
                             {
-                                dtLogTime = dtLogTime.ToUniversalTime();
-                                if (dtLogTime >= dtDateThresholdToStore)
-                                {
-                                    string strKey = reMatch.Groups[2].Value + "_" + reMatch.Groups[3].Value;
+                                var key = reMatch.Groups[2].Value + "_" + reMatch.Groups[3].Value;
 
-                                    try
+                                try
+                                {
+                                    if (mLogDataCache.ContainsKey(key))
                                     {
-                                        if (mLogDataCache.ContainsKey(strKey))
-                                        {
-                                            mLogDataCache[strKey] = dtLogTime;
-                                        }
-                                        else
-                                        {
-                                            mLogDataCache.Add(strKey, dtLogTime);
-                                        }
+                                        mLogDataCache[key] = logTime;
                                     }
-                                    catch (Exception)
+                                    else
                                     {
-                                        // Ignore errors here
+                                        mLogDataCache.Add(key, logTime);
                                     }
+                                }
+                                catch (Exception)
+                                {
+                                    // Ignore errors here
                                 }
                             }
                         }
@@ -823,17 +640,17 @@ namespace DMSUpdateManager
             }
             catch (Exception ex)
             {
-                if (DateTime.UtcNow.Subtract(dtLastErrorShown).TotalSeconds > 10)
+                if (DateTime.UtcNow.Subtract(mLastErrorShown).TotalSeconds > 10)
                 {
-                    dtLastErrorShown = DateTime.UtcNow;
+                    mLastErrorShown = DateTime.UtcNow;
                     Console.WriteLine("Error caching the log file: " + ex.Message);
                 }
             }
         }
 
-        protected void UpdateProgress(string strProgressStepDescription)
+        protected void UpdateProgress(string progressStepDescription)
         {
-            UpdateProgress(strProgressStepDescription, mProgressPercentComplete);
+            UpdateProgress(progressStepDescription, mProgressPercentComplete);
         }
 
         protected void UpdateProgress(float sngPercentComplete)
@@ -841,11 +658,11 @@ namespace DMSUpdateManager
             UpdateProgress(ProgressStepDescription, sngPercentComplete);
         }
 
-        protected void UpdateProgress(string strProgressStepDescription, float sngPercentComplete)
+        protected void UpdateProgress(string progressStepDescription, float sngPercentComplete)
         {
-            var blnDescriptionChanged = !string.Equals(strProgressStepDescription, mProgressStepDescription);
+            var descriptionChanged = !string.Equals(progressStepDescription, mProgressStepDescription);
 
-            mProgressStepDescription = string.Copy(strProgressStepDescription);
+            mProgressStepDescription = string.Copy(progressStepDescription);
             if (sngPercentComplete < 0)
             {
                 sngPercentComplete = 0;
@@ -856,7 +673,7 @@ namespace DMSUpdateManager
             }
             mProgressPercentComplete = sngPercentComplete;
 
-            if (blnDescriptionChanged)
+            if (descriptionChanged)
             {
                 if (mProgressPercentComplete < float.Epsilon)
                 {
@@ -864,23 +681,86 @@ namespace DMSUpdateManager
                 }
                 else
                 {
-                    LogMessage(mProgressStepDescription + " (" + mProgressPercentComplete.ToString("0.0") +
-                               "% complete)".Replace(Environment.NewLine, "; "));
+                    LogMessage(mProgressStepDescription + " (" + mProgressPercentComplete.ToString("0.0") + "% complete)".Replace(Environment.NewLine, "; "));
                 }
             }
 
-            if (ProgressChanged != null)
+            OnProgressUpdate(ProgressStepDescription, ProgressPercentComplete);
+        }
+
+        private void WriteToLogFile(string message, eMessageTypeConstants eMessageType, int duplicateHoldoffHours)
+        {
+            string messageType;
+
+            switch (eMessageType)
             {
-                ProgressChanged(ProgressStepDescription, ProgressPercentComplete);
+                case eMessageTypeConstants.Normal:
+                    messageType = "Normal";
+                    break;
+                case eMessageTypeConstants.ErrorMsg:
+                    messageType = "Error";
+                    break;
+                case eMessageTypeConstants.Warning:
+                    messageType = "Warning";
+                    break;
+                default:
+                    messageType = "Unknown";
+                    break;
+            }
+
+            var writeToLog = true;
+
+            var logKey = messageType + "_" + message;
+            bool messageCached;
+
+            if (mLogDataCache.TryGetValue(logKey, out var lastLogTime))
+            {
+                messageCached = true;
+            }
+            else
+            {
+                messageCached = false;
+                lastLogTime = DateTime.UtcNow.AddHours(-(duplicateHoldoffHours + 1));
+            }
+
+            if (duplicateHoldoffHours > 0 && DateTime.UtcNow.Subtract(lastLogTime).TotalHours < duplicateHoldoffHours)
+            {
+                writeToLog = false;
+            }
+
+            if (!writeToLog)
+                return;
+
+            mLogFile.WriteLine(DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss tt") + "\t" +
+                               messageType + "\t" +
+                               message);
+
+            if (messageCached)
+            {
+                mLogDataCache[logKey] = DateTime.UtcNow;
+            }
+            else
+            {
+                try
+                {
+                    mLogDataCache.Add(logKey, DateTime.UtcNow);
+
+                    if (mLogDataCache.Count > MAX_LOGDATA_CACHE_SIZE)
+                    {
+                        TrimLogDataCache();
+                    }
+                }
+                catch (Exception)
+                {
+                    // Ignore errors here
+                }
             }
         }
 
         protected void OperationComplete()
         {
-            if (ProgressComplete != null)
-            {
-                ProgressComplete();
-            }
+            ProgressComplete?.Invoke();
         }
     }
 }
+
