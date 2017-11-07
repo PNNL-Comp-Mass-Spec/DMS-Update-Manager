@@ -32,7 +32,7 @@ namespace DMSUpdateManager
             mFileDate = "April 7, 2017";
 
             mFilesToIgnore = new SortedSet<string>(StringComparer.InvariantCultureIgnoreCase);
-            mProcessesDict = new Dictionary<UInt32, clsProcessInfo>();
+            mProcessesDict = new Dictionary<uint, clsProcessInfo>();
 
             mExecutingExePath = Assembly.GetExecutingAssembly().Location;
             mExecutingExeName = Path.GetFileName(mExecutingExePath);
@@ -65,97 +65,78 @@ namespace DMSUpdateManager
 
         public const string ROLLBACK_SUFFIX = ".rollback";
         public const string DELETE_SUFFIX = ".delete";
-
         public const string CHECK_JAVA_SUFFIX = ".checkjava";
+
         public const string PUSH_DIR_FLAG = "_PushDir_.txt";
-
         public const string PUSH_AM_SUBDIR_FLAG = "_AMSubDir_.txt";
+
         public const string DELETE_SUBDIR_FLAG = "_DeleteSubDir_.txt";
-
         public const string DELETE_AM_SUBDIR_FLAG = "_DeleteAMSubDir_.txt";
-        #endregion
-
-        #region "Structures"
 
         #endregion
 
         #region "Classwide Variables"
 
-        // When true, then messages will be displayed and logged showing the files that would be copied
-
-        private bool mPreviewMode;
-
         private bool mProcessesShown = false;
-        // If False, then will not overwrite files in the target folder that are newer than files in the source folder
 
-        private bool mOverwriteNewerFiles;
-        // When mCopySubdirectoriesToParentFolder=True, then will copy any subdirectories of the source folder into a subdirectory off the parent folder of the target folder
-        // For example:
-        //   The .Exe resides at folder C:\DMS_Programs\AnalysisToolManager\DMSUpdateManager.exe
-        //   mSourceFolderPath = "\\gigasax\DMS_Programs\AnalysisToolManagerDistribution"
-        //   mTargetFolderPath = "."
-        //   Files are synced from "\\gigasax\DMS_Programs\AnalysisToolManagerDistribution" to "C:\DMS_Programs\AnalysisToolManager\"
-        //   Next, folder \\gigasax\DMS_Programs\AnalysisToolManagerDistribution\MASIC\ will get sync'd with ..\MASIC (but only if ..\MASIC exists)
-        //     Note that ..\MASIC is actually C:\DMS_Programs\MASIC\
-        //   When sync'ing the MASIC folders, will recursively sync additional folders that match
-        //   If the source folder contains file _PushDir_.txt or _AMSubDir_.txt then the directory will be copied to the target even if it doesn't exist there
-
-        private bool mCopySubdirectoriesToParentFolder;
         // The following is the path that lists the files that will be copied to the target folder
         private string mSourceFolderPath;
-
         private string mTargetFolderPath;
+
         // List of files that will not be copied
         // The names must be full filenames (no wildcards)
-
         private readonly SortedSet<string> mFilesToIgnore;
 
-        private eDMSUpdateManagerErrorCodes mLocalErrorCode;
         private readonly string mExecutingExeName;
-
         private readonly string mExecutingExePath;
+
         // Store the results of the WMI query getting running processes with command line data
         // Keys are Process ID
         // Values are clsProcessInfo
+        private readonly Dictionary<uint, clsProcessInfo> mProcessesDict;
 
-        private readonly Dictionary<UInt32, clsProcessInfo> mProcessesDict;
         // Keys are process ID
         // Values are the full command line for the process
+        private Dictionary<uint, string> mProcessesMatchingTarget;
 
-        private Dictionary<UInt32, string> mProcessesMatchingTarget;
         private string mLastFolderProcessesChecked;
         private string mLastFolderRunningProcessPath;
+        private uint mLastFolderRunningProcessId;
 
-        private UInt32 mLastFolderRunningProcessId;
         private string mSourceFolderPathBase;
-
         private string mTargetFolderPathBase;
+
         #endregion
 
         #region "Properties"
 
-        public bool CopySubdirectoriesToParentFolder
-        {
-            get { return mCopySubdirectoriesToParentFolder; }
-            set { mCopySubdirectoriesToParentFolder = value; }
-        }
+        /// <summary>
+        /// When mCopySubdirectoriesToParentFolder=True, then will copy any subdirectories of the source folder into a subdirectory off the parent folder of the target folder
+        /// </summary>
+        /// <remarks>
+        /// For example:
+        ///   The .Exe resides at folder C:\DMS_Programs\AnalysisToolManager\DMSUpdateManager.exe
+        ///   mSourceFolderPath = "\\gigasax\DMS_Programs\AnalysisToolManagerDistribution"
+        ///   mTargetFolderPath = "."
+        ///   Files are synced from "\\gigasax\DMS_Programs\AnalysisToolManagerDistribution" to "C:\DMS_Programs\AnalysisToolManager\"
+        ///   Next, folder \\gigasax\DMS_Programs\AnalysisToolManagerDistribution\MASIC\ will get sync'd with ..\MASIC (but only if ..\MASIC exists)
+        ///     Note that ..\MASIC is actually C:\DMS_Programs\MASIC\
+        ///   When sync'ing the MASIC folders, will recursively sync additional folders that match
+        ///   If the source folder contains file _PushDir_.txt or _AMSubDir_.txt then the directory will be copied to the target even if it doesn't exist there
+        /// </remarks>
+        public bool CopySubdirectoriesToParentFolder { get; set; }
 
-        public eDMSUpdateManagerErrorCodes LocalErrorCode
-        {
-            get { return mLocalErrorCode; }
-        }
+        public eDMSUpdateManagerErrorCodes LocalErrorCode { get; private set; }
 
-        public bool OverwriteNewerFiles
-        {
-            get { return mOverwriteNewerFiles; }
-            set { mOverwriteNewerFiles = value; }
-        }
+        /// <summary>
+        /// If False, then will not overwrite files in the target folder that are newer than files in the source folder
+        /// </summary>
+        public bool OverwriteNewerFiles { get; set; }
 
-        public bool PreviewMode
-        {
-            get { return mPreviewMode; }
-            set { mPreviewMode = value; }
-        }
+        /// <summary>
+        /// When true, then messages will be displayed and logged showing the files that would be copied
+        /// </summary>
+        public bool PreviewMode { get; set; }
 
         public string SourceFolderPath
         {
@@ -172,7 +153,7 @@ namespace DMSUpdateManager
             }
             set
             {
-                if ((value != null))
+                if (value != null)
                 {
                     mSourceFolderPath = value;
                 }
@@ -238,7 +219,7 @@ namespace DMSUpdateManager
         /// <param name="strCopyReason">Reason for the copy</param>
         private void CopyFile(FileInfo fiSourceFile, FileInfo fiTargetFile, ref int fileUpdateCount, string strCopyReason)
         {
-            string existingFileInfo = null;
+            string existingFileInfo;
 
             if (fiTargetFile.Exists)
             {
@@ -251,7 +232,7 @@ namespace DMSUpdateManager
 
             var updatedFileInfo = "New: " + GetFileDateAndSize(fiSourceFile);
 
-            if (mPreviewMode)
+            if (PreviewMode)
             {
                 ShowOldAndNewFileInfo("Preview: Update file: ", fiSourceFile, fiTargetFile, existingFileInfo, updatedFileInfo, strCopyReason, true);
             }
@@ -312,7 +293,6 @@ namespace DMSUpdateManager
             else
             {
                 // File is present, see if the file has a different size
-
                 if (eDateComparisonMode == eDateComparisonModeConstants.CopyIfSizeOrDateDiffers)
                 {
                     if (fiTargetFile.Length != fiSourceFile.Length)
@@ -418,9 +398,9 @@ namespace DMSUpdateManager
             base.ShowMessages = false;
             base.mLogFileUsesDateStamp = false;
 
-            mPreviewMode = false;
-            mOverwriteNewerFiles = false;
-            mCopySubdirectoriesToParentFolder = false;
+            PreviewMode = false;
+            OverwriteNewerFiles = false;
+            CopySubdirectoriesToParentFolder = false;
 
             mSourceFolderPath = string.Empty;
             mTargetFolderPath = string.Empty;
@@ -431,7 +411,7 @@ namespace DMSUpdateManager
             mFilesToIgnore.Add(DELETE_SUBDIR_FLAG);
             mFilesToIgnore.Add(DELETE_AM_SUBDIR_FLAG);
 
-            mLocalErrorCode = eDMSUpdateManagerErrorCodes.NoError;
+            LocalErrorCode = eDMSUpdateManagerErrorCodes.NoError;
 
             string executingExePath = Assembly.GetExecutingAssembly().Location;
             var vsHostName = Path.ChangeExtension(mExecutingExeName, "vshost.exe").ToLower();
@@ -441,7 +421,7 @@ namespace DMSUpdateManager
 
             foreach (var item in results.Get())
             {
-                var processId = (UInt32) item["ProcessId"];
+                var processId = (uint) item["ProcessId"];
                 var processPath = (string)item["ExecutablePath"];
                 var cmd = (string)item["CommandLine"];
 
@@ -475,7 +455,7 @@ namespace DMSUpdateManager
                 mProcessesDict.Add(processId, newProcess);
             }
 
-            mProcessesMatchingTarget = new Dictionary<UInt32, string>();
+            mProcessesMatchingTarget = new Dictionary<uint, string>();
 
             // Ignore checking for running processes in the first folder that we are updating
             mLastFolderProcessesChecked = Path.GetDirectoryName(executingExePath);
@@ -491,7 +471,7 @@ namespace DMSUpdateManager
 
             if (base.ErrorCode == eProcessFoldersErrorCodes.LocalizedError | base.ErrorCode == eProcessFoldersErrorCodes.NoError)
             {
-                switch (mLocalErrorCode)
+                switch (LocalErrorCode)
                 {
                     case eDMSUpdateManagerErrorCodes.NoError:
                         strErrorMessage = string.Empty;
@@ -526,7 +506,7 @@ namespace DMSUpdateManager
 
             try
             {
-                if (strParameterFilePath == null || strParameterFilePath.Length == 0)
+                if (string.IsNullOrEmpty(strParameterFilePath))
                 {
                     // No parameter file specified; nothing to load
                     return true;
@@ -558,8 +538,8 @@ namespace DMSUpdateManager
                             base.LogMessagesToFile = true;
                         }
 
-                        mOverwriteNewerFiles = objSettingsFile.GetParam(OPTIONS_SECTION, "OverwriteNewerFiles", mOverwriteNewerFiles);
-                        mCopySubdirectoriesToParentFolder = objSettingsFile.GetParam(OPTIONS_SECTION, "CopySubdirectoriesToParentFolder", mCopySubdirectoriesToParentFolder);
+                        OverwriteNewerFiles = objSettingsFile.GetParam(OPTIONS_SECTION, "OverwriteNewerFiles", OverwriteNewerFiles);
+                        CopySubdirectoriesToParentFolder = objSettingsFile.GetParam(OPTIONS_SECTION, "CopySubdirectoriesToParentFolder", CopySubdirectoriesToParentFolder);
 
                         mSourceFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "SourceFolderPath", mSourceFolderPath);
                         mTargetFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "TargetFolderPath", mTargetFolderPath);
@@ -630,7 +610,7 @@ namespace DMSUpdateManager
         {
             SetLocalErrorCode(eDMSUpdateManagerErrorCodes.NoError);
 
-            if ((targetFolderPath != null) && targetFolderPath.Length > 0)
+            if (!string.IsNullOrEmpty(targetFolderPath))
             {
                 // Update mTargetFolderPath using targetFolderPath
                 // Note: If TargetFolder is defined in the parameter file, this value will get overridden
@@ -652,7 +632,7 @@ namespace DMSUpdateManager
             {
                 targetFolderPath = string.Copy(mTargetFolderPath);
 
-                if (mSourceFolderPath == null || mSourceFolderPath.Length == 0)
+                if (string.IsNullOrEmpty(mSourceFolderPath))
                 {
                     ShowMessage("Source folder path is not defined.  Either specify it at the command line or include it in the parameter file.");
                     base.SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidInputFolderPath);
@@ -667,8 +647,8 @@ namespace DMSUpdateManager
                 }
 
                 // Note that CleanupFilePaths() will update mOutputFolderPath, which is used by LogMessage()
-                var tempstr = string.Empty;
-                if (!CleanupFolderPaths(ref targetFolderPath, ref tempstr))
+                var tempStr = string.Empty;
+                if (!CleanupFolderPaths(ref targetFolderPath, ref tempStr))
                 {
                     base.SetBaseClassErrorCode(eProcessFoldersErrorCodes.FilePathError);
                     return false;
@@ -687,7 +667,7 @@ namespace DMSUpdateManager
 
                 var success = UpdateFolderWork(diSourceFolder.FullName, diTargetFolder.FullName, blnPushNewSubfolders: false, blnProcessingSubFolder: false);
 
-                if (mCopySubdirectoriesToParentFolder)
+                if (CopySubdirectoriesToParentFolder)
                 {
                     success = UpdateFolderCopyToParent(diTargetFolder, diSourceFolder);
                 }
@@ -781,7 +761,7 @@ namespace DMSUpdateManager
                 {
                     try
                     {
-                        if (mPreviewMode)
+                        if (PreviewMode)
                         {
                             ShowMessage("Preview " + folderDescription + " delete: " + diTargetSubFolder.FullName);
                         }
@@ -839,7 +819,7 @@ namespace DMSUpdateManager
                 lstCheckJavaFiles.Add(item);
             }
 
-            foreach (FileInfo fiSourceFile in fiFilesInSource)
+            foreach (var fiSourceFile in fiFilesInSource)
             {
                 var retryCount = 2;
                 var errorLogged = false;
@@ -862,7 +842,7 @@ namespace DMSUpdateManager
                         }
 
                         var itemInUse = eItemInUseConstants.NotInUse;
-                        string fileUsageMessage = string.Empty;
+                        var fileUsageMessage = string.Empty;
 
                         // See if file ends with one of the special suffix flags
                         if (fiSourceFile.Name.EndsWith(ROLLBACK_SUFFIX, StringComparison.InvariantCultureIgnoreCase))
@@ -914,9 +894,9 @@ namespace DMSUpdateManager
                             continue;
                         }
 
-                        eDateComparisonModeConstants eDateComparisonMode = default(eDateComparisonModeConstants);
+                        eDateComparisonModeConstants eDateComparisonMode;
 
-                        if (mOverwriteNewerFiles)
+                        if (OverwriteNewerFiles)
                         {
                             eDateComparisonMode = eDateComparisonModeConstants.OverwriteNewerTargetIfDifferentSize;
                         }
@@ -1015,7 +995,7 @@ namespace DMSUpdateManager
                 var processes = Process.GetProcesses().ToList();
                 processes.Sort(new ProcessNameComparer());
 
-                if (mPreviewMode & !mProcessesShown)
+                if (PreviewMode & !mProcessesShown)
                 {
                     Console.WriteLine();
                     ShowMessage("Examining running processes for Java", false);
@@ -1025,7 +1005,7 @@ namespace DMSUpdateManager
 
                 foreach (Process oProcess in processes)
                 {
-                    if (mPreviewMode & !mProcessesShown)
+                    if (PreviewMode & !mProcessesShown)
                     {
                         if (oProcess.ProcessName != lastProcess)
                         {
@@ -1043,7 +1023,7 @@ namespace DMSUpdateManager
                     {
                         var commandLine = GetCommandLine(oProcess, INCLUDE_PROGRAM_PATH);
 
-                        if (mPreviewMode & !mProcessesShown)
+                        if (PreviewMode & !mProcessesShown)
                         {
                             Console.WriteLine("  " + commandLine);
                         }
@@ -1074,7 +1054,7 @@ namespace DMSUpdateManager
                     }
                 }
 
-                if (mPreviewMode & !mProcessesShown)
+                if (PreviewMode & !mProcessesShown)
                 {
                     Console.WriteLine();
                     mProcessesShown = true;
@@ -1114,9 +1094,7 @@ namespace DMSUpdateManager
 
             try
             {
-                string firstProcessPath = string.Empty;
-                UInt32 firstProcessId = default(UInt32);
-                var processCount = GetNumTargetFolderProcesses(strTargetFolderPath, out firstProcessPath, out firstProcessId);
+                var processCount = GetNumTargetFolderProcesses(strTargetFolderPath, out var firstProcessPath, out var firstProcessId);
 
                 if (processCount > 0)
                 {
@@ -1189,7 +1167,7 @@ namespace DMSUpdateManager
         /// <param name="firstProcessPath">Output parameter: first process using files in this folder; empty string if no processes</param>
         /// <param name="firstProcessId">Output parameter: Process ID of first process using files in this folder</param>
         /// <returns>Count of processes using this folder</returns>
-        private int GetNumTargetFolderProcesses(string strTargetFolderPath, out string firstProcessPath, out UInt32 firstProcessId)
+        private int GetNumTargetFolderProcesses(string strTargetFolderPath, out string firstProcessPath, out uint firstProcessId)
         {
             firstProcessPath = string.Empty;
             firstProcessId = 0;
@@ -1247,7 +1225,6 @@ namespace DMSUpdateManager
 
             // Next examine the command line arguments of running processes
             // This can help check for .jar files that don't have a .checkjava flag file
-
             foreach (var item in mProcessesDict)
             {
                 if (item.Value.CommandLineArgs.IndexOf(strTargetFolderPath, StringComparison.InvariantCultureIgnoreCase) < 0)
@@ -1286,7 +1263,7 @@ namespace DMSUpdateManager
 
             if (fiTargetFile.Exists)
             {
-                if (mPreviewMode)
+                if (PreviewMode)
                 {
                     ShowMessage("Preview delete: " + fiTargetFile.FullName);
                 }
@@ -1303,7 +1280,7 @@ namespace DMSUpdateManager
 
             if (fiTargetDeleteFile.Exists)
             {
-                if (mPreviewMode)
+                if (PreviewMode)
                 {
                     ShowMessage("Preview delete: " + fiTargetDeleteFile.FullName);
                 }
@@ -1337,7 +1314,7 @@ namespace DMSUpdateManager
                 {
                     string prefix = null;
 
-                    if (mPreviewMode)
+                    if (PreviewMode)
                     {
                         prefix = "Preview rollback of file ";
                     }
@@ -1355,20 +1332,15 @@ namespace DMSUpdateManager
             }
         }
 
-        private void SetLocalErrorCode(eDMSUpdateManagerErrorCodes eNewErrorCode)
+        private void SetLocalErrorCode(eDMSUpdateManagerErrorCodes eNewErrorCode, bool blnLeaveExistingErrorCodeUnchanged = false)
         {
-            SetLocalErrorCode(eNewErrorCode, false);
-        }
-
-        private void SetLocalErrorCode(eDMSUpdateManagerErrorCodes eNewErrorCode, bool blnLeaveExistingErrorCodeUnchanged)
-        {
-            if (blnLeaveExistingErrorCodeUnchanged && mLocalErrorCode != eDMSUpdateManagerErrorCodes.NoError)
+            if (blnLeaveExistingErrorCodeUnchanged && LocalErrorCode != eDMSUpdateManagerErrorCodes.NoError)
             {
                 // An error code is already defined; do not change it
             }
             else
             {
-                mLocalErrorCode = eNewErrorCode;
+                LocalErrorCode = eNewErrorCode;
 
                 if (eNewErrorCode == eDMSUpdateManagerErrorCodes.NoError)
                 {
