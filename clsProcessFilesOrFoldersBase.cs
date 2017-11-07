@@ -349,58 +349,66 @@ namespace DMSUpdateManager
             }
         }
 
+        /// <summary>
+        /// Sets the log file path (<see cref="mLogFilePath"/>), according to data in <see cref="mLogFilePath"/>, <see cref="mLogFileUsesDateStamp"/>, and <see cref="LogFolderPath"/>
+        /// </summary>
+        protected void ConfigureLogFilePath()
+        {
+            if (string.IsNullOrWhiteSpace(mLogFilePath))
+            {
+                // Auto-name the log file
+                mLogFilePath = Path.GetFileNameWithoutExtension(GetAppPath());
+                mLogFilePath += "_log";
+
+                if (mLogFileUsesDateStamp)
+                {
+                    mLogFilePath += "_" + DateTime.Now.ToString("yyyy-MM-dd") + ".txt";
+                }
+                else
+                {
+                    mLogFilePath += ".txt";
+                }
+            }
+
+            try
+            {
+                if (LogFolderPath == null)
+                    LogFolderPath = string.Empty;
+
+                if (string.IsNullOrWhiteSpace(LogFolderPath))
+                {
+                    // Log folder is undefined; use mOutputFolderPath if it is defined
+                    if (!string.IsNullOrWhiteSpace(mOutputFolderPath))
+                    {
+                        LogFolderPath = string.Copy(mOutputFolderPath);
+                    }
+                }
+
+                if (LogFolderPath.Length > 0)
+                {
+                    // Create the log folder if it doesn't exist
+                    if (!Directory.Exists(LogFolderPath))
+                    {
+                        Directory.CreateDirectory(LogFolderPath);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                LogFolderPath = string.Empty;
+            }
+
+            if (!Path.IsPathRooted(mLogFilePath) && LogFolderPath.Length > 0)
+            {
+                mLogFilePath = Path.Combine(LogFolderPath, mLogFilePath);
+            }
+        }
+
         private void InitializeLogFile(int duplicateHoldoffHours)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(mLogFilePath))
-                {
-                    // Auto-name the log file
-                    mLogFilePath = Path.GetFileNameWithoutExtension(GetAppPath());
-                    mLogFilePath += "_log";
-
-                    if (mLogFileUsesDateStamp)
-                    {
-                        mLogFilePath += "_" + DateTime.Now.ToString("yyyy-MM-dd") + ".txt";
-                    }
-                    else
-                    {
-                        mLogFilePath += ".txt";
-                    }
-                }
-
-                try
-                {
-                    if (LogFolderPath == null)
-                        LogFolderPath = string.Empty;
-
-                    if (string.IsNullOrWhiteSpace(LogFolderPath))
-                    {
-                        // Log folder is undefined; use mOutputFolderPath if it is defined
-                        if (!string.IsNullOrWhiteSpace(mOutputFolderPath))
-                        {
-                            LogFolderPath = string.Copy(mOutputFolderPath);
-                        }
-                    }
-
-                    if (LogFolderPath.Length > 0)
-                    {
-                        // Create the log folder if it doesn't exist
-                        if (!Directory.Exists(LogFolderPath))
-                        {
-                            Directory.CreateDirectory(LogFolderPath);
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    LogFolderPath = string.Empty;
-                }
-
-                if (!Path.IsPathRooted(mLogFilePath) && LogFolderPath.Length > 0)
-                {
-                    mLogFilePath = Path.Combine(LogFolderPath, mLogFilePath);
-                }
+                ConfigureLogFilePath();
 
                 var openingExistingFile = File.Exists(mLogFilePath);
 
