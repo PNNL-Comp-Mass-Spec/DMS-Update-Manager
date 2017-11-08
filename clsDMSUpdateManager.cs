@@ -128,6 +128,10 @@ namespace DMSUpdateManager
         /// </remarks>
         public bool CopySubdirectoriesToParentFolder { get; set; }
 
+        public double MutexWaitTimeoutMinutes { get; set; }
+
+        public bool DoNotUseMutex { get; set; }
+
         public eDMSUpdateManagerErrorCodes LocalErrorCode { get; private set; }
 
         /// <summary>
@@ -404,6 +408,9 @@ namespace DMSUpdateManager
             OverwriteNewerFiles = false;
             CopySubdirectoriesToParentFolder = false;
 
+            MutexWaitTimeoutMinutes = 5;
+            DoNotUseMutex = false;
+
             mSourceFolderPath = string.Empty;
             mTargetFolderPath = string.Empty;
 
@@ -613,29 +620,6 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
-        /// Update the last write time on the log file
-        /// </summary>
-        /// <returns>false if LogFilePath not set, true otherwise</returns>
-        private bool TouchLogFile()
-        {
-            if (string.IsNullOrWhiteSpace(LogFilePath))
-            {
-                ConfigureLogFilePath();
-            }
-            if (!string.IsNullOrWhiteSpace(LogFilePath))
-            {
-                if (!File.Exists(LogFilePath))
-                {
-                    LogMessage("Initializing Log file");
-                }
-                CloseLogFileNow();
-                File.SetLastWriteTimeUtc(LogFilePath, DateTime.UtcNow);
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
         /// Update files in folder targetFolderPath
         /// </summary>
         /// <param name="targetFolderPath">Target folder to update</param>
@@ -690,48 +674,213 @@ namespace DMSUpdateManager
                     return false;
                 }
 
-                // Check the repeat time threshold; must be checked before any writes to the log; make sure anything added above only logs on error
-                if (!string.IsNullOrWhiteSpace(LogFilePath) && File.Exists(LogFilePath))
+                if (DoNotUseMutex)
                 {
-                    var logInfo = new FileInfo(LogFilePath);
-                    var lastWrote = logInfo.LastWriteTimeUtc;
-                    var checkTime = DateTime.UtcNow;
-                    if (lastWrote.AddSeconds(mMinimumRepeatThresholdSeconds) > checkTime)
-                    {
-                        // Reduce hits on the source: not enough time has passed since the last update
-                        // Delay the output so that important log messages about bad parameters will be output regardless of this
-                        Console.WriteLine("ALERT: exiting because not enough time has passed since last run. Time lapsed < minimum: {0} < {1}", (int)(checkTime - lastWrote).TotalSeconds, mMinimumRepeatThresholdSeconds);
-                        return true;
-                    }
+                    return UpdateFolderRun(targetFolderPath, strParameterFilePath);
                 }
-
-                var diSourceFolder = new DirectoryInfo(mSourceFolderPath);
-                var diTargetFolder = new DirectoryInfo(targetFolderPath);
-
-                mSourceFolderPathBase = diSourceFolder.Parent.FullName;
-                mTargetFolderPathBase = diTargetFolder.Parent.FullName;
-
-                base.mProgressStepDescription = "Updating " + diTargetFolder.Name + "\n" + " using " + diSourceFolder.FullName;
-                base.ResetProgress();
-
-                ShowMessage("Updating " + diTargetFolder.FullName + "\n" + " using " + diSourceFolder.FullName, false);
-
-                var success = UpdateFolderWork(diSourceFolder.FullName, diTargetFolder.FullName, blnPushNewSubfolders: false, blnProcessingSubFolder: false);
-
-                if (CopySubdirectoriesToParentFolder)
+                else
                 {
-                    success = UpdateFolderCopyToParent(diTargetFolder, diSourceFolder);
+                    return UpdateFolderMutexWrapped(targetFolderPath, strParameterFilePath);
                 }
-
-                // Regardless of success, touch the log file
-                TouchLogFile();
-
-                return success;
             }
             catch (Exception ex)
             {
                 HandleException("Error in UpdateFolder: " + ex.Message, ex);
                 return false;
+            }
+        }
+
+        private bool UpdateFolderMutexWrapped(string targetFolderPath, string strParameterFilePath)
+        {
+            // Check a global mutex keyed on the parameter file path; if it returns false, exit
+            Mutex mutex = null;
+            var hasMutexHandle = false;
+
+            try
+            {
+                bool doNotUpdateParent = false;
+                if (!string.IsNullOrWhiteSpace(strParameterFilePath))
+                {
+                    var mutexBase = "Global\\" + Assembly.GetExecutingAssembly().GetName().Name;
+                    var parameterFileCleaned = strParameterFilePath.Replace("\\", "_").Replace(":", "_").Replace(".", "_").Replace(" ", "_");
+                    var mutexName = mutexBase + "_" + parameterFileCleaned;
+
+                    mutex = new Mutex(false, mutexName);
+                    try
+                    {
+                        hasMutexHandle = mutex.WaitOne(0, false);
+                        if (!hasMutexHandle)
+                        {
+                            Console.WriteLine("WARNING: Other instance already running, waiting for finish before continuing...");
+                            // Mutex is held by another application; do another wait for it to be released, with a timeout of 2 minutes
+                            hasMutexHandle = mutex.WaitOne(TimeSpan.FromMinutes(MutexWaitTimeoutMinutes), false);
+                        }
+                    }
+                    catch (AbandonedMutexException)
+                    {
+                        Console.WriteLine("WARNING: Detected abandoned mutex, picking it up...");
+                        hasMutexHandle = true;
+                    }
+
+                    if (!hasMutexHandle)
+                    {
+                        // If we don't have the mutex handle, don't try to update the parent folder
+                        doNotUpdateParent = true;
+                    }
+                }
+
+                return UpdateFolderRun(targetFolderPath, strParameterFilePath, doNotUpdateParent);
+            }
+            finally
+            {
+                if (hasMutexHandle)
+                {
+                    mutex?.ReleaseMutex();
+                }
+                mutex?.Dispose();
+            }
+        }
+
+        private bool UpdateFolderCopyToParentMutexWrapped(DirectoryInfo diTargetFolder, DirectoryInfo diSourceFolder, string strParameterFilePath)
+        {
+            // Check a global mutex keyed on the parameter file path; if it returns false, exit
+            Mutex mutex = null;
+            var hasMutexHandle = false;
+
+            try
+            {
+                bool doNotUpdateParent = false;
+                var targetFolderParent = diTargetFolder.Parent?.FullName;
+                if (!string.IsNullOrWhiteSpace(targetFolderParent))
+                {
+                    var mutexBase = "Global\\" + Assembly.GetExecutingAssembly().GetName().Name;
+                    var parameterFileCleaned = targetFolderParent.Replace("\\", "_").Replace(":", "_").Replace(".", "_").Replace(" ", "_");
+                    var mutexName = mutexBase + "_" + parameterFileCleaned;
+
+                    mutex = new Mutex(false, mutexName);
+                    try
+                    {
+                        hasMutexHandle = mutex.WaitOne(0, false);
+                        if (!hasMutexHandle)
+                        {
+                            Console.WriteLine("WARNING: Other instance already running on target folder, waiting for finish before exiting...");
+                            // Mutex is held by another application; do another wait for it to be released, with a timeout of 2 minutes
+                            hasMutexHandle = mutex.WaitOne(TimeSpan.FromMinutes(MutexWaitTimeoutMinutes), false);
+                        }
+                    }
+                    catch (AbandonedMutexException)
+                    {
+                        Console.WriteLine("WARNING: Detected abandoned mutex, picking it up...");
+                        hasMutexHandle = true;
+                    }
+
+                    if (!hasMutexHandle)
+                    {
+                        // If we don't have the mutex handle, don't try to update the parent folder
+                        doNotUpdateParent = true;
+                    }
+                }
+
+                if (!doNotUpdateParent)
+                {
+                    return UpdateFolderCopyToParentRun(diTargetFolder, diSourceFolder, strParameterFilePath);
+                }
+                return true;
+            }
+            finally
+            {
+                if (hasMutexHandle)
+                {
+                    mutex?.ReleaseMutex();
+                }
+                mutex?.Dispose();
+            }
+        }
+
+        private bool UpdateFolderRun(string targetFolderPath, string strParameterFilePath, bool doNotUpdateParent = false)
+        {
+            var diSourceFolder = new DirectoryInfo(mSourceFolderPath);
+            var diTargetFolder = new DirectoryInfo(targetFolderPath);
+
+            mSourceFolderPathBase = diSourceFolder.Parent.FullName;
+            mTargetFolderPathBase = diTargetFolder.Parent.FullName;
+
+            base.mProgressStepDescription = "Updating " + diTargetFolder.Name + "\n" + " using " + diSourceFolder.FullName;
+            base.ResetProgress();
+
+            ShowMessage("Updating " + diTargetFolder.FullName + "\n" + " using " + diSourceFolder.FullName, false);
+
+            var success = UpdateFolderWork(diSourceFolder.FullName, diTargetFolder.FullName, blnPushNewSubfolders: false, blnProcessingSubFolder: false);
+
+            // if the override is not null, use it, else use the provided setting
+            if (CopySubdirectoriesToParentFolder && !doNotUpdateParent)
+            {
+                if (DoNotUseMutex)
+                {
+                    success = UpdateFolderCopyToParentRun(diTargetFolder, diSourceFolder, strParameterFilePath);
+                }
+                else
+                {
+                    success = UpdateFolderCopyToParentMutexWrapped(diTargetFolder, diSourceFolder, strParameterFilePath);
+                }
+            }
+
+            return success;
+        }
+
+        private bool UpdateFolderCopyToParentRun(DirectoryInfo diTargetFolder, DirectoryInfo diSourceFolder, string strParameterFilePath)
+        {
+            var success = true;
+            var skip = false;
+            var checkFilePath = string.Empty;
+            // Check the repeat time threshold; must be checked before any writes to the log; make sure anything added above only logs on error
+            if (!string.IsNullOrWhiteSpace(LogFilePath))
+            {
+                var logFileInfo = new FileInfo(LogFilePath);
+                var logFileFolder = logFileInfo.Directory.FullName;
+                checkFilePath = Path.Combine(logFileFolder, Path.GetFileNameWithoutExtension(strParameterFilePath) + "_parentCheck.txt");
+                var checkFileInfo = new FileInfo(checkFilePath);
+                if (checkFileInfo.Exists)
+                {
+                    var lastWrote = checkFileInfo.LastWriteTimeUtc;
+                    var checkTime = DateTime.UtcNow;
+                    if (lastWrote.AddSeconds(mMinimumRepeatThresholdSeconds) > checkTime)
+                    {
+                        // Reduce hits on the source: not enough time has passed since the last update
+                        // Delay the output so that important log messages about bad parameters will be output regardless of this
+                        Console.WriteLine("ALERT: exiting parent update because not enough time has passed since last run. Time lapsed < minimum: {0} < {1}", (int) (checkTime - lastWrote).TotalSeconds, mMinimumRepeatThresholdSeconds);
+                        skip = true;
+                    }
+                }
+            }
+
+            if (!skip)
+            {
+                // Regardless of success, touch the log file
+                TouchCheckFile(checkFilePath);
+
+                success = UpdateFolderCopyToParent(diTargetFolder, diSourceFolder);
+
+                // Regardless of success, touch the log file
+                TouchCheckFile(checkFilePath);
+            }
+
+            return success;
+        }
+
+        /// <summary>
+        /// Update the last write time on the log file
+        /// </summary>
+        private void TouchCheckFile(string checkFilePath)
+        {
+            if (!string.IsNullOrWhiteSpace(checkFilePath))
+            {
+                if (!File.Exists(checkFilePath))
+                {
+                    // Create an empty file; since a FileStream is returned, also call Dispose().
+                    File.Create(checkFilePath).Dispose();
+                }
+                File.SetLastWriteTimeUtc(checkFilePath, DateTime.UtcNow);
             }
         }
 

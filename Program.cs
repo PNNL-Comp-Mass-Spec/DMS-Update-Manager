@@ -72,13 +72,27 @@ namespace DMSUpdateManager
                 }
                 else
                 {
-                    if (mNoMutex)
+                    mDMSUpdateManager = new clsDMSUpdateManager();
+
+                    mDMSUpdateManager.PreviewMode = mPreviewMode;
+                    mDMSUpdateManager.LogMessagesToFile = mLogMessagesToFile;
+
+                    // Note: These options will get overridden if defined in the parameter file
+                    mDMSUpdateManager.SourceFolderPath = mSourceFolderPath;
+                    mDMSUpdateManager.DoNotUseMutex = mNoMutex;
+                    mDMSUpdateManager.MutexWaitTimeoutMinutes = mWaitTimeoutMinutes;
+
+                    if (mDMSUpdateManager.UpdateFolder(mTargetFolderPath, mParameterFilePath))
                     {
-                        intReturnCode = RunUpdateManager();
+                        intReturnCode = 0;
                     }
                     else
                     {
-                        intReturnCode = MutexWrappedUpdate();
+                        intReturnCode = (int)mDMSUpdateManager.ErrorCode;
+                        if (intReturnCode != 0)
+                        {
+                            Console.WriteLine("Error while processing: " + mDMSUpdateManager.GetErrorMessage());
+                        }
                     }
                 }
             }
@@ -89,85 +103,6 @@ namespace DMSUpdateManager
             }
 
             return intReturnCode;
-        }
-
-        private static int RunUpdateManager()
-        {
-            var intReturnCode = 0;
-            mDMSUpdateManager = new clsDMSUpdateManager();
-
-            mDMSUpdateManager.PreviewMode = mPreviewMode;
-            mDMSUpdateManager.LogMessagesToFile = mLogMessagesToFile;
-
-            // Note: These options will get overridden if defined in the parameter file
-            mDMSUpdateManager.SourceFolderPath = mSourceFolderPath;
-
-            if (mDMSUpdateManager.UpdateFolder(mTargetFolderPath, mParameterFilePath))
-            {
-                intReturnCode = 0;
-            }
-            else
-            {
-                intReturnCode = (int)mDMSUpdateManager.ErrorCode;
-                if (intReturnCode != 0)
-                {
-                    Console.WriteLine("Error while processing: " + mDMSUpdateManager.GetErrorMessage());
-                }
-            }
-
-            return intReturnCode;
-        }
-
-        private static int MutexWrappedUpdate()
-        {
-            // Check a global mutex keyed on the parameter file path; if it returns false, exit
-            Mutex mutex = null;
-            var hasMutexHandle = false;
-
-            try
-            {
-                if (!string.IsNullOrWhiteSpace(mParameterFilePath))
-                {
-                    var mutexBase = "Global\\" + Assembly.GetExecutingAssembly().GetName().Name;
-                    var parameterFileCleaned = mParameterFilePath.Replace("\\", "_").Replace(":", "_").Replace(".", "_");
-                    var mutexName = mutexBase + "_" + parameterFileCleaned;
-
-                    mutex = new Mutex(false, mutexName);
-                    var mutexHeldByOther = false;
-                    try
-                    {
-                        hasMutexHandle = mutex.WaitOne(0, false);
-                        if (!hasMutexHandle)
-                        {
-                            mutexHeldByOther = true;
-                            Console.WriteLine("WARNING: Other instance already running, waiting for finish before exiting...");
-                            // Mutex is held by another application; do another wait for it to be released, with a timeout of 2 minutes
-                            hasMutexHandle = mutex.WaitOne(TimeSpan.FromMinutes(mWaitTimeoutMinutes), false);
-                        }
-                    }
-                    catch (AbandonedMutexException)
-                    {
-                        Console.WriteLine("WARNING: Detected abandoned mutex, picking it up...");
-                        hasMutexHandle = true;
-                    }
-
-                    if (mutexHeldByOther)
-                    {
-                        // If another process held the mutex, regardless of what happens we want to exit without running the update
-                        return 0;
-                    }
-                }
-
-                return RunUpdateManager();
-            }
-            finally
-            {
-                if (hasMutexHandle)
-                {
-                    mutex?.ReleaseMutex();
-                }
-                mutex?.Dispose();
-            }
         }
 
         private static string GetAppVersion()
