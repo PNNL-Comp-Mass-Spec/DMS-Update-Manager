@@ -107,6 +107,7 @@ namespace DMSUpdateManager
         private string mTargetFolderPathBase;
 
         private int mMinimumRepeatThresholdSeconds;
+        private string mMutexNameSuffix;
 
         #endregion
 
@@ -410,6 +411,9 @@ namespace DMSUpdateManager
 
             MutexWaitTimeoutMinutes = 5;
             DoNotUseMutex = false;
+            mMutexNameSuffix = string.Empty;
+
+            mMinimumRepeatThresholdSeconds = 60;
 
             mSourceFolderPath = string.Empty;
             mTargetFolderPath = string.Empty;
@@ -552,6 +556,8 @@ namespace DMSUpdateManager
 
                         mSourceFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "SourceFolderPath", mSourceFolderPath);
                         mTargetFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "TargetFolderPath", mTargetFolderPath);
+
+                        mMutexNameSuffix = objSettingsFile.GetParam(OPTIONS_SECTION, "MutexNameSuffix", string.Empty);
 
                         var logFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "LogFolderPath", "Logs");
                         mMinimumRepeatThresholdSeconds = objSettingsFile.GetParam(OPTIONS_SECTION, "MinimumRepeatTimeSeconds", 60);
@@ -701,8 +707,13 @@ namespace DMSUpdateManager
                 bool doNotUpdateParent = false;
                 if (!string.IsNullOrWhiteSpace(strParameterFilePath))
                 {
+                    var mutexSuffix = strParameterFilePath;
+                    if (!string.IsNullOrWhiteSpace(mMutexNameSuffix))
+                    {
+                        mutexSuffix = mMutexNameSuffix;
+                    }
                     var mutexBase = "Global\\" + Assembly.GetExecutingAssembly().GetName().Name;
-                    var parameterFileCleaned = strParameterFilePath.Replace("\\", "_").Replace(":", "_").Replace(".", "_").Replace(" ", "_");
+                    var parameterFileCleaned = mutexSuffix.Replace("\\", "_").Replace(":", "_").Replace(".", "_").Replace(" ", "_");
                     var mutexName = mutexBase + "_" + parameterFileCleaned;
 
                     mutex = new Mutex(false, mutexName);
