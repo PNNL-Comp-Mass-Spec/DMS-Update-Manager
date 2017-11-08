@@ -140,6 +140,7 @@ namespace DMSUpdateManager
                         if (!hasMutexHandle)
                         {
                             mutexHeldByOther = true;
+                            Console.WriteLine("WARNING: Other instance already running, waiting for finish before exiting...");
                             // Mutex is held by another application; do another wait for it to be released, with a timeout of 2 minutes
                             hasMutexHandle = mutex.WaitOne(TimeSpan.FromMinutes(mWaitTimeoutMinutes), false);
                         }
