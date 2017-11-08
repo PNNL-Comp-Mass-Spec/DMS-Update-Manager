@@ -147,6 +147,7 @@ namespace DMSUpdateManager
                     }
                     catch (AbandonedMutexException)
                     {
+                        Console.WriteLine("WARNING: Detected abandoned mutex, picking it up...");
                         hasMutexHandle = true;
                     }
 

@@ -890,7 +890,7 @@ namespace DMSUpdateManager
 
                         if (blnSkipFile)
                         {
-                            continue;
+                            break; // Break out of the while, continue the for loop
                         }
 
                         var itemInUse = eItemInUseConstants.NotInUse;
@@ -922,7 +922,7 @@ namespace DMSUpdateManager
                             }
 
                             ProcessRollbackFile(fiSourceFile, diTargetFolder.FullName, ref fileUpdateCount, blnProcessingSubFolder, itemInUse, fileUsageMessage);
-                            continue;
+                            break; // Break out of the while, continue the for loop
                         }
                         else if (fiSourceFile.Name.EndsWith(DELETE_SUFFIX, StringComparison.InvariantCultureIgnoreCase))
                         {
@@ -931,19 +931,19 @@ namespace DMSUpdateManager
                             // However, do look for a corresponding file that does not have .delete and delete that file in the target folder
 
                             ProcessDeleteFile(fiSourceFile, diTargetFolder.FullName);
-                            continue;
+                            break; // Break out of the while, continue the for loop
                         }
                         else if (fiSourceFile.Name.EndsWith(CHECK_JAVA_SUFFIX, StringComparison.InvariantCultureIgnoreCase))
                         {
                             // This is a .checkjava file
                             // Do not copy this file
-                            continue;
+                            break; // Break out of the while, continue the for loop
                         }
 
                         // Make sure this file does not match a corresponding .delete file
                         if (lstDeleteFiles.Contains(strFileNameLCase))
                         {
-                            continue;
+                            break; // Break out of the while, continue the for loop
                         }
 
                         eDateComparisonModeConstants eDateComparisonMode;
