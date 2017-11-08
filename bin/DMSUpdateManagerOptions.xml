@@ -7,5 +7,7 @@
     <item key="CopySubdirectoriesToParentFolder" value="True" />
     <item key="FilesToIgnore" value="AnalysisManagerProg.exe.config, Utils.pyc, Global.pyc" />
     <item key="LogMessages" value="True" />
+    <item key="MinimumRepeatTimeSeconds" value="60" />
+    <item key="LogFolderPath" value=".\DMS_Programs\DMSUpdateManager\Logs" />
   </section>
 </sections>

@@ -106,6 +106,8 @@ namespace DMSUpdateManager
         private string mSourceFolderPathBase;
         private string mTargetFolderPathBase;
 
+        private int mMinimumRepeatThresholdSeconds;
+
         #endregion
 
         #region "Properties"
@@ -396,7 +398,7 @@ namespace DMSUpdateManager
         private void InitializeLocalVariables()
         {
             base.ShowMessages = false;
-            base.mLogFileUsesDateStamp = false;
+            base.mLogFileUsesDateStamp = true;
 
             PreviewMode = false;
             OverwriteNewerFiles = false;
@@ -544,6 +546,17 @@ namespace DMSUpdateManager
                         mSourceFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "SourceFolderPath", mSourceFolderPath);
                         mTargetFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "TargetFolderPath", mTargetFolderPath);
 
+                        var logFolderPath = objSettingsFile.GetParam(OPTIONS_SECTION, "LogFolderPath", "Logs");
+                        mMinimumRepeatThresholdSeconds = objSettingsFile.GetParam(OPTIONS_SECTION, "MinimumRepeatTimeSeconds", 60);
+
+                        if (!string.IsNullOrWhiteSpace(logFolderPath))
+                        {
+                            CloseLogFileNow();
+                            LogFolderPath = logFolderPath;
+                            LogFilePath = string.Empty;
+                            ConfigureLogFilePath();
+                        }
+
                         var strFilesToIgnore = objSettingsFile.GetParam(OPTIONS_SECTION, "FilesToIgnore", string.Empty);
                         try
                         {
@@ -597,6 +610,29 @@ namespace DMSUpdateManager
                 ShowMessage(spacePad + existingFileInfo);
             }
             ShowMessage(spacePad + updatedFileInfo);
+        }
+
+        /// <summary>
+        /// Update the last write time on the log file
+        /// </summary>
+        /// <returns>false if LogFilePath not set, true otherwise</returns>
+        private bool TouchLogFile()
+        {
+            if (string.IsNullOrWhiteSpace(LogFilePath))
+            {
+                ConfigureLogFilePath();
+            }
+            if (!string.IsNullOrWhiteSpace(LogFilePath))
+            {
+                if (!File.Exists(LogFilePath))
+                {
+                    LogMessage("Initializing Log file");
+                }
+                CloseLogFileNow();
+                File.SetLastWriteTimeUtc(LogFilePath, DateTime.UtcNow);
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -654,6 +690,19 @@ namespace DMSUpdateManager
                     return false;
                 }
 
+                // Check the repeat time threshold; must be checked before any writes to the log; make sure anything added above only logs on error
+                if (!string.IsNullOrWhiteSpace(LogFilePath) && File.Exists(LogFilePath))
+                {
+                    var logInfo = new FileInfo(LogFilePath);
+                    var lastWrote = logInfo.LastWriteTimeUtc;
+                    if (lastWrote.AddSeconds(mMinimumRepeatThresholdSeconds) > DateTime.UtcNow)
+                    {
+                        // Reduce hits on the source: not enough time has passed since the last update
+                        // Delay the output so that important log messages about bad parameters will be output regardless of this
+                        return true;
+                    }
+                }
+
                 var diSourceFolder = new DirectoryInfo(mSourceFolderPath);
                 var diTargetFolder = new DirectoryInfo(targetFolderPath);
 
@@ -671,6 +720,9 @@ namespace DMSUpdateManager
                 {
                     success = UpdateFolderCopyToParent(diTargetFolder, diSourceFolder);
                 }
+
+                // Regardless of success, touch the log file
+                TouchLogFile();
 
                 return success;
             }
