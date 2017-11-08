@@ -695,10 +695,12 @@ namespace DMSUpdateManager
                 {
                     var logInfo = new FileInfo(LogFilePath);
                     var lastWrote = logInfo.LastWriteTimeUtc;
-                    if (lastWrote.AddSeconds(mMinimumRepeatThresholdSeconds) > DateTime.UtcNow)
+                    var checkTime = DateTime.UtcNow;
+                    if (lastWrote.AddSeconds(mMinimumRepeatThresholdSeconds) > checkTime)
                     {
                         // Reduce hits on the source: not enough time has passed since the last update
                         // Delay the output so that important log messages about bad parameters will be output regardless of this
+                        Console.WriteLine("ALERT: exiting because not enough time has passed since last run. Time lapsed < minimum: {0} < {1}", (int)(checkTime - lastWrote).TotalSeconds, mMinimumRepeatThresholdSeconds);
                         return true;
                     }
                 }
