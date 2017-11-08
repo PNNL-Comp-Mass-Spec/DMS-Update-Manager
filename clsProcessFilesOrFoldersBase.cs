@@ -398,7 +398,7 @@ namespace DMSUpdateManager
                 LogFolderPath = string.Empty;
             }
 
-            if (!Path.IsPathRooted(mLogFilePath) && LogFolderPath.Length > 0)
+            if (!Path.IsPathRooted(mLogFilePath) && LogFolderPath.Length > 0 && !mLogFilePath.StartsWith(LogFolderPath))
             {
                 mLogFilePath = Path.Combine(LogFolderPath, mLogFilePath);
             }
