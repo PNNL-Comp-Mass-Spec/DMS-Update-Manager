@@ -34,6 +34,9 @@ namespace DMSUpdateManager
 
         private static bool mPreviewMode;
 
+        private static bool mNoMutex;
+        private static double mWaitTimeoutMinutes;
+
         private static clsDMSUpdateManager mDMSUpdateManager;
 
         public static int Main(string[] args)
@@ -50,6 +53,8 @@ namespace DMSUpdateManager
 
             mLogMessagesToFile = false;
             mPreviewMode = false;
+            mNoMutex = false;
+            mWaitTimeoutMinutes = 5;
 
             try
             {
@@ -67,25 +72,13 @@ namespace DMSUpdateManager
                 }
                 else
                 {
-                    mDMSUpdateManager = new clsDMSUpdateManager();
-
-                    mDMSUpdateManager.PreviewMode = mPreviewMode;
-                    mDMSUpdateManager.LogMessagesToFile = mLogMessagesToFile;
-
-                    // Note: These options will get overridden if defined in the parameter file
-                    mDMSUpdateManager.SourceFolderPath = mSourceFolderPath;
-
-                    if (mDMSUpdateManager.UpdateFolder(mTargetFolderPath, mParameterFilePath))
+                    if (mNoMutex)
                     {
-                        intReturnCode = 0;
+                        intReturnCode = RunUpdateManager();
                     }
                     else
                     {
-                        intReturnCode = (int)mDMSUpdateManager.ErrorCode;
-                        if (intReturnCode != 0)
-                        {
-                            Console.WriteLine("Error while processing: " + mDMSUpdateManager.GetErrorMessage());
-                        }
+                        intReturnCode = MutexWrappedUpdate();
                     }
                 }
             }
@@ -96,6 +89,83 @@ namespace DMSUpdateManager
             }
 
             return intReturnCode;
+        }
+
+        private static int RunUpdateManager()
+        {
+            var intReturnCode = 0;
+            mDMSUpdateManager = new clsDMSUpdateManager();
+
+            mDMSUpdateManager.PreviewMode = mPreviewMode;
+            mDMSUpdateManager.LogMessagesToFile = mLogMessagesToFile;
+
+            // Note: These options will get overridden if defined in the parameter file
+            mDMSUpdateManager.SourceFolderPath = mSourceFolderPath;
+
+            if (mDMSUpdateManager.UpdateFolder(mTargetFolderPath, mParameterFilePath))
+            {
+                intReturnCode = 0;
+            }
+            else
+            {
+                intReturnCode = (int)mDMSUpdateManager.ErrorCode;
+                if (intReturnCode != 0)
+                {
+                    Console.WriteLine("Error while processing: " + mDMSUpdateManager.GetErrorMessage());
+                }
+            }
+
+            return intReturnCode;
+        }
+
+        private static int MutexWrappedUpdate()
+        {
+            // Check a global mutex keyed on the parameter file path; if it returns false, exit
+            Mutex mutex = null;
+            var hasMutexHandle = false;
+
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(mParameterFilePath))
+                {
+                    var mutexBase = "Global\\" + Assembly.GetExecutingAssembly().GetName().Name;
+                    var parameterFileCleaned = mParameterFilePath.Replace("\\", "_").Replace(":", "_").Replace(".", "_");
+                    var mutexName = mutexBase + "_" + parameterFileCleaned;
+
+                    mutex = new Mutex(false, mutexName);
+                    var mutexHeldByOther = false;
+                    try
+                    {
+                        hasMutexHandle = mutex.WaitOne(0, false);
+                        if (!hasMutexHandle)
+                        {
+                            mutexHeldByOther = true;
+                            // Mutex is held by another application; do another wait for it to be released, with a timeout of 2 minutes
+                            hasMutexHandle = mutex.WaitOne(TimeSpan.FromMinutes(mWaitTimeoutMinutes), false);
+                        }
+                    }
+                    catch (AbandonedMutexException)
+                    {
+                        hasMutexHandle = true;
+                    }
+
+                    if (mutexHeldByOther)
+                    {
+                        // If another process held the mutex, regardless of what happens we want to exit without running the update
+                        return 0;
+                    }
+                }
+
+                return RunUpdateManager();
+            }
+            finally
+            {
+                if (hasMutexHandle)
+                {
+                    mutex?.ReleaseMutex();
+                }
+                mutex?.Dispose();
+            }
         }
 
         private static string GetAppVersion()
@@ -115,7 +185,9 @@ namespace DMSUpdateManager
                 "P",
                 "L",
                 "V",
-                "Preview"
+                "Preview",
+                "NM",
+                "WaitTimeout"
             };
 
             try
@@ -140,6 +212,12 @@ namespace DMSUpdateManager
                         mPreviewMode = true;
                     if (objParseCommandLine.IsParameterPresent("Preview"))
                         mPreviewMode = true;
+                    if (objParseCommandLine.IsParameterPresent("NM"))
+                        mNoMutex = true;
+                    if (objParseCommandLine.RetrieveValueForParameter("WaitTimeout", out strValue))
+                    {
+                        mWaitTimeoutMinutes = double.Parse(strValue);
+                    }
 
                     return true;
                 }
@@ -171,13 +249,15 @@ namespace DMSUpdateManager
                 Console.WriteLine();
                 Console.WriteLine("Program syntax:" + "\n" + Path.GetFileName(Assembly.GetExecutingAssembly().Location));
                 Console.WriteLine(" [/S:SourceFolderPath [/T:TargetFolderPath]");
-                Console.WriteLine(" [/P:ParameterFilePath] [/L] [/V]");
+                Console.WriteLine(" [/P:ParameterFilePath] [/L] [/V] [/NM] [/WaitTimeout:minutes]");
                 Console.WriteLine();
                 Console.WriteLine("All files present in the source folder will be copied to the target folder if the file size or file modification time are different.");
                 Console.WriteLine("You can either define the source and target folder at the command line, or using the parameter file.  All settings in the parameter file override command line settings.");
                 Console.WriteLine();
                 Console.WriteLine("Use /L to log details of the updated files.");
                 Console.WriteLine("Use /V to preview the files that would be updated.");
+                Console.WriteLine("Use /NM to not use a mutex, allowing multiple instances of this program to run simultaneously with the same parameter file.");
+                Console.WriteLine("Use /WaitTimeout:minutes to specify how long the program should wait for another instance to finish before exiting.");
                 Console.WriteLine();
                 Console.WriteLine("These special flags affect how files are processed");
                 Console.WriteLine("Append the flags to the source file name to use them");
