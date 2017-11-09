@@ -71,7 +71,7 @@ namespace DMSUpdateManager
                 }
                 else
                 {
-                    var dmsUpdateManager = new clsDMSUpdateManager();
+                    var dmsUpdateManager = new DMSUpdateManager();
                     RegisterEvents(dmsUpdateManager);
 
                     dmsUpdateManager.PreviewMode = mPreviewMode;
@@ -182,15 +182,15 @@ namespace DMSUpdateManager
                 Console.WriteLine();
                 Console.WriteLine("These special flags affect how files are processed");
                 Console.WriteLine("Append the flags to the source file name to use them");
-                Console.WriteLine("  " + clsDMSUpdateManager.ROLLBACK_SUFFIX + " - Rolls back newer target files to match the source");
-                Console.WriteLine("  " + clsDMSUpdateManager.DELETE_SUFFIX + " - Deletes the target file");
+                Console.WriteLine("  " + DMSUpdateManager.ROLLBACK_SUFFIX + " - Rolls back newer target files to match the source");
+                Console.WriteLine("  " + DMSUpdateManager.DELETE_SUFFIX + " - Deletes the target file");
                 Console.WriteLine();
                 Console.WriteLine("These special flag files affect how folders are processed");
                 Console.WriteLine("To use them, create an empty file with the given name in a source folder");
-                Console.WriteLine("  " + clsDMSUpdateManager.PUSH_DIR_FLAG + " - Pushes the directory to the parent of the target folder");
-                Console.WriteLine("  " + clsDMSUpdateManager.PUSH_AM_SUBDIR_FLAG + " - Pushes the directory to the target folder as a subfolder");
-                Console.WriteLine("  " + clsDMSUpdateManager.DELETE_SUBDIR_FLAG + " - Deletes the directory from the parent of the target, but only if the directory is empty");
-                Console.WriteLine("  " + clsDMSUpdateManager.DELETE_AM_SUBDIR_FLAG + " - Deletes the directory from below the target, but only if it is empty");
+                Console.WriteLine("  " + DMSUpdateManager.PUSH_DIR_FLAG + " - Pushes the directory to the parent of the target folder");
+                Console.WriteLine("  " + DMSUpdateManager.PUSH_AM_SUBDIR_FLAG + " - Pushes the directory to the target folder as a subfolder");
+                Console.WriteLine("  " + DMSUpdateManager.DELETE_SUBDIR_FLAG + " - Deletes the directory from the parent of the target, but only if the directory is empty");
+                Console.WriteLine("  " + DMSUpdateManager.DELETE_AM_SUBDIR_FLAG + " - Deletes the directory from below the target, but only if it is empty");
                 Console.WriteLine();
                 Console.WriteLine("Program written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA) in 2009");
                 Console.WriteLine("Version: " + GetAppVersion());

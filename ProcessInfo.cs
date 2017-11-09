@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace DMSUpdateManager
 {
-    public class clsProcessInfo
+    public class ProcessInfo
     {
         /// <summary>
         /// Process ID
@@ -48,17 +48,16 @@ namespace DMSUpdateManager
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="lngProcessID">Process ID</param>
-        /// <param name="strExePath">Executable path</param>
-        /// <param name="strCommandLine">Command line</param>
-        public clsProcessInfo(long lngProcessID, string strExePath, string strCommandLine)
+        /// <param name="processID">Process ID</param>
+        /// <param name="exePath">Executable path</param>
+        /// <param name="commandLine">Command line</param>
+        public ProcessInfo(long processID, string exePath, string commandLine)
         {
-            ProcessID = lngProcessID;
-            ExePath = strExePath;
-            CommandLine = strCommandLine;
+            ProcessID = processID;
+            ExePath = exePath;
+            CommandLine = commandLine;
 
-            FolderPath = Path.GetDirectoryName(strExePath);
-            CommandLine = strCommandLine;
+            FolderPath = Path.GetDirectoryName(exePath);
             FolderHierarchy = GetFolderHierarchy(FolderPath);
 
             var exeName = Path.GetFileName(ExePath);
