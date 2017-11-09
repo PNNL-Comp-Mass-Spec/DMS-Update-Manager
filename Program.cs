@@ -37,14 +37,12 @@ namespace DMSUpdateManager
         private static bool mNoMutex;
         private static double mWaitTimeoutMinutes;
 
-        private static clsDMSUpdateManager mDMSUpdateManager;
-
         public static int Main(string[] args)
         {
             // Returns 0 if no error, error code if an error
 
             var intReturnCode = 0;
-            clsParseCommandLine objParseCommandLine = new clsParseCommandLine();
+            var objParseCommandLine = new clsParseCommandLine();
             bool blnProceed = false;
 
             mSourceFolderPath = string.Empty;
@@ -72,33 +70,34 @@ namespace DMSUpdateManager
                 }
                 else
                 {
-                    mDMSUpdateManager = new clsDMSUpdateManager();
+                    var dmsUpdateManager = new clsDMSUpdateManager();
+                    RegisterEvents(dmsUpdateManager);
 
-                    mDMSUpdateManager.PreviewMode = mPreviewMode;
-                    mDMSUpdateManager.LogMessagesToFile = mLogMessagesToFile;
+                    dmsUpdateManager.PreviewMode = mPreviewMode;
+                    dmsUpdateManager.LogMessagesToFile = mLogMessagesToFile;
 
                     // Note: These options will get overridden if defined in the parameter file
-                    mDMSUpdateManager.SourceFolderPath = mSourceFolderPath;
-                    mDMSUpdateManager.DoNotUseMutex = mNoMutex;
-                    mDMSUpdateManager.MutexWaitTimeoutMinutes = mWaitTimeoutMinutes;
+                    dmsUpdateManager.SourceFolderPath = mSourceFolderPath;
+                    dmsUpdateManager.DoNotUseMutex = mNoMutex;
+                    dmsUpdateManager.MutexWaitTimeoutMinutes = mWaitTimeoutMinutes;
 
-                    if (mDMSUpdateManager.UpdateFolder(mTargetFolderPath, mParameterFilePath))
+                    if (dmsUpdateManager.UpdateFolder(mTargetFolderPath, mParameterFilePath))
                     {
                         intReturnCode = 0;
                     }
                     else
                     {
-                        intReturnCode = (int)mDMSUpdateManager.ErrorCode;
+                        intReturnCode = (int)dmsUpdateManager.ErrorCode;
                         if (intReturnCode != 0)
                         {
-                            Console.WriteLine("Error while processing: " + mDMSUpdateManager.GetErrorMessage());
+                            Console.WriteLine("Error while processing: " + dmsUpdateManager.GetErrorMessage());
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                ShowErrorMessage("Error occurred in modMain->Main: " + Environment.NewLine + ex.Message);
+                ShowErrorMessage("Error occurred in modMain->Main: " + Environment.NewLine + ex.Message, ex);
                 intReturnCode = -1;
             }
 
@@ -161,21 +160,15 @@ namespace DMSUpdateManager
             }
             catch (Exception ex)
             {
-                ShowErrorMessage("Error parsing the command line parameters: " + Environment.NewLine + ex.Message);
+                ShowErrorMessage("Error parsing the command line parameters: " + Environment.NewLine + ex.Message, ex);
             }
 
             return false;
         }
 
-        private static void ShowErrorMessage(string strMessage)
+        private static void ShowErrorMessage(string message, Exception ex)
         {
-            var strSeparator = "------------------------------------------------------------------------------";
-
-            Console.WriteLine();
-            Console.WriteLine(strSeparator);
-            Console.WriteLine(strMessage);
-            Console.WriteLine(strSeparator);
-            Console.WriteLine();
+            ConsoleMsgUtils.ShowError(message, ex);
         }
 
         private static void ShowProgramHelp()
@@ -221,8 +214,36 @@ namespace DMSUpdateManager
             }
             catch (Exception ex)
             {
-                ShowErrorMessage("Error displaying the program syntax: " + ex.Message);
+                ShowErrorMessage("Error displaying the program syntax: " + ex.Message, ex);
             }
+        }
+
+        static void RegisterEvents(clsEventNotifier processor)
+        {
+            processor.DebugEvent += Processor_DebugEvent;
+            processor.ErrorEvent += Processor_ErrorEvent;
+            processor.StatusEvent += Processor_StatusEvent;
+            processor.WarningEvent += Processor_WarningEvent;
+        }
+
+        static void Processor_DebugEvent(string message)
+        {
+            ConsoleMsgUtils.ShowDebug(message);
+        }
+
+        static void Processor_ErrorEvent(string message, Exception ex)
+        {
+            ShowErrorMessage(message, ex);
+        }
+
+        static void Processor_StatusEvent(string message)
+        {
+            Console.WriteLine(message);
+        }
+
+        static void Processor_WarningEvent(string message)
+        {
+            ConsoleMsgUtils.ShowWarning(message);
         }
     }
 }

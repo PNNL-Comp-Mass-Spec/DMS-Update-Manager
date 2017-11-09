@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using PRISM;
+using PRISM.FileProcessor;
 
 namespace DMSUpdateManager
 {
@@ -22,7 +23,7 @@ namespace DMSUpdateManager
     /// E-mail: matthew.monroe@pnnl.gov or matt@alchemistmatt.com
     /// Website: http://omics.pnl.gov/ or http://panomics.pnnl.gov/")
     /// </remarks>
-    public class clsDMSUpdateManager : clsProcessFoldersBaseClass
+    public class clsDMSUpdateManager : ProcessFoldersBase
     {
         /// <summary>
         /// Constructor
@@ -402,8 +403,8 @@ namespace DMSUpdateManager
 
         private void InitializeLocalVariables()
         {
-            base.ShowMessages = false;
-            base.mLogFileUsesDateStamp = true;
+            ReThrowEvents = false;
+            mLogFileUsesDateStamp = true;
 
             PreviewMode = false;
             OverwriteNewerFiles = false;
@@ -816,8 +817,8 @@ namespace DMSUpdateManager
             mSourceFolderPathBase = diSourceFolder.Parent.FullName;
             mTargetFolderPathBase = diTargetFolder.Parent.FullName;
 
-            base.mProgressStepDescription = "Updating " + diTargetFolder.Name + "\n" + " using " + diSourceFolder.FullName;
             base.ResetProgress();
+            UpdateProgress("Updating " + diTargetFolder.Name + "\n" + " using " + diSourceFolder.FullName);
 
             ShowMessage("Updating " + diTargetFolder.FullName + "\n" + " using " + diSourceFolder.FullName, false);
 
@@ -999,9 +1000,11 @@ namespace DMSUpdateManager
 
         private bool UpdateFolderWork(string strSourceFolderPath, string strTargetFolderPath, bool blnPushNewSubfolders, bool blnProcessingSubFolder)
         {
-            base.mProgressStepDescription = "Updating " + AbbreviatePath(strTargetFolderPath) + "\n" + " using " + AbbreviatePath(strSourceFolderPath, mSourceFolderPathBase);
 
-            ShowMessage(base.mProgressStepDescription, false);
+            UpdateProgress("Updating " + AbbreviatePath(strTargetFolderPath) + "\n" + " using " +
+                           AbbreviatePath(strSourceFolderPath, mSourceFolderPathBase));
+
+            ShowMessage(ProgressStepDescription, false);
 
             // Make sure the target folder exists
             var diTargetFolder = new DirectoryInfo(strTargetFolderPath);
