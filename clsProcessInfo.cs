@@ -62,6 +62,13 @@ namespace DMSUpdateManager
             FolderHierarchy = GetFolderHierarchy(FolderPath);
 
             var exeName = Path.GetFileName(ExePath);
+
+            if (string.IsNullOrWhiteSpace(exeName))
+            {
+                CommandLineArgs = CommandLine;
+                return;
+            }
+
             var exeIndex = CommandLine.IndexOf(exeName, StringComparison.Ordinal);
 
             if (exeIndex >= 0)

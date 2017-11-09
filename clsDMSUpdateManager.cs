@@ -521,11 +521,17 @@ namespace DMSUpdateManager
 
                 if (!File.Exists(parameterFilePath))
                 {
-                    // See if strParameterFilePath points to a file in the same directory as the application
-                    strParameterFilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Path.GetFileName(strParameterFilePath));
-                    if (!File.Exists(strParameterFilePath))
+                    // See if parameterFilePath points to a file in the same directory as the application
+                    var exeFolder = Path.GetDirectoryName(mExecutingExePath);
+                    if (exeFolder == null)
+                        parameterFilePath = Path.GetFileName(parameterFilePath);
+                    else
+                        parameterFilePath = Path.Combine(exeFolder, Path.GetFileName(parameterFilePath));
+
+                    if (!File.Exists(parameterFilePath))
                     {
-                        base.SetBaseClassErrorCode(eProcessFoldersErrorCodes.ParameterFileNotFound);
+                        OnErrorEvent("Parameter file not found: " + parameterFilePath);
+                        SetBaseClassErrorCode(eProcessFoldersErrorCodes.ParameterFileNotFound);
                         return false;
                     }
                 }
@@ -810,6 +816,18 @@ namespace DMSUpdateManager
             var diSourceFolder = new DirectoryInfo(mSourceFolderPath);
             var diTargetFolder = new DirectoryInfo(targetFolderPath);
 
+            if (diSourceFolder.Parent == null)
+            {
+                OnErrorEvent("Unable to determine the parent directory of the source folder: " + diSourceFolder.FullName);
+                return false;
+            }
+
+            if (diTargetFolder.Parent == null)
+            {
+                OnErrorEvent("Unable to determine the parent directory of the target folder: " + diTargetFolder.FullName);
+                return false;
+            }
+
             mSourceFolderPathBase = diSourceFolder.Parent.FullName;
             mTargetFolderPathBase = diTargetFolder.Parent.FullName;
 
@@ -845,6 +863,15 @@ namespace DMSUpdateManager
             if (!string.IsNullOrWhiteSpace(LogFilePath))
             {
                 var logFileInfo = new FileInfo(LogFilePath);
+                var logFileFolder = logFileInfo.DirectoryName;
+
+                if (logFileFolder == null)
+                {
+                    OnErrorEvent("Unable to determine the parent directory of the log file: " + logFileInfo.FullName);
+                    return false;
+                }
+
+                checkFilePath = Path.Combine(logFileFolder, Path.GetFileNameWithoutExtension(parameterFilePath) + "_parentCheck.txt");
                 var checkFileInfo = new FileInfo(checkFilePath);
                 if (checkFileInfo.Exists)
                 {
@@ -854,7 +881,10 @@ namespace DMSUpdateManager
                     {
                         // Reduce hits on the source: not enough time has passed since the last update
                         // Delay the output so that important log messages about bad parameters will be output regardless of this
-                        Console.WriteLine("ALERT: exiting parent update because not enough time has passed since last run. Time lapsed < minimum: {0} < {1}", (int) (checkTime - lastWrote).TotalSeconds, mMinimumRepeatThresholdSeconds);
+                        OnWarningEvent(
+                            "Exiting parent update because not enough time has passed since last run. " +
+                            string.Format("Time lapsed < minimum: {0} < {1}", (int) (checkTime - lastWrote).TotalSeconds, mMinimumRepeatThresholdSeconds));
+
                         skip = true;
                     }
                 }
@@ -894,7 +924,14 @@ namespace DMSUpdateManager
         {
             var successOverall = true;
 
-            foreach (DirectoryInfo diSourceSubFolder in diSourceFolder.GetDirectories())
+            var parentFolder = diTargetFolder.Parent;
+            if (parentFolder == null)
+            {
+                OnWarningEvent("Unable to determine the parent directory of " + diTargetFolder.FullName);
+                return false;
+            }
+
+            foreach (var diSourceSubFolder in diSourceFolder.GetDirectories())
             {
 
                 // The target folder is treated as a subdirectory of the parent folder
@@ -1304,6 +1341,12 @@ namespace DMSUpdateManager
         {
             folderUsageMessage = string.Empty;
 
+            if (string.IsNullOrWhiteSpace(targetFolderPath))
+            {
+                OnWarningEvent("Empty target folder path passed to TargetFolderInUseByProcess");
+                return false;
+            }
+
             try
             {
                 var processCount = GetNumTargetFolderProcesses(targetFolderPath, out var firstProcessPath, out var firstProcessId);
@@ -1327,12 +1370,24 @@ namespace DMSUpdateManager
                         var diProcessFile = new FileInfo(firstProcessPath);
                         var processIdAppend = " (" + " PID " + firstProcessId + ")";
 
-                        if (diProcessFile.DirectoryName == strTargetFolderPath)
+                        if (diProcessFile.DirectoryName == null)
+                        {
+                            OnWarningEvent("Unable to determine the parent directory of " + diProcessFile.FullName);
+                            return false;
+                        }
+
+                        if (diProcessFile.DirectoryName == targetFolderPath)
                         {
                             processPathToShow = Path.GetFileName(firstProcessPath) + processIdAppend;
                         }
-                        else if (strTargetFolderPath.StartsWith(diProcessFile.DirectoryName))
+                        else if (targetFolderPath.StartsWith(diProcessFile.DirectoryName))
                         {
+                            if (diProcessFile.Directory?.Parent == null)
+                            {
+                                OnWarningEvent("Unable to determine the parent directory of " + diProcessFile.FullName);
+                                return false;
+                            }
+
                             var relativePath = diProcessFile.Directory.Parent.FullName;
                             string pathPart;
                             if (diProcessFile.DirectoryName.Length > relativePath.Length)
