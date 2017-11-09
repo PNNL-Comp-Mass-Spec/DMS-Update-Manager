@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -41,9 +42,9 @@ namespace DMSUpdateManager
         {
             // Returns 0 if no error, error code if an error
 
-            var intReturnCode = 0;
-            var objParseCommandLine = new clsParseCommandLine();
-            bool blnProceed = false;
+            int intReturnCode;
+            var commandLineParser = new clsParseCommandLine();
+            var blnProceed = false;
 
             mSourceFolderPath = string.Empty;
             mTargetFolderPath = string.Empty;
@@ -56,13 +57,13 @@ namespace DMSUpdateManager
 
             try
             {
-                if (objParseCommandLine.ParseCommandLine())
+                if (commandLineParser.ParseCommandLine())
                 {
-                    if (SetOptionsUsingCommandLineParameters(objParseCommandLine))
+                    if (SetOptionsUsingCommandLineParameters(commandLineParser))
                         blnProceed = true;
                 }
 
-                if (!blnProceed || objParseCommandLine.NeedToShowHelp || objParseCommandLine.ParameterCount == 0 ||
+                if (!blnProceed || commandLineParser.NeedToShowHelp || commandLineParser.ParameterCount == 0 ||
                     !(mSourceFolderPath.Length > 0 & mTargetFolderPath.Length > 0 | mParameterFilePath.Length > 0))
                 {
                     ShowProgramHelp();
@@ -106,57 +107,47 @@ namespace DMSUpdateManager
 
         private static string GetAppVersion()
         {
-            return Assembly.GetExecutingAssembly().GetName().Version.ToString() + " (" + PROGRAM_DATE + ")";
+            return Assembly.GetExecutingAssembly().GetName().Version + " (" + PROGRAM_DATE + ")";
         }
 
-        private static bool SetOptionsUsingCommandLineParameters(clsParseCommandLine objParseCommandLine)
+        private static bool SetOptionsUsingCommandLineParameters(clsParseCommandLine commandLineParser)
         {
             // Returns True if no problems; otherwise, returns false
 
-            string strValue = string.Empty;
-            var strValidParameters = new string[]
-            {
-                "S",
-                "T",
-                "P",
-                "L",
-                "V",
-                "Preview",
-                "NM",
-                "WaitTimeout"
-            };
+            var validParameters = new List<string> { "S", "T", "P", "L", "V", "Preview", "NM", "WaitTimeout" };
 
             try
             {
                 // Make sure no invalid parameters are present
-                if (objParseCommandLine.InvalidParametersPresent(strValidParameters))
+                if (commandLineParser.InvalidParametersPresent(validParameters))
                 {
                     return false;
                 }
-                else
-                {
-                    // Query objParseCommandLine to see if various parameters are present
-                    if (objParseCommandLine.RetrieveValueForParameter("S", out strValue))
-                        mSourceFolderPath = strValue;
-                    if (objParseCommandLine.RetrieveValueForParameter("T", out strValue))
-                        mTargetFolderPath = strValue;
-                    if (objParseCommandLine.RetrieveValueForParameter("P", out strValue))
-                        mParameterFilePath = strValue;
-                    if (objParseCommandLine.IsParameterPresent("L"))
-                        mLogMessagesToFile = true;
-                    if (objParseCommandLine.IsParameterPresent("V"))
-                        mPreviewMode = true;
-                    if (objParseCommandLine.IsParameterPresent("Preview"))
-                        mPreviewMode = true;
-                    if (objParseCommandLine.IsParameterPresent("NM"))
-                        mNoMutex = true;
-                    if (objParseCommandLine.RetrieveValueForParameter("WaitTimeout", out strValue))
-                    {
-                        mWaitTimeoutMinutes = double.Parse(strValue);
-                    }
 
-                    return true;
+                // Query commandLineParser to see if various parameters are present
+                if (commandLineParser.RetrieveValueForParameter("S", out var sourceFolder))
+                    mSourceFolderPath = sourceFolder;
+
+                if (commandLineParser.RetrieveValueForParameter("T", out var targetFolder))
+                    mTargetFolderPath = targetFolder;
+
+                if (commandLineParser.RetrieveValueForParameter("P", out var parameterFile))
+                    mParameterFilePath = parameterFile;
+
+                mLogMessagesToFile = commandLineParser.IsParameterPresent("L");
+
+                mPreviewMode = commandLineParser.IsParameterPresent("V");
+
+                mPreviewMode = mPreviewMode || commandLineParser.IsParameterPresent("Preview");
+
+                mNoMutex = commandLineParser.IsParameterPresent("NM");
+
+                if (commandLineParser.RetrieveValueForParameter("WaitTimeout", out var timeoutMinutes))
+                {
+                    mWaitTimeoutMinutes = double.Parse(timeoutMinutes);
                 }
+
+                return true;
             }
             catch (Exception ex)
             {

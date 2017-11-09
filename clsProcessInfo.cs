@@ -86,10 +86,7 @@ namespace DMSUpdateManager
             {
                 return CommandLine;
             }
-            else
-            {
-                return ExePath;
-            }
+            return ExePath;
         }
     }
 }
