@@ -30,7 +30,7 @@ namespace DMSUpdateManager
         /// </summary>
         public DMSUpdateManager()
         {
-            mFileDate = "April 7, 2017";
+            mFileDate = "Novemeber 9, 2017";
 
             mFilesToIgnore = new SortedSet<string>(StringComparer.InvariantCultureIgnoreCase);
             mProcessesDict = new Dictionary<uint, ProcessInfo>();
