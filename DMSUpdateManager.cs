@@ -237,11 +237,11 @@ namespace DMSUpdateManager
 
             if (PreviewMode)
             {
-                ShowOldAndNewFileInfo("Preview: Update file: ", sourceFile, targetFile, existingFileInfo, updatedFileInfo, copyReason, true);
+                ShowOldAndNewFileInfo("Preview: Update file: ", targetFile, existingFileInfo, updatedFileInfo, copyReason, true);
             }
             else
             {
-                ShowOldAndNewFileInfo("Update file: ", sourceFile, targetFile, existingFileInfo, updatedFileInfo, copyReason, true);
+                ShowOldAndNewFileInfo("Update file: ", targetFile, existingFileInfo, updatedFileInfo, copyReason, true);
 
                 try
                 {
@@ -619,7 +619,6 @@ namespace DMSUpdateManager
 
         private void ShowOldAndNewFileInfo(
             string messagePrefix,
-            FileSystemInfo sourceFile,
             FileSystemInfo targetFile,
             string existingFileInfo,
             string updatedFileInfo,
@@ -628,7 +627,7 @@ namespace DMSUpdateManager
         {
             var spacePad = new string(' ', messagePrefix.Length);
 
-            ShowMessage(messagePrefix + sourceFile.Name + "; " + copyReason, logToFile);
+            ShowMessage(messagePrefix + targetFile.FullName + "; " + copyReason, logToFile);
             if (targetFile.Exists)
             {
                 ShowMessage(spacePad + existingFileInfo);
