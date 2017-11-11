@@ -838,9 +838,9 @@ namespace DMSUpdateManager
             mTargetFolderPathBase = targetFolder.Parent.FullName;
 
             ResetProgress();
-            UpdateProgress("Updating " + targetFolder.Name + "\n" + " using " + sourceFolder.FullName);
+            //UpdateProgress("Updating " + targetFolder.Name + "\n" + " using " + sourceFolder.FullName);
 
-            ShowMessage("Updating " + targetFolder.FullName + "\n" + " using " + sourceFolder.FullName, false);
+            ShowMessage("Updating " + targetFolder.FullName + "\n" + " using " + sourceFolder.FullName, false, eMessageType: eMessageTypeConstants.Debug);
 
             var success = UpdateFolderWork(sourceFolder.FullName, targetFolder.FullName, pushNewSubfolders: false, processingSubFolder: false);
 
@@ -1004,11 +1004,11 @@ namespace DMSUpdateManager
 
                 if (fileCount > 0)
                 {
-                    ShowMessage("Folder flagged for deletion, but it is not empty (File Count  = " + fileCount + "): " + AbbreviatePath(targetSubFolder.FullName));
+                    ShowMessage("Folder flagged for deletion, but it is not empty (File Count  = " + fileCount + "): " + AbbreviatePath(targetSubFolder.FullName), eMessageType: eMessageTypeConstants.Warning);
                 }
                 else if (folderCount > 0)
                 {
-                    ShowMessage("Folder flagged for deletion, but it is not empty (Folder Count = " + folderCount + "): " + AbbreviatePath(targetSubFolder.FullName));
+                    ShowMessage("Folder flagged for deletion, but it is not empty (Folder Count = " + folderCount + "): " + AbbreviatePath(targetSubFolder.FullName), eMessageType: eMessageTypeConstants.Warning);
                 }
                 else
                 {
@@ -1038,11 +1038,11 @@ namespace DMSUpdateManager
 
         private bool UpdateFolderWork(string sourceFolderPath, string targetFolderPath, bool pushNewSubfolders, bool processingSubFolder)
         {
+            var description = "Updating " + AbbreviatePath(targetFolderPath) + "\n" + " using " +
+                              AbbreviatePath(sourceFolderPath, mSourceFolderPathBase);
+            //UpdateProgress(description);
 
-            UpdateProgress("Updating " + AbbreviatePath(targetFolderPath) + "\n" + " using " +
-                           AbbreviatePath(sourceFolderPath, mSourceFolderPathBase));
-
-            ShowMessage(ProgressStepDescription, false);
+            ShowMessage(description, false, eMessageType: eMessageTypeConstants.Debug);
 
             // Make sure the target folder exists
             var targetFolder = new DirectoryInfo(targetFolderPath);

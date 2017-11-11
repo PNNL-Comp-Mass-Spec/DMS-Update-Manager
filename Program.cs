@@ -82,7 +82,8 @@ namespace DMSUpdateManager
                     dmsUpdateManager.SourceFolderPath = mSourceFolderPath;
                     dmsUpdateManager.DoNotUseMutex = mNoMutex;
                     dmsUpdateManager.MutexWaitTimeoutMinutes = mWaitTimeoutMinutes;
-                    dmsUpdateManager.LoggingLevel = ProcessFilesOrFoldersBase.LogLevel.Warning;
+                    dmsUpdateManager.LoggingLevel = ProcessFilesOrFoldersBase.LogLevel.Normal;
+                    dmsUpdateManager.ProgressOutputLevel = ProcessFilesOrFoldersBase.LogLevel.Suppress;
                     dmsUpdateManager.WriteToConsoleIfNoListener = false;
 
                     if (dmsUpdateManager.UpdateFolder(mTargetFolderPath, mParameterFilePath))
