@@ -30,7 +30,7 @@ namespace DMSUpdateManager
         /// </summary>
         public DMSUpdateManager()
         {
-            mFileDate = "Novemeber 9, 2017";
+            mFileDate = "Novemeber 11, 2017";
 
             mFilesToIgnore = new SortedSet<string>(StringComparer.InvariantCultureIgnoreCase);
             mProcessesDict = new Dictionary<uint, ProcessInfo>();
@@ -80,12 +80,22 @@ namespace DMSUpdateManager
 
         private bool mProcessesShown;
 
-        // The following is the path that lists the files that will be copied to the target folder
+        private bool mSourcePathNotified;
+
+        /// <summary>
+        /// Source folder path
+        /// </summary>
         private string mSourceFolderPath;
+
+        /// <summary>
+        /// Target folder path
+        /// </summary>
         private string mTargetFolderPath;
 
-        // List of files that will not be copied
-        // The names must be full filenames (no wildcards)
+        /// <summary>
+        /// List of files that will not be copied
+        /// The names must be full filenames (no wildcards)
+        /// </summary>
         private readonly SortedSet<string> mFilesToIgnore;
 
         private readonly string mExecutingExeName;
@@ -104,7 +114,6 @@ namespace DMSUpdateManager
         private string mLastFolderRunningProcessPath;
         private uint mLastFolderRunningProcessId;
 
-        private string mSourceFolderPathBase;
         private string mTargetFolderPathBase;
 
         private int mMinimumRepeatThresholdSeconds;
@@ -607,9 +616,9 @@ namespace DMSUpdateManager
         /// Update files in folder strInputFolderPath
         /// </summary>
         /// <param name="inputFolderPath">Target folder to update</param>
-        /// <param name="outputFolderAlternatePath">Ignored by this function</param>
+        /// <param name="outputFolderAlternatePath">Ignored by this method</param>
         /// <param name="parameterFilePath">Parameter file defining the source folder path and other options</param>
-        /// <param name="resetErrorCode">Ignored by this function</param>
+        /// <param name="resetErrorCode">Ignored by this method</param>
         /// <returns>True if success, False if failure</returns>
         /// <remarks>If TargetFolder is defined in the parameter file, strInputFolderPath will be ignored</remarks>
         public override bool ProcessFolder(string inputFolderPath, string outputFolderAlternatePath, string parameterFilePath, bool resetErrorCode)
@@ -833,13 +842,9 @@ namespace DMSUpdateManager
                 return false;
             }
 
-            mSourceFolderPathBase = sourceFolder.Parent.FullName;
             mTargetFolderPathBase = targetFolder.Parent.FullName;
 
             ResetProgress();
-            //UpdateProgress("Updating " + targetFolder.Name + "\n" + " using " + sourceFolder.FullName);
-
-            ShowMessage("Updating " + targetFolder.FullName + "\n" + " using " + sourceFolder.FullName, false, eMessageType: eMessageTypeConstants.Debug);
 
             var success = UpdateFolderWork(sourceFolder.FullName, targetFolder.FullName, pushNewSubfolders: false, processingSubFolder: false);
 
@@ -864,6 +869,7 @@ namespace DMSUpdateManager
             var success = true;
             var skip = false;
             var checkFilePath = string.Empty;
+
             // Check the repeat time threshold; must be checked before any writes to the log; make sure anything added above only logs on error
             if (!string.IsNullOrWhiteSpace(LogFilePath))
             {
@@ -880,15 +886,19 @@ namespace DMSUpdateManager
                 var checkFileInfo = new FileInfo(checkFilePath);
                 if (checkFileInfo.Exists)
                 {
-                    var lastWrote = checkFileInfo.LastWriteTimeUtc;
-                    var checkTime = DateTime.UtcNow;
-                    if (lastWrote.AddSeconds(mMinimumRepeatThresholdSeconds) > checkTime)
+                    var lastUpdate = checkFileInfo.LastWriteTimeUtc;
+                    var nextAllowedUpdate = lastUpdate.AddSeconds(mMinimumRepeatThresholdSeconds);
+
+                    var currentTime = DateTime.UtcNow;
+
+                    if (currentTime < nextAllowedUpdate)
                     {
                         // Reduce hits on the source: not enough time has passed since the last update
                         // Delay the output so that important log messages about bad parameters will be output regardless of this
                         OnWarningEvent(
-                            "Exiting parent update because not enough time has passed since last run. " +
-                            string.Format("Time lapsed < minimum: {0} < {1}", (int) (checkTime - lastWrote).TotalSeconds, mMinimumRepeatThresholdSeconds));
+                            string.Format("Exiting update since last update ran {0:N0} seconds ago; update is allowed in {1:N0} seconds",
+                                          currentTime.Subtract(lastUpdate).TotalSeconds,
+                                          nextAllowedUpdate.Subtract(currentTime).TotalSeconds));
 
                         skip = true;
                     }
@@ -943,12 +953,13 @@ namespace DMSUpdateManager
                 var targetSubFolderPath = Path.Combine(parentFolder.FullName, sourceSubFolder.Name);
 
                 // Initially assume we'll process this folder if it exists at the target
-                var processSubfolder = Directory.Exists(targetSubFolderPath);
+                var targetSubFolder = new DirectoryInfo(targetSubFolderPath);
+                var processSubfolder = targetSubFolder.Exists;
 
                 if (processSubfolder && sourceSubFolder.GetFiles(DELETE_SUBDIR_FLAG).Length > 0)
                 {
                     // Remove this subfolder (but only if it's empty)
-                    var folderDeleted = DeleteSubFolder(targetSubFolderPath, "parent subfolder", DELETE_SUBDIR_FLAG);
+                    var folderDeleted = DeleteSubFolder(sourceSubFolder, targetSubFolder, "parent subfolder", DELETE_SUBDIR_FLAG);
                     if (folderDeleted)
                         processSubfolder = false;
                 }
@@ -956,8 +967,8 @@ namespace DMSUpdateManager
                 if (sourceSubFolder.GetFiles(DELETE_AM_SUBDIR_FLAG).Length > 0)
                 {
                     // Remove this subfolder (but only if it's empty)
-                    var amSubDirPath = Path.Combine(targetFolder.FullName, sourceSubFolder.Name);
-                    var folderDeleted = DeleteSubFolder(amSubDirPath, "subfolder", DELETE_AM_SUBDIR_FLAG);
+                    var analysisMgrSubDir = new DirectoryInfo(Path.Combine(targetFolder.FullName, sourceSubFolder.Name));
+                    var folderDeleted = DeleteSubFolder(sourceSubFolder, analysisMgrSubDir, "subfolder", DELETE_AM_SUBDIR_FLAG);
                     if (folderDeleted)
                         processSubfolder = false;
                 }
@@ -987,10 +998,8 @@ namespace DMSUpdateManager
             return successOverall;
         }
 
-        private bool DeleteSubFolder(string targetSubFolderPath, string folderDescription, string deleteFlag)
+        private bool DeleteSubFolder(DirectoryInfo sourceSubFolder, DirectoryInfo targetSubFolder, string folderDescription, string deleteFlag)
         {
-            var targetSubFolder = new DirectoryInfo(targetSubFolderPath);
-
             if (string.IsNullOrWhiteSpace(folderDescription))
             {
                 folderDescription = "folder";
@@ -1037,11 +1046,13 @@ namespace DMSUpdateManager
 
         private bool UpdateFolderWork(string sourceFolderPath, string targetFolderPath, bool pushNewSubfolders, bool processingSubFolder)
         {
-            var description = "Updating " + AbbreviatePath(targetFolderPath) + "\n" + " using " +
-                              AbbreviatePath(sourceFolderPath, mSourceFolderPathBase);
-            //UpdateProgress(description);
+            if (!mSourcePathNotified)
+            {
+                mSourcePathNotified = true;
+                ShowMessage("Source folder path: " + sourceFolderPath);
+            }
 
-            ShowMessage(description, false, eMessageType: eMessageTypeConstants.Debug);
+            ShowMessage("Updating " + AbbreviatePath(targetFolderPath), false, eMessageType: eMessageTypeConstants.Debug);
 
             // Make sure the target folder exists
             var targetFolder = new DirectoryInfo(targetFolderPath);
@@ -1222,7 +1233,7 @@ namespace DMSUpdateManager
                 if (processSubfolder && sourceSubFolder.GetFiles(DELETE_SUBDIR_FLAG).Length > 0)
                 {
                     // Remove this subfolder (but only if it's empty)
-                    var folderDeleted = DeleteSubFolder(targetSubFolderPath, "subfolder", DELETE_SUBDIR_FLAG);
+                    var folderDeleted = DeleteSubFolder(sourceSubFolder, targetSubFolder, "subfolder", DELETE_SUBDIR_FLAG);
                     if (folderDeleted)
                         processSubfolder = false;
                 }
@@ -1444,7 +1455,7 @@ namespace DMSUpdateManager
             firstProcessPath = string.Empty;
             firstProcessId = 0;
 
-            // Filter the queried results for each call to this function.
+            // Filter the queried results for each call to this method
 
             var targetFolderPathHierarchy = ProcessInfo.GetFolderHierarchy(targetFolderPath);
 

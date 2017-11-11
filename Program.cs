@@ -43,7 +43,7 @@ namespace DMSUpdateManager
         {
             // Returns 0 if no error, error code if an error
 
-            int intReturnCode;
+            int returnCode;
             var commandLineParser = new clsParseCommandLine();
             var blnProceed = false;
 
@@ -68,32 +68,32 @@ namespace DMSUpdateManager
                     !(mSourceFolderPath.Length > 0 & mTargetFolderPath.Length > 0 | mParameterFilePath.Length > 0))
                 {
                     ShowProgramHelp();
-                    intReturnCode = -1;
+                    returnCode = -1;
                 }
                 else
                 {
-                    var dmsUpdateManager = new DMSUpdateManager();
+                    var dmsUpdateManager = new DMSUpdateManager
+                    {
+                        PreviewMode = mPreviewMode,
+                        LogMessagesToFile = mLogMessagesToFile,
+                        SourceFolderPath = mSourceFolderPath,
+                        DoNotUseMutex = mNoMutex,
+                        MutexWaitTimeoutMinutes = mWaitTimeoutMinutes,
+                        LoggingLevel = ProcessFilesOrFoldersBase.LogLevel.Normal,
+                        ProgressOutputLevel = ProcessFilesOrFoldersBase.LogLevel.Suppress,
+                        WriteToConsoleIfNoListener = false
+                    };
+
                     RegisterEvents(dmsUpdateManager);
-
-                    dmsUpdateManager.PreviewMode = mPreviewMode;
-                    dmsUpdateManager.LogMessagesToFile = mLogMessagesToFile;
-
-                    // Note: These options will get overridden if defined in the parameter file
-                    dmsUpdateManager.SourceFolderPath = mSourceFolderPath;
-                    dmsUpdateManager.DoNotUseMutex = mNoMutex;
-                    dmsUpdateManager.MutexWaitTimeoutMinutes = mWaitTimeoutMinutes;
-                    dmsUpdateManager.LoggingLevel = ProcessFilesOrFoldersBase.LogLevel.Normal;
-                    dmsUpdateManager.ProgressOutputLevel = ProcessFilesOrFoldersBase.LogLevel.Suppress;
-                    dmsUpdateManager.WriteToConsoleIfNoListener = false;
 
                     if (dmsUpdateManager.UpdateFolder(mTargetFolderPath, mParameterFilePath))
                     {
-                        intReturnCode = 0;
+                        returnCode = 0;
                     }
                     else
                     {
-                        intReturnCode = (int)dmsUpdateManager.ErrorCode;
-                        if (intReturnCode != 0)
+                        returnCode = (int)dmsUpdateManager.ErrorCode;
+                        if (returnCode != 0)
                         {
                             Console.WriteLine("Error while processing: " + dmsUpdateManager.GetErrorMessage());
                         }
@@ -103,10 +103,10 @@ namespace DMSUpdateManager
             catch (Exception ex)
             {
                 ShowErrorMessage("Error occurred in modMain->Main: " + Environment.NewLine + ex.Message, ex);
-                intReturnCode = -1;
+                returnCode = -1;
             }
 
-            return intReturnCode;
+            return returnCode;
         }
 
         private static string GetAppVersion()
