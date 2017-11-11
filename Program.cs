@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using PRISM;
+using PRISM.FileProcessor;
 
 namespace DMSUpdateManager
 {
@@ -81,6 +82,8 @@ namespace DMSUpdateManager
                     dmsUpdateManager.SourceFolderPath = mSourceFolderPath;
                     dmsUpdateManager.DoNotUseMutex = mNoMutex;
                     dmsUpdateManager.MutexWaitTimeoutMinutes = mWaitTimeoutMinutes;
+                    dmsUpdateManager.LoggingLevel = ProcessFilesOrFoldersBase.LogLevel.Warning;
+                    dmsUpdateManager.WriteToConsoleIfNoListener = false;
 
                     if (dmsUpdateManager.UpdateFolder(mTargetFolderPath, mParameterFilePath))
                     {

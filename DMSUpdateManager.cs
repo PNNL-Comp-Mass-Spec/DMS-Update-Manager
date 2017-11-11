@@ -335,7 +335,7 @@ namespace DMSUpdateManager
                             }
                             strWarning += " since a newer version exists in the target; source=" + sourceFile.LastWriteTimeUtc.ToLocalTime() + ", target=" + targetFile.LastWriteTimeUtc.ToLocalTime();
 
-                            ShowMessage(strWarning, duplicateHoldoffHours: 24);
+                            ShowMessage(strWarning, duplicateHoldoffHours: 24, eMessageType: eMessageTypeConstants.Warning);
                             needToCopy = false;
                         }
                     }
@@ -560,6 +560,12 @@ namespace DMSUpdateManager
 
                     var logFolderPath = settingsFile.GetParam(OPTIONS_SECTION, "LogFolderPath", "Logs");
                     mMinimumRepeatThresholdSeconds = settingsFile.GetParam(OPTIONS_SECTION, "MinimumRepeatTimeSeconds", 60);
+                    var logLevel = settingsFile.GetParam(OPTIONS_SECTION, "LoggingLevel", string.Empty);
+
+                    if (Enum.TryParse(logLevel, false, out LogLevel level))
+                    {
+                        LoggingLevel = level;
+                    }
 
                     if (!string.IsNullOrWhiteSpace(logFolderPath))
                     {
@@ -1595,7 +1601,7 @@ namespace DMSUpdateManager
             }
             else
             {
-                ShowMessage("Warning: Rollback file is present (" + rollbackFile.Name + ") but expected source file was not found: " + sourceFile.Name, duplicateHoldoffHours: 24);
+                ShowMessage("Warning: Rollback file is present (" + rollbackFile.Name + ") but expected source file was not found: " + sourceFile.Name, duplicateHoldoffHours: 24, eMessageType: eMessageTypeConstants.Warning);
             }
         }
 
