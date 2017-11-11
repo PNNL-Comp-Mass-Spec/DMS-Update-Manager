@@ -1005,43 +1005,65 @@ namespace DMSUpdateManager
                 folderDescription = "folder";
             }
 
-            if (targetSubFolder.Exists)
+            if (!targetSubFolder.Exists)
+                return false;
+
+            var fileCount = targetSubFolder.GetFiles().Length;
+            var folders = targetSubFolder.GetDirectories().ToList();
+
+            if (fileCount > 0)
             {
-                var fileCount = targetSubFolder.GetFiles().Length;
+                ShowMessage("Folder flagged for deletion, but it is not empty (File Count  = " + fileCount + "): " + AbbreviatePath(targetSubFolder.FullName), eMessageType: eMessageTypeConstants.Warning);
+                return false;
+            }
+
+            if (folders.Count > 0)
+            {
+                // Check each sub directory for file _DeleteSubDir_.txt
+                foreach (var folder in folders)
+                {
+                    var newSourceSubDir = new DirectoryInfo(Path.Combine(sourceSubFolder.FullName, folder.Name));
+                    var deleteSubDirFile = new FileInfo(Path.Combine(newSourceSubDir.FullName, deleteFlag));
+
+                    if (deleteSubDirFile.Exists)
+                    {
+                        // Recursively call this method
+                        DeleteSubFolder(newSourceSubDir, folder, folderDescription, deleteFlag);
+                    }
+                }
+
+                // Refresh the subdirectories
                 var folderCount = targetSubFolder.GetDirectories().Length;
 
-                if (fileCount > 0)
+                if (folderCount > 0)
                 {
-                    ShowMessage("Folder flagged for deletion, but it is not empty (File Count  = " + fileCount + "): " + AbbreviatePath(targetSubFolder.FullName), eMessageType: eMessageTypeConstants.Warning);
-                }
-                else if (folderCount > 0)
-                {
-                    ShowMessage("Folder flagged for deletion, but it is not empty (Folder Count = " + folderCount + "): " + AbbreviatePath(targetSubFolder.FullName), eMessageType: eMessageTypeConstants.Warning);
-                }
-                else
-                {
-                    try
-                    {
-                        if (PreviewMode)
-                        {
-                            ShowMessage("Preview " + folderDescription + " delete: " + targetSubFolder.FullName);
-                        }
-                        else
-                        {
-                            targetSubFolder.Delete(false);
-                            ShowMessage("Deleted " + folderDescription + " " + targetSubFolder.FullName);
-                        }
-
-                        return true;
-                    }
-                    catch (Exception ex)
-                    {
-                        HandleException("Error removing empty " + folderDescription + " flagged with " + deleteFlag + " at " + targetSubFolder.FullName, ex);
-                    }
+                    ShowMessage(
+                        "Folder flagged for deletion, but it is not empty (Folder Count = " + folderCount + "): " +
+                        AbbreviatePath(targetSubFolder.FullName), eMessageType: eMessageTypeConstants.Warning);
+                    return false;
                 }
             }
 
-            return false;
+            try
+            {
+                if (PreviewMode)
+                {
+                    ShowMessage("Preview " + folderDescription + " delete: " + targetSubFolder.FullName);
+                }
+                else
+                {
+                    targetSubFolder.Delete(false);
+                    ShowMessage("Deleted " + folderDescription + " " + targetSubFolder.FullName);
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                HandleException("Error removing empty " + folderDescription + " flagged with " + deleteFlag + " at " + targetSubFolder.FullName, ex);
+                return false;
+            }
+
         }
 
         private bool UpdateFolderWork(string sourceFolderPath, string targetFolderPath, bool pushNewSubfolders, bool processingSubFolder)
