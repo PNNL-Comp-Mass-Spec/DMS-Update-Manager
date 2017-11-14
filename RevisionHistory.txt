@@ -1,5 +1,14 @@
 DMS Update Manager Change Log
 
+Version 1.2.6526; November 13, 2017
+	- Update messages
+
+Version 1.2.6524; November 11, 2017
+	- Recursively check for _DeleteSubDir_.txt and _DeleteAMSubDir_.txt
+
+Version 1.2.6521; November 8, 2017
+	- Use ProcessFoldersBase in PRISM.dll
+
 Version 1.2.6519; November 6, 2017
 	- Convert to C#
 	- Use PRISM-Library versions of clsParseCommandLine and XmlSettingsFileAccessor
