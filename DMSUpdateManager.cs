@@ -281,7 +281,6 @@ namespace DMSUpdateManager
         /// <param name="targetFolderPath">Target folder</param>
         /// <param name="fileUpdateCount">Number of files that have been updated (Input/output)</param>
         /// <param name="eDateComparisonMode">Date comparison mode</param>
-        /// <param name="sourceFolderPath">Base source folder path</param>
         /// <param name="itemInUse">Used to track when a file or folder is in use by another process (log a message if the source and target files differ)</param>
         /// <param name="fileUsageMessage">Message to log when the file (or folder) is in use and the source and targets differ</param>
         /// <returns>True if the file was updated, otherwise false</returns>
@@ -291,7 +290,6 @@ namespace DMSUpdateManager
             string targetFolderPath,
             ref int fileUpdateCount,
             eDateComparisonModeConstants eDateComparisonMode,
-            string sourceFolderPath,
             eItemInUseConstants itemInUse = eItemInUseConstants.NotInUse,
             string fileUsageMessage = "")
         {
@@ -436,7 +434,7 @@ namespace DMSUpdateManager
 
             foreach (var item in results.Get())
             {
-                var processId = (uint) item["ProcessId"];
+                var processId = (uint)item["ProcessId"];
                 var processPath = (string)item["ExecutablePath"];
                 var cmd = (string)item["CommandLine"];
 
@@ -847,17 +845,16 @@ namespace DMSUpdateManager
 
             var success = UpdateFolderWork(sourceFolder.FullName, targetFolder.FullName, pushNewSubfolders: false);
 
-            // if the override is not null, use it, else use the provided setting
-            if (CopySubdirectoriesToParentFolder && !doNotUpdateParent)
+            if (!CopySubdirectoriesToParentFolder || doNotUpdateParent)
+                return success;
+
+            if (DoNotUseMutex)
             {
-                if (DoNotUseMutex)
-                {
-                    success = UpdateFolderCopyToParentRun(targetFolder, sourceFolder, parameterFilePath);
-                }
-                else
-                {
-                    success = UpdateFolderCopyToParentMutexWrapped(targetFolder, sourceFolder, parameterFilePath);
-                }
+                success = UpdateFolderCopyToParentRun(targetFolder, sourceFolder, parameterFilePath);
+            }
+            else
+            {
+                success = UpdateFolderCopyToParentMutexWrapped(targetFolder, sourceFolder, parameterFilePath);
             }
 
             return success;
@@ -866,7 +863,7 @@ namespace DMSUpdateManager
         private bool UpdateFolderCopyToParentRun(DirectoryInfo targetFolder, DirectoryInfo sourceFolder, string parameterFilePath)
         {
             var success = true;
-            var skip = false;
+            var skipShared = false;
             var checkFilePath = string.Empty;
 
             // Check the repeat time threshold; must be checked before any writes to the log; make sure anything added above only logs on error
@@ -899,19 +896,19 @@ namespace DMSUpdateManager
                                           currentTime.Subtract(lastUpdate).TotalSeconds,
                                           nextAllowedUpdate.Subtract(currentTime).TotalSeconds));
 
-                        skip = true;
+                        skipShared = true;
                     }
                 }
             }
 
-            if (!skip)
+            if (!skipShared)
             {
-                // Regardless of success, touch the log file
+                // Update the check file's date
                 TouchCheckFile(checkFilePath);
 
                 success = UpdateFolderCopyToParent(targetFolder, sourceFolder);
 
-                // Regardless of success, touch the log file
+                // Update the check file's date one more itme
                 TouchCheckFile(checkFilePath);
             }
 
@@ -1150,7 +1147,7 @@ namespace DMSUpdateManager
                                 }
                             }
 
-                            ProcessRollbackFile(sourceFile, targetFolder.FullName, ref fileUpdateCount, sourceFolderPath, itemInUse, fileUsageMessage);
+                            ProcessRollbackFile(sourceFile, targetFolder.FullName, ref fileUpdateCount, itemInUse, fileUsageMessage);
                             break; // Break out of the while, continue the for loop
                         }
 
@@ -1205,7 +1202,7 @@ namespace DMSUpdateManager
                             }
                         }
 
-                        CopyFileIfNeeded(sourceFile, targetFolder.FullName, ref fileUpdateCount, eDateComparisonMode, sourceFolderPath, itemInUse, fileUsageMessage);
+                        CopyFileIfNeeded(sourceFile, targetFolder.FullName, ref fileUpdateCount, eDateComparisonMode, itemInUse, fileUsageMessage);
 
                         // File processed; move on to the next file
                         break;
@@ -1599,10 +1596,14 @@ namespace DMSUpdateManager
         /// <param name="rollbackFile">Rollback file path</param>
         /// <param name="targetFolderPath">Target folder</param>
         /// <param name="fileUpdateCount">Number of files that have been updated (Input/output)</param>
-        /// <param name="sourceFolderPath">Base source folder path</param>
         /// <param name="itemInUse">Used to track when a file or folder is in use by another process (log a message if the source and target files differ)</param>
         /// <param name="fileUsageMessage">Message to log when the file (or folder) is in use and the source and targets differ</param>
-        private void ProcessRollbackFile(FileSystemInfo rollbackFile, string targetFolderPath, ref int fileUpdateCount, string sourceFolderPath, eItemInUseConstants itemInUse = eItemInUseConstants.NotInUse, string fileUsageMessage = "")
+        private void ProcessRollbackFile(
+            FileSystemInfo rollbackFile,
+            string targetFolderPath,
+            ref int fileUpdateCount,
+            eItemInUseConstants itemInUse = eItemInUseConstants.NotInUse,
+            string fileUsageMessage = "")
         {
             var sourceFilePath = TrimSuffix(rollbackFile.FullName, ROLLBACK_SUFFIX);
 
@@ -1610,7 +1611,7 @@ namespace DMSUpdateManager
 
             if (sourceFile.Exists)
             {
-                var copied = CopyFileIfNeeded(sourceFile, targetFolderPath, ref fileUpdateCount, eDateComparisonModeConstants.CopyIfSizeOrDateDiffers, sourceFolderPath, itemInUse, fileUsageMessage);
+                var copied = CopyFileIfNeeded(sourceFile, targetFolderPath, ref fileUpdateCount, eDateComparisonModeConstants.CopyIfSizeOrDateDiffers, itemInUse, fileUsageMessage);
                 if (copied)
                 {
                     string prefix;
