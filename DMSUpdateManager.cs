@@ -30,7 +30,7 @@ namespace DMSUpdateManager
         /// </summary>
         public DMSUpdateManager()
         {
-            mFileDate = "Novemeber 11, 2017";
+            mFileDate = "November 13, 2017";
 
             mFilesToIgnore = new SortedSet<string>(StringComparer.InvariantCultureIgnoreCase);
             mProcessesDict = new Dictionary<uint, ProcessInfo>();
@@ -997,7 +997,7 @@ namespace DMSUpdateManager
             return successOverall;
         }
 
-        private bool DeleteSubFolder(DirectoryInfo sourceSubFolder, DirectoryInfo targetSubFolder, string folderDescription, string deleteFlag)
+        private bool DeleteSubFolder(FileSystemInfo sourceSubFolder, DirectoryInfo targetSubFolder, string folderDescription, string deleteFlag)
         {
             if (string.IsNullOrWhiteSpace(folderDescription))
             {
@@ -1226,6 +1226,8 @@ namespace DMSUpdateManager
 
             if (fileUpdateCount > 0)
             {
+                // Example message
+                // Updated 1 file using \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution\DMSUpdateManager\
                 var statusMessage = "Updated " + fileUpdateCount + " file";
                 if (fileUpdateCount > 1)
                     statusMessage += "s";
