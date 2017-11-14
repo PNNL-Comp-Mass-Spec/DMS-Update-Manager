@@ -352,56 +352,54 @@ namespace DMSUpdateManager
                 }
             }
 
-            if (needToCopy)
+            if (!needToCopy)
+                return false;
+
+            if (targetFile.Exists)
             {
-                if (targetFile.Exists)
+                if (string.Equals(targetFile.FullName, mExecutingExePath))
                 {
-                    if (string.Equals(targetFile.FullName, mExecutingExePath))
-                    {
-                        ShowMessage("Skipping " + targetFile.FullName + "; cannot update the currently running copy of the DMSUpdateManager");
-                        return false;
-                    }
+                    ShowMessage("Skipping " + targetFile.FullName + "; cannot update the currently running copy of the DMSUpdateManager");
+                    return false;
+                }
 
-                    if (itemInUse != eItemInUseConstants.NotInUse)
+                if (itemInUse != eItemInUseConstants.NotInUse)
+                {
+                    if (targetFile.Name == mExecutingExeName)
                     {
-                        if (targetFile.Name == mExecutingExeName)
+                        // Update DMSUpdateManager.exe if it is not in the same folder as the starting folder
+                        if (!string.Equals(targetFile.DirectoryName, mOutputFolderPath))
                         {
-                            // Update DMSUpdateManager.exe if it is not in the same folder as the starting folder
-                            if (!string.Equals(targetFile.DirectoryName, mOutputFolderPath))
-                            {
-                                itemInUse = eItemInUseConstants.NotInUse;
-                            }
+                            itemInUse = eItemInUseConstants.NotInUse;
                         }
-                    }
-
-                    if (itemInUse != eItemInUseConstants.NotInUse)
-                    {
-                        // Do not update this file; it is in use (or another file in this folder is in use)
-                        if (string.IsNullOrWhiteSpace(fileUsageMessage))
-                        {
-                            if (itemInUse == eItemInUseConstants.FolderInUse)
-                            {
-                                ShowMessage("Skipping " + sourceFile.Name + " because folder " + AbbreviatePath(targetFile.DirectoryName) + " is in use (by an unknown process)");
-                            }
-                            else
-                            {
-                                ShowMessage("Skipping " + sourceFile.Name + " in folder " + AbbreviatePath(targetFile.DirectoryName) + " because currently in use (by an unknown process)");
-                            }
-                        }
-                        else
-                        {
-                            ShowMessage(fileUsageMessage);
-                        }
-
-                        return false;
                     }
                 }
 
-                CopyFile(sourceFile, targetFile, ref fileUpdateCount, copyReason);
-                return true;
+                if (itemInUse != eItemInUseConstants.NotInUse)
+                {
+                    // Do not update this file; it is in use (or another file in this folder is in use)
+                    if (string.IsNullOrWhiteSpace(fileUsageMessage))
+                    {
+                        if (itemInUse == eItemInUseConstants.FolderInUse)
+                        {
+                            ShowMessage("Skipping " + sourceFile.Name + " because folder " + AbbreviatePath(targetFile.DirectoryName) + " is in use (by an unknown process)");
+                        }
+                        else
+                        {
+                            ShowMessage("Skipping " + sourceFile.Name + " in folder " + AbbreviatePath(targetFile.DirectoryName) + " because currently in use (by an unknown process)");
+                        }
+                    }
+                    else
+                    {
+                        ShowMessage(fileUsageMessage);
+                    }
+
+                    return false;
+                }
             }
 
-            return false;
+            CopyFile(sourceFile, targetFile, ref fileUpdateCount, copyReason);
+            return true;
         }
 
         private void InitializeLocalVariables()
