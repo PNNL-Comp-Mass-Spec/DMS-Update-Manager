@@ -415,7 +415,7 @@ namespace DMSUpdateManager
             DoNotUseMutex = false;
             mMutexNameSuffix = string.Empty;
 
-            mMinimumRepeatThresholdSeconds = 60;
+            mMinimumRepeatThresholdSeconds = 30;
 
             mSourceFolderPath = string.Empty;
             mTargetFolderPath = string.Empty;
@@ -567,7 +567,7 @@ namespace DMSUpdateManager
                     mMutexNameSuffix = settingsFile.GetParam(OPTIONS_SECTION, "MutexNameSuffix", string.Empty);
 
                     var logFolderPath = settingsFile.GetParam(OPTIONS_SECTION, "LogFolderPath", "Logs");
-                    mMinimumRepeatThresholdSeconds = settingsFile.GetParam(OPTIONS_SECTION, "MinimumRepeatTimeSeconds", 60);
+                    mMinimumRepeatThresholdSeconds = settingsFile.GetParam(OPTIONS_SECTION, "MinimumRepeatTimeSeconds", 30);
                     var logLevel = settingsFile.GetParam(OPTIONS_SECTION, "LoggingLevel", string.Empty);
 
                     if (Enum.TryParse(logLevel, false, out LogLevel level))
