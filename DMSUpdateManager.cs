@@ -80,8 +80,6 @@ namespace DMSUpdateManager
 
         private bool mProcessesShown;
 
-        private bool mSourcePathNotified;
-
         /// <summary>
         /// Source folder path
         /// </summary>
@@ -283,12 +281,19 @@ namespace DMSUpdateManager
         /// <param name="targetFolderPath">Target folder</param>
         /// <param name="fileUpdateCount">Number of files that have been updated (Input/output)</param>
         /// <param name="eDateComparisonMode">Date comparison mode</param>
-        /// <param name="processingSubFolder">True if processing a subfolder</param>
+        /// <param name="sourceFolderPath">Base source folder path</param>
         /// <param name="itemInUse">Used to track when a file or folder is in use by another process (log a message if the source and target files differ)</param>
         /// <param name="fileUsageMessage">Message to log when the file (or folder) is in use and the source and targets differ</param>
         /// <returns>True if the file was updated, otherwise false</returns>
         /// <remarks></remarks>
-        private bool CopyFileIfNeeded(FileInfo sourceFile, string targetFolderPath, ref int fileUpdateCount, eDateComparisonModeConstants eDateComparisonMode, bool processingSubFolder, eItemInUseConstants itemInUse = eItemInUseConstants.NotInUse, string fileUsageMessage = "")
+        private bool CopyFileIfNeeded(
+            FileInfo sourceFile,
+            string targetFolderPath,
+            ref int fileUpdateCount,
+            eDateComparisonModeConstants eDateComparisonMode,
+            string sourceFolderPath,
+            eItemInUseConstants itemInUse = eItemInUseConstants.NotInUse,
+            string fileUsageMessage = "")
         {
             var targetFilePath = Path.Combine(targetFolderPath, sourceFile.Name);
             var targetFile = new FileInfo(targetFilePath);
@@ -337,12 +342,8 @@ namespace DMSUpdateManager
                         {
                             // Target file is newer than the source; do not overwrite
 
-                            var strWarning = "Warning: Skipping file " + sourceFile.Name;
-                            if (processingSubFolder)
-                            {
-                                strWarning += " in " + targetFolderPath;
-                            }
-                            strWarning += " since a newer version exists in the target; source=" + sourceFile.LastWriteTimeUtc.ToLocalTime() + ", target=" + targetFile.LastWriteTimeUtc.ToLocalTime();
+                            var strWarning = "Warning: Skipping file " + targetFile.FullName + " since a newer version exists in the target; " +
+                                             "source=" + sourceFile.LastWriteTimeUtc.ToLocalTime() + ", target=" + targetFile.LastWriteTimeUtc.ToLocalTime();
 
                             ShowMessage(strWarning, duplicateHoldoffHours: 24, eMessageType: eMessageTypeConstants.Warning);
                             needToCopy = false;
@@ -846,7 +847,7 @@ namespace DMSUpdateManager
 
             ResetProgress();
 
-            var success = UpdateFolderWork(sourceFolder.FullName, targetFolder.FullName, pushNewSubfolders: false, processingSubFolder: false);
+            var success = UpdateFolderWork(sourceFolder.FullName, targetFolder.FullName, pushNewSubfolders: false);
 
             // if the override is not null, use it, else use the provided setting
             if (CopySubdirectoriesToParentFolder && !doNotUpdateParent)
@@ -989,7 +990,7 @@ namespace DMSUpdateManager
 
                 if (processSubfolder)
                 {
-                    var success = UpdateFolderWork(sourceSubFolder.FullName, targetSubFolderPath, pushNewSubfolders: true, processingSubFolder: true);
+                    var success = UpdateFolderWork(sourceSubFolder.FullName, targetSubFolderPath, pushNewSubfolders: true);
                     if (!success)
                         successOverall = false;
                 }
@@ -1066,13 +1067,8 @@ namespace DMSUpdateManager
 
         }
 
-        private bool UpdateFolderWork(string sourceFolderPath, string targetFolderPath, bool pushNewSubfolders, bool processingSubFolder)
+        private bool UpdateFolderWork(string sourceFolderPath, string targetFolderPath, bool pushNewSubfolders)
         {
-            if (!mSourcePathNotified)
-            {
-                mSourcePathNotified = true;
-                ShowMessage("Source folder path: " + sourceFolderPath);
-            }
 
             ShowMessage("Updating " + AbbreviatePath(targetFolderPath), false, eMessageType: eMessageTypeConstants.Debug);
 
@@ -1156,7 +1152,7 @@ namespace DMSUpdateManager
                                 }
                             }
 
-                            ProcessRollbackFile(sourceFile, targetFolder.FullName, ref fileUpdateCount, processingSubFolder, itemInUse, fileUsageMessage);
+                            ProcessRollbackFile(sourceFile, targetFolder.FullName, ref fileUpdateCount, sourceFolderPath, itemInUse, fileUsageMessage);
                             break; // Break out of the while, continue the for loop
                         }
 
@@ -1211,7 +1207,7 @@ namespace DMSUpdateManager
                             }
                         }
 
-                        CopyFileIfNeeded(sourceFile, targetFolder.FullName, ref fileUpdateCount, eDateComparisonMode, processingSubFolder, itemInUse, fileUsageMessage);
+                        CopyFileIfNeeded(sourceFile, targetFolder.FullName, ref fileUpdateCount, eDateComparisonMode, sourceFolderPath, itemInUse, fileUsageMessage);
 
                         // File processed; move on to the next file
                         break;
@@ -1267,7 +1263,7 @@ namespace DMSUpdateManager
 
                 if (processSubfolder)
                 {
-                    UpdateFolderWork(sourceSubFolder.FullName, targetSubFolder.FullName, pushNewSubfolders, processingSubFolder);
+                    UpdateFolderWork(sourceSubFolder.FullName, targetSubFolder.FullName, pushNewSubfolders);
                 }
             }
 
@@ -1603,10 +1599,10 @@ namespace DMSUpdateManager
         /// <param name="rollbackFile">Rollback file path</param>
         /// <param name="targetFolderPath">Target folder</param>
         /// <param name="fileUpdateCount">Number of files that have been updated (Input/output)</param>
-        /// <param name="processingSubFolder">True if processing a subfolder</param>
+        /// <param name="sourceFolderPath">Base source folder path</param>
         /// <param name="itemInUse">Used to track when a file or folder is in use by another process (log a message if the source and target files differ)</param>
         /// <param name="fileUsageMessage">Message to log when the file (or folder) is in use and the source and targets differ</param>
-        private void ProcessRollbackFile(FileSystemInfo rollbackFile, string targetFolderPath, ref int fileUpdateCount, bool processingSubFolder, eItemInUseConstants itemInUse = eItemInUseConstants.NotInUse, string fileUsageMessage = "")
+        private void ProcessRollbackFile(FileSystemInfo rollbackFile, string targetFolderPath, ref int fileUpdateCount, string sourceFolderPath, eItemInUseConstants itemInUse = eItemInUseConstants.NotInUse, string fileUsageMessage = "")
         {
             var sourceFilePath = TrimSuffix(rollbackFile.FullName, ROLLBACK_SUFFIX);
 
@@ -1614,7 +1610,7 @@ namespace DMSUpdateManager
 
             if (sourceFile.Exists)
             {
-                var copied = CopyFileIfNeeded(sourceFile, targetFolderPath, ref fileUpdateCount, eDateComparisonModeConstants.CopyIfSizeOrDateDiffers, processingSubFolder, itemInUse, fileUsageMessage);
+                var copied = CopyFileIfNeeded(sourceFile, targetFolderPath, ref fileUpdateCount, eDateComparisonModeConstants.CopyIfSizeOrDateDiffers, sourceFolderPath, itemInUse, fileUsageMessage);
                 if (copied)
                 {
                     string prefix;
