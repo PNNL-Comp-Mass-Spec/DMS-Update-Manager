@@ -351,7 +351,7 @@ namespace DMSUpdateManager
                             var strWarning = "Warning: Skipping file " + targetFile.FullName + " since a newer version exists in the target; " +
                                              "source=" + sourceFile.LastWriteTimeUtc.ToLocalTime() + ", target=" + targetFile.LastWriteTimeUtc.ToLocalTime();
 
-                            ShowMessage(strWarning, duplicateHoldoffHours: 24, eMessageType: eMessageTypeConstants.Warning);
+                            ShowWarning(strWarning, 24);
                             needToCopy = false;
                         }
                     }
@@ -743,14 +743,14 @@ namespace DMSUpdateManager
 
                 if (string.IsNullOrEmpty(mSourceFolderPath))
                 {
-                    ShowMessage("Source folder path is not defined.  Either specify it at the command line or include it in the parameter file.");
+                    ShowWarning("Source folder path is not defined; either specify it at the command line or include it in the parameter file");
                     SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidInputFolderPath);
                     return false;
                 }
 
                 if (string.IsNullOrWhiteSpace(targetFolderPath))
                 {
-                    ShowMessage("Target folder path is not defined.  Either specify it at the command line or include it in the parameter file.");
+                    ShowWarning("Target folder path is not defined; either specify it at the command line or include it in the parameter file");
                     SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidInputFolderPath);
                     return false;
                 }
@@ -1029,7 +1029,9 @@ namespace DMSUpdateManager
 
             if (fileCount > 0)
             {
-                ShowMessage("Folder flagged for deletion, but it is not empty (File Count  = " + fileCount + "): " + AbbreviatePath(targetSubFolder.FullName), eMessageType: eMessageTypeConstants.Warning);
+                ShowWarning(
+                    "Folder flagged for deletion, but it is not empty (File Count  = " + fileCount + "): " +
+                    AbbreviatePath(targetSubFolder.FullName));
                 return false;
             }
 
@@ -1053,9 +1055,9 @@ namespace DMSUpdateManager
 
                 if (folderCount > 0)
                 {
-                    ShowMessage(
+                    ShowWarning(
                         "Folder flagged for deletion, but it is not empty (Folder Count = " + folderCount + "): " +
-                        AbbreviatePath(targetSubFolder.FullName), eMessageType: eMessageTypeConstants.Warning);
+                        AbbreviatePath(targetSubFolder.FullName));
                     return false;
                 }
             }
@@ -1650,7 +1652,9 @@ namespace DMSUpdateManager
             }
             else
             {
-                ShowMessage("Warning: Rollback file is present (" + rollbackFile.Name + ") but expected source file was not found: " + sourceFile.Name, duplicateHoldoffHours: 24, eMessageType: eMessageTypeConstants.Warning);
+                ShowWarning(
+                    "Warning: Rollback file is present (" + rollbackFile.Name + ") but expected source file was not found: " +
+                    sourceFile.Name, 24);
             }
         }
 
