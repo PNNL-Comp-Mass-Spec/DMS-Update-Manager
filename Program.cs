@@ -45,7 +45,7 @@ namespace DMSUpdateManager
 
             int returnCode;
             var commandLineParser = new clsParseCommandLine();
-            var blnProceed = false;
+            var proceed = false;
 
             mSourceFolderPath = string.Empty;
             mTargetFolderPath = string.Empty;
@@ -61,10 +61,10 @@ namespace DMSUpdateManager
                 if (commandLineParser.ParseCommandLine())
                 {
                     if (SetOptionsUsingCommandLineParameters(commandLineParser))
-                        blnProceed = true;
+                        proceed = true;
                 }
 
-                if (!blnProceed || commandLineParser.NeedToShowHelp || commandLineParser.ParameterCount == 0 ||
+                if (!proceed || commandLineParser.NeedToShowHelp || commandLineParser.ParameterCount == 0 ||
                     !(mSourceFolderPath.Length > 0 & mTargetFolderPath.Length > 0 | mParameterFilePath.Length > 0))
                 {
                     ShowProgramHelp();

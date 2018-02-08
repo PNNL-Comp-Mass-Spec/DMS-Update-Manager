@@ -60,7 +60,7 @@ namespace DMSUpdateManager
         private enum eItemInUseConstants
         {
             NotInUse = 0,
-            itemInUse = 1,
+            ItemInUse = 1,
             FolderInUse = 2
         }
 
@@ -1134,7 +1134,7 @@ namespace DMSUpdateManager
                             {
                                 if (JarFileInUseByJava(sourceFile, out fileUsageMessage))
                                 {
-                                    itemInUse = eItemInUseConstants.itemInUse;
+                                    itemInUse = eItemInUseConstants.ItemInUse;
                                 }
                             }
                             else
@@ -1189,7 +1189,7 @@ namespace DMSUpdateManager
                         {
                             if (JarFileInUseByJava(sourceFile, out fileUsageMessage))
                             {
-                                itemInUse = eItemInUseConstants.itemInUse;
+                                itemInUse = eItemInUseConstants.ItemInUse;
                             }
                         }
                         else
