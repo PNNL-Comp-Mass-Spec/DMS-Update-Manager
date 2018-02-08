@@ -5,7 +5,7 @@
     <item key="SourceFolderPath" value="F:\My Documents\Projects\DataMining\DMS_Managers\DMS_Update_Manager\bin\AnalysisToolManagerDistribution" />
     <item key="TargetFolderPath" value=".\DMS_Programs\AnalysisToolManager1" />
     <item key="CopySubdirectoriesToParentFolder" value="True" />
-    <item key="FilesToIgnore" value="AnalysisManagerProg.exe.config, Utils.pyc, Global.pyc" />
+    <item key="FilesToIgnore" value="AnalysisManagerProg.exe.config, Utils.pyc, Global.pyc, thumbs.db" />
     <item key="LogMessages" value="True" />
     <item key="MinimumRepeatTimeSeconds" value="60" />
     <item key="LogFolderPath" value=".\DMS_Programs\DMSUpdateManager\Logs" />
