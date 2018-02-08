@@ -1404,80 +1404,82 @@ namespace DMSUpdateManager
             {
                 var processCount = GetNumTargetFolderProcesses(targetFolderPath, out var firstProcessPath, out var firstProcessId);
 
-                if (processCount > 0)
+                if (processCount <= 0)
                 {
-                    // Example log messages:
-                    // Skipping UIMFLibrary.dll because folder DeconTools is in use by process DeconConsole.exe (PID 343243)
-                    // Skipping DeconConsole.exe because folder DeconTools is in use by 2 processes on this system, including DeconConsole.exe (PID 343243)
+                    return false;
+                }
 
-                    folderUsageMessage = "Skipping " + targetFileName + " because folder " + AbbreviatePath(targetFolderPath) + " is in use by ";
+                // Example log messages:
+                // Skipping UIMFLibrary.dll because folder DeconTools is in use by process DeconConsole.exe (PID 343243)
+                // Skipping DeconConsole.exe because folder DeconTools is in use by 2 processes on this system, including DeconConsole.exe (PID 343243)
 
-                    string processPathToShow;
+                folderUsageMessage = "Skipping " + targetFileName + " because folder " + AbbreviatePath(targetFolderPath) + " is in use by ";
 
-                    if (string.IsNullOrWhiteSpace(firstProcessPath))
+                string processPathToShow;
+
+                if (string.IsNullOrWhiteSpace(firstProcessPath))
+                {
+                    processPathToShow = "an unknown process";
+                }
+                else
+                {
+                    var processFile = new FileInfo(firstProcessPath);
+                    var processIdAppend = " (PID " + firstProcessId + ")";
+
+                    if (processFile.DirectoryName == null)
                     {
-                        processPathToShow = "an unknown process";
+                        OnWarningEvent("Unable to determine the parent directory of " + processFile.FullName);
+                        return false;
                     }
-                    else
-                    {
-                        var processFile = new FileInfo(firstProcessPath);
-                        var processIdAppend = " (" + " PID " + firstProcessId + ")";
 
-                        if (processFile.DirectoryName == null)
+                    if (processFile.DirectoryName == targetFolderPath)
+                    {
+                        processPathToShow = Path.GetFileName(firstProcessPath) + processIdAppend;
+                    }
+                    else if (targetFolderPath.StartsWith(processFile.DirectoryName))
+                    {
+                        if (processFile.Directory?.Parent == null)
                         {
                             OnWarningEvent("Unable to determine the parent directory of " + processFile.FullName);
                             return false;
                         }
 
-                        if (processFile.DirectoryName == targetFolderPath)
+                        var relativePath = processFile.Directory.Parent.FullName;
+                        string pathPart;
+                        if (processFile.DirectoryName.Length > relativePath.Length)
                         {
-                            processPathToShow = Path.GetFileName(firstProcessPath) + processIdAppend;
-                        }
-                        else if (targetFolderPath.StartsWith(processFile.DirectoryName))
-                        {
-                            if (processFile.Directory?.Parent == null)
-                            {
-                                OnWarningEvent("Unable to determine the parent directory of " + processFile.FullName);
-                                return false;
-                            }
-
-                            var relativePath = processFile.Directory.Parent.FullName;
-                            string pathPart;
-                            if (processFile.DirectoryName.Length > relativePath.Length)
-                            {
-                                pathPart = processFile.DirectoryName.Substring(relativePath.Length + 1);
-                            }
-                            else
-                            {
-                                pathPart = processFile.DirectoryName;
-                            }
-
-                            processPathToShow = Path.Combine(pathPart, Path.GetFileName(firstProcessPath)) + processIdAppend;
+                            pathPart = processFile.DirectoryName.Substring(relativePath.Length + 1);
                         }
                         else
                         {
-                            processPathToShow = firstProcessPath + processIdAppend;
+                            pathPart = processFile.DirectoryName;
                         }
-                    }
 
-                    if (processCount == 1)
-                    {
-                        folderUsageMessage += "process " + processPathToShow;
+                        processPathToShow = Path.Combine(pathPart, Path.GetFileName(firstProcessPath)) + processIdAppend;
                     }
                     else
                     {
-                        folderUsageMessage += processCount + " processes on this system, including " + processPathToShow;
+                        processPathToShow = firstProcessPath + processIdAppend;
                     }
-
-                    return true;
                 }
+
+                if (processCount == 1)
+                {
+                    folderUsageMessage += "process " + processPathToShow;
+                }
+                else
+                {
+                    folderUsageMessage += processCount + " processes on this system, including " + processPathToShow;
+                }
+
+                return true;
             }
             catch (Exception ex)
             {
                 ShowErrorMessage("Error looking for processes using files in " + targetFolderPath + ": " + ex.Message);
+                return false;
             }
 
-            return false;
         }
 
         /// <summary>
