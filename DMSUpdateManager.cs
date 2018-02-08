@@ -220,6 +220,14 @@ namespace DMSUpdateManager
             }
         }
 
+        private string ConstructMutexName(string mutexSuffix)
+        {
+            var appName = GetEntryOrExecutingAssembly().GetName().Name.ToLower();
+            var parameterFileCleaned = mutexSuffix.Replace("\\", "_").Replace(":", "_").Replace(".", "_").Replace(" ", "_");
+            var mutexName = @"Global\" + appName.ToLower() + "_" + parameterFileCleaned.ToLower();
+            return mutexName;
+        }
+
         /// <summary>
         /// Copy the file (or preview the copy)
         /// </summary>
@@ -511,6 +519,65 @@ namespace DMSUpdateManager
             return fileInfo.LastWriteTimeUtc.ToString("yyyy-MM-dd hh:mm:ss tt") + " and " + fileInfo.Length + " bytes";
         }
 
+        private bool GetMutex(string mutexName, bool updatingTargetFolder, out Mutex mutex, out bool doNotUpdateParent)
+        {
+            doNotUpdateParent = false;
+
+            try
+            {
+                mutex = new Mutex(false, mutexName);
+
+                bool hasMutexHandle;
+                try
+                {
+                    hasMutexHandle = mutex.WaitOne(0, false);
+                    if (!hasMutexHandle)
+                    {
+                        if (updatingTargetFolder)
+                            ConsoleMsgUtils.ShowWarning("Other instance already running on target folder, waiting for finish before continuing...");
+                        else
+                            ConsoleMsgUtils.ShowWarning("Other instance already running, waiting for finish before continuing...");
+
+                        ConsoleMsgUtils.ShowDebug("Mutex: " + mutexName);
+
+                        // Mutex is held by another application; do another wait for it to be released, with a timeout of 5 minutes
+                        hasMutexHandle = mutex.WaitOne(TimeSpan.FromMinutes(MutexWaitTimeoutMinutes), false);
+
+                        Console.WriteLine();
+                    }
+                }
+                catch (AbandonedMutexException)
+                {
+                    ConsoleMsgUtils.ShowWarning("Detected abandoned mutex, picking it up...");
+                    hasMutexHandle = true;
+                }
+
+                if (!hasMutexHandle)
+                {
+                    // If we don't have the mutex handle, don't try to update the parent folder
+                    doNotUpdateParent = true;
+                }
+
+                return hasMutexHandle;
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                // Access to the path 'Global\dmsupdatemanager_c__dms_programs' is denied.
+                OnWarningEvent("Error accessing the mutex: " + ex.Message);
+                mutex = null;
+                doNotUpdateParent = true;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                OnWarningEvent("Error creating/monitoring the mutex: " + ex.Message);
+                doNotUpdateParent = true;
+                mutex = null;
+                return false;
+            }
+
+        }
+
         private bool LoadParameterFileSettings(string parameterFilePath)
         {
             const string OPTIONS_SECTION = "DMSUpdateManager";
@@ -721,37 +788,13 @@ namespace DMSUpdateManager
                 var doNotUpdateParent = false;
                 if (!string.IsNullOrWhiteSpace(parameterFilePath))
                 {
-                    var mutexSuffix = parameterFilePath;
-                    if (!string.IsNullOrWhiteSpace(mMutexNameSuffix))
-                    {
-                        mutexSuffix = mMutexNameSuffix;
-                    }
-                    var mutexBase = "Global\\" + Assembly.GetExecutingAssembly().GetName().Name;
-                    var parameterFileCleaned = mutexSuffix.Replace("\\", "_").Replace(":", "_").Replace(".", "_").Replace(" ", "_");
-                    var mutexName = mutexBase + "_" + parameterFileCleaned;
+                    string mutexName;
+                    if (string.IsNullOrWhiteSpace(mMutexNameSuffix))
+                        mutexName = ConstructMutexName(parameterFilePath);
+                    else
+                        mutexName = ConstructMutexName(mMutexNameSuffix);
 
-                    mutex = new Mutex(false, mutexName);
-                    try
-                    {
-                        hasMutexHandle = mutex.WaitOne(0, false);
-                        if (!hasMutexHandle)
-                        {
-                            Console.WriteLine("WARNING: Other instance already running, waiting for finish before continuing...");
-                            // Mutex is held by another application; do another wait for it to be released, with a timeout of 2 minutes
-                            hasMutexHandle = mutex.WaitOne(TimeSpan.FromMinutes(MutexWaitTimeoutMinutes), false);
-                        }
-                    }
-                    catch (AbandonedMutexException)
-                    {
-                        Console.WriteLine("WARNING: Detected abandoned mutex, picking it up...");
-                        hasMutexHandle = true;
-                    }
-
-                    if (!hasMutexHandle)
-                    {
-                        // If we don't have the mutex handle, don't try to update the parent folder
-                        doNotUpdateParent = true;
-                    }
+                    hasMutexHandle = GetMutex(mutexName, false, out mutex, out doNotUpdateParent);
                 }
 
                 return UpdateFolderRun(targetFolderPath, parameterFilePath, doNotUpdateParent);
@@ -778,32 +821,9 @@ namespace DMSUpdateManager
                 var targetFolderParent = diTargetFolder.Parent?.FullName;
                 if (!string.IsNullOrWhiteSpace(targetFolderParent))
                 {
-                    var mutexBase = "Global\\" + Assembly.GetExecutingAssembly().GetName().Name;
-                    var parameterFileCleaned = targetFolderParent.Replace("\\", "_").Replace(":", "_").Replace(".", "_").Replace(" ", "_");
-                    var mutexName = mutexBase + "_" + parameterFileCleaned;
+                    var mutexName = ConstructMutexName(targetFolderParent);
 
-                    mutex = new Mutex(false, mutexName);
-                    try
-                    {
-                        hasMutexHandle = mutex.WaitOne(0, false);
-                        if (!hasMutexHandle)
-                        {
-                            Console.WriteLine("WARNING: Other instance already running on target folder, waiting for finish before exiting...");
-                            // Mutex is held by another application; do another wait for it to be released, with a timeout of 2 minutes
-                            hasMutexHandle = mutex.WaitOne(TimeSpan.FromMinutes(MutexWaitTimeoutMinutes), false);
-                        }
-                    }
-                    catch (AbandonedMutexException)
-                    {
-                        Console.WriteLine("WARNING: Detected abandoned mutex, picking it up...");
-                        hasMutexHandle = true;
-                    }
-
-                    if (!hasMutexHandle)
-                    {
-                        // If we don't have the mutex handle, don't try to update the parent folder
-                        doNotUpdateParent = true;
-                    }
+                    hasMutexHandle = GetMutex(mutexName, true, out mutex, out doNotUpdateParent);
                 }
 
                 if (!doNotUpdateParent)
