@@ -30,6 +30,8 @@ namespace DMSUpdateManager
         // Option B
         private static string mParameterFilePath;
 
+        private static bool mForceUpdate;
+
         private static bool mLogMessagesToFile;
 
         private static bool mPreviewMode;
@@ -49,6 +51,7 @@ namespace DMSUpdateManager
             mTargetFolderPath = string.Empty;
             mParameterFilePath = string.Empty;
 
+            mForceUpdate = false;
             mLogMessagesToFile = false;
             mPreviewMode = false;
             mNoMutex = false;
@@ -72,8 +75,9 @@ namespace DMSUpdateManager
                 {
                     var dmsUpdateManager = new DMSUpdateManager
                     {
-                        PreviewMode = mPreviewMode,
+                        ForceUpdate = mForceUpdate,
                         LogMessagesToFile = mLogMessagesToFile,
+                        PreviewMode = mPreviewMode,
                         SourceFolderPath = mSourceFolderPath,
                         DoNotUseMutex = mNoMutex,
                         MutexWaitTimeoutMinutes = mWaitTimeoutMinutes,
@@ -111,7 +115,7 @@ namespace DMSUpdateManager
         {
             // Returns True if no problems; otherwise, returns false
 
-            var validParameters = new List<string> { "S", "T", "P", "L", "V", "Preview", "NM", "WaitTimeout" };
+            var validParameters = new List<string> { "S", "T", "P", "Force", "L", "V", "Preview", "NM", "WaitTimeout" };
 
             try
             {
@@ -130,6 +134,8 @@ namespace DMSUpdateManager
 
                 if (commandLineParser.RetrieveValueForParameter("P", out var parameterFile))
                     mParameterFilePath = parameterFile;
+
+                mForceUpdate = commandLineParser.IsParameterPresent("Force");
 
                 mLogMessagesToFile = commandLineParser.IsParameterPresent("L");
 
@@ -163,19 +169,22 @@ namespace DMSUpdateManager
         {
             try
             {
-                Console.WriteLine("This program copies new and updated files from a source folder to a target folder.");
+                Console.WriteLine("This program copies new and updated files from a source folder to a target folder");
                 Console.WriteLine();
                 Console.WriteLine("Program syntax:" + "\n" + Path.GetFileName(ProcessFilesOrFoldersBase.GetAppPath()));
                 Console.WriteLine(" [/S:SourceFolderPath [/T:TargetFolderPath]");
-                Console.WriteLine(" [/P:ParameterFilePath] [/L] [/V] [/NM] [/WaitTimeout:minutes]");
+                Console.WriteLine(" [/P:ParameterFilePath] [/Force] [/L] [/V]");
+                Console.WriteLine(" [/NM] [/WaitTimeout:minutes]");
                 Console.WriteLine();
-                Console.WriteLine("All files present in the source folder will be copied to the target folder if the file size or file modification time are different.");
+                Console.WriteLine("All files present in the source folder will be copied to the target folder if the file size or file modification time are different");
                 Console.WriteLine("You can either define the source and target folder at the command line, or using the parameter file.  All settings in the parameter file override command line settings.");
                 Console.WriteLine();
-                Console.WriteLine("Use /L to log details of the updated files.");
-                Console.WriteLine("Use /V to preview the files that would be updated.");
-                Console.WriteLine("Use /NM to not use a mutex, allowing multiple instances of this program to run simultaneously with the same parameter file.");
-                Console.WriteLine("Use /WaitTimeout:minutes to specify how long the program should wait for another instance to finish before exiting.");
+                Console.WriteLine("Use /Force to force an update to run, even if the last update ran less than 30 seconds ago (or the time defined by MinimumRepeatTimeSeconds in the parameter file)");
+                Console.WriteLine("Use /L to log details of the updated files");
+                Console.WriteLine("Use /V to preview the files that would be updated");
+                Console.WriteLine();
+                Console.WriteLine("Use /NM to not use a mutex, allowing multiple instances of this program to run simultaneously with the same parameter file");
+                Console.WriteLine("Use /WaitTimeout:minutes to specify how long the program should wait for another instance to finish before exiting");
                 Console.WriteLine();
                 Console.WriteLine("These special flags affect how files are processed");
                 Console.WriteLine("Append the flags to the source file name to use them");

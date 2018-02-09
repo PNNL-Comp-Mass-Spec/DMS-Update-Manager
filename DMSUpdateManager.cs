@@ -114,7 +114,12 @@ namespace DMSUpdateManager
 
         private string mTargetFolderPathBase;
 
+        /// <summary>
+        /// Minimum time between updates
+        /// </summary>
+        /// <remarks>Ignored if ForceUpdate is true</remarks>
         private int mMinimumRepeatThresholdSeconds;
+
         private string mMutexNameSuffix;
 
         #endregion
@@ -140,6 +145,8 @@ namespace DMSUpdateManager
         public double MutexWaitTimeoutMinutes { get; set; }
 
         public bool DoNotUseMutex { get; set; }
+
+        public bool ForceUpdate { get; set; }
 
         public eDMSUpdateManagerErrorCodes LocalErrorCode { get; private set; }
 
@@ -413,6 +420,7 @@ namespace DMSUpdateManager
             ReThrowEvents = false;
             mLogFileUsesDateStamp = true;
 
+            ForceUpdate = false;
             PreviewMode = false;
             OverwriteNewerFiles = false;
             CopySubdirectoriesToParentFolder = false;
@@ -909,14 +917,26 @@ namespace DMSUpdateManager
 
                     if (currentTime < nextAllowedUpdate)
                     {
-                        // Reduce hits on the source: not enough time has passed since the last update
-                        // Delay the output so that important log messages about bad parameters will be output regardless of this
-                        OnWarningEvent(
-                            string.Format("Exiting update since last update ran {0:N0} seconds ago; update is allowed in {1:N0} seconds",
-                                          currentTime.Subtract(lastUpdate).TotalSeconds,
-                                          nextAllowedUpdate.Subtract(currentTime).TotalSeconds));
+                        var lastUpdateSeconds = currentTime.Subtract(lastUpdate).TotalSeconds;
 
-                        skipShared = true;
+                        if (ForceUpdate)
+                        {
+                            OnStatusEvent(
+                                string.Format("Last update ran {0:N0} seconds ago; forcing update due to /Force swich", lastUpdateSeconds));
+                            Console.WriteLine();
+                        }
+                        else
+                        {
+
+                            // Reduce hits on the source: not enough time has passed since the last update
+                            // Delay the output so that important log messages about bad parameters will be output regardless of this
+                            OnWarningEvent(
+                                string.Format("Exiting update since last update ran {0:N0} seconds ago; update is allowed in {1:N0} seconds",
+                                              lastUpdateSeconds,
+                                              nextAllowedUpdate.Subtract(currentTime).TotalSeconds));
+
+                            skipShared = true;
+                        }
                     }
                 }
             }
