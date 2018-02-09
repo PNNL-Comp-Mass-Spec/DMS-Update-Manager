@@ -656,6 +656,8 @@ namespace DMSUpdateManager
                         LogFolderPath = logFolderPath;
                         LogFilePath = string.Empty;
                         ConfigureLogFilePath();
+                        ConsoleMsgUtils.ShowDebug("Logging to " + LogFilePath);
+                        Console.WriteLine();
                     }
 
                     var filesToIgnore = settingsFile.GetParam(OPTIONS_SECTION, "FilesToIgnore", string.Empty);
@@ -711,6 +713,7 @@ namespace DMSUpdateManager
             var spacePad = new string(' ', messagePrefix.Length);
 
             ShowMessage(messagePrefix + targetFile.FullName + "; " + copyReason, logToFile);
+
             if (targetFile.Exists)
             {
                 ShowMessage(spacePad + existingFileInfo);
@@ -782,7 +785,7 @@ namespace DMSUpdateManager
             }
             catch (Exception ex)
             {
-                HandleException("Error in UpdateFolder: " + ex.Message, ex);
+                HandleException("Error in UpdateFolder", ex);
                 return false;
             }
         }
