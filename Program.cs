@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using System.Threading;
 using PRISM;
 using PRISM.FileProcessor;
 
@@ -95,7 +93,7 @@ namespace DMSUpdateManager
                         returnCode = (int)dmsUpdateManager.ErrorCode;
                         if (returnCode != 0)
                         {
-                            Console.WriteLine("Error while processing: " + dmsUpdateManager.GetErrorMessage());
+                            ConsoleMsgUtils.ShowError("Error while processing: " + dmsUpdateManager.GetErrorMessage());
                         }
                     }
                 }
@@ -107,11 +105,6 @@ namespace DMSUpdateManager
             }
 
             return returnCode;
-        }
-
-        private static string GetAppVersion()
-        {
-            return Assembly.GetExecutingAssembly().GetName().Version + " (" + PROGRAM_DATE + ")";
         }
 
         private static bool SetOptionsUsingCommandLineParameters(clsParseCommandLine commandLineParser)
@@ -172,7 +165,7 @@ namespace DMSUpdateManager
             {
                 Console.WriteLine("This program copies new and updated files from a source folder to a target folder.");
                 Console.WriteLine();
-                Console.WriteLine("Program syntax:" + "\n" + Path.GetFileName(Assembly.GetExecutingAssembly().Location));
+                Console.WriteLine("Program syntax:" + "\n" + Path.GetFileName(ProcessFilesOrFoldersBase.GetAppPath()));
                 Console.WriteLine(" [/S:SourceFolderPath [/T:TargetFolderPath]");
                 Console.WriteLine(" [/P:ParameterFilePath] [/L] [/V] [/NM] [/WaitTimeout:minutes]");
                 Console.WriteLine();
@@ -197,7 +190,7 @@ namespace DMSUpdateManager
                 Console.WriteLine("  " + DMSUpdateManager.DELETE_AM_SUBDIR_FLAG + " - Deletes the directory from below the target, but only if it is empty");
                 Console.WriteLine();
                 Console.WriteLine("Program written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA) in 2009");
-                Console.WriteLine("Version: " + GetAppVersion());
+                Console.WriteLine("Version: " + PRISM.FileProcessor.ProcessFilesOrFoldersBase.GetAppVersion(PROGRAM_DATE));
                 Console.WriteLine();
 
                 Console.WriteLine("E-mail: matthew.monroe@pnnl.gov or matt@alchemistmatt.com");
@@ -205,7 +198,7 @@ namespace DMSUpdateManager
                 Console.WriteLine();
 
                 // Delay for 750 msec in case the user double clicked this file from within Windows Explorer (or started the program via a shortcut)
-                Thread.Sleep(750);
+                clsProgRunner.SleepMilliseconds(750);
             }
             catch (Exception ex)
             {

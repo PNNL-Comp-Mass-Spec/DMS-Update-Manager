@@ -35,7 +35,7 @@ namespace DMSUpdateManager
             mFilesToIgnore = new SortedSet<string>(StringComparer.InvariantCultureIgnoreCase);
             mProcessesDict = new Dictionary<uint, ProcessInfo>();
 
-            mExecutingExePath = Assembly.GetExecutingAssembly().Location;
+            mExecutingExePath = GetAppPath();
             mExecutingExeName = Path.GetFileName(mExecutingExePath);
 
             InitializeLocalVariables();
@@ -1238,7 +1238,7 @@ namespace DMSUpdateManager
                         }
 
                         retryCount -= 1;
-                        Thread.Sleep(100);
+                        clsProgRunner.SleepMilliseconds(100);
                     }
                 }
             }
