@@ -658,6 +658,7 @@ namespace DMSUpdateManager
                         ConfigureLogFilePath();
                         ConsoleMsgUtils.ShowDebug("Logging to " + LogFilePath);
                         Console.WriteLine();
+                        ArchiveOldLogFilesNow();
                     }
 
                     var filesToIgnore = settingsFile.GetParam(OPTIONS_SECTION, "FilesToIgnore", string.Empty);
