@@ -441,7 +441,14 @@ namespace DMSUpdateManager
 
             LocalErrorCode = eDMSUpdateManagerErrorCodes.NoError;
 
-            var vsHostName = Path.ChangeExtension(mExecutingExeName, "vshost.exe")?.ToLower();
+            // This list tracks processes that appear to be using a folder, but for which we likely can still update files in that folder
+            var executablesToIgnore = new SortedSet<string>(StringComparer.OrdinalIgnoreCase) {
+                "cmd.exe", "BC2.exe", "BCompare.exe", "BComp.com", "BComp.exe"
+            };
+
+            var runningExeName = mExecutingExeName ?? "UnknownApp.exe";
+
+            executablesToIgnore.Add(Path.ChangeExtension(runningExeName, "vshost.exe"));
 
             mProcessesDict.Clear();
             var results = new ManagementObjectSearcher("SELECT ProcessId, ExecutablePath, CommandLine FROM Win32_Process");
@@ -459,18 +466,13 @@ namespace DMSUpdateManager
                 }
 
                 // If the ExecutablePath is null/empty, replace it with the CommandLine string
-                // Otherwise, the next check will throw an exception when the ExecutablePath is null (at the .ToLower() part of line)
-                // We could also set it to an empty string, but using the CommandLine for pessimistic purposes
                 if (string.IsNullOrWhiteSpace(processPath))
                 {
                     processPath = cmd;
                 }
 
-                // Skip this process if it is the active DMSUpdateManager, or DMSUpdateManager.vshost.exe or cmd.exe
-                var exeLCase = Path.GetFileName(processPath).ToLower();
-
-                // ReSharper disable once AssignNullToNotNullAttribute
-                if (processPath.Contains(mExecutingExeName) || exeLCase == vsHostName || exeLCase == "cmd.exe")
+                // Skip this process if it is unlikely to be locking the target file
+                if (processPath.Contains(runningExeName) || executablesToIgnore.Contains(Path.GetFileName(processPath)))
                 {
                     continue;
                 }
