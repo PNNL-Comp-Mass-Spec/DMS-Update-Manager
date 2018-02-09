@@ -228,7 +228,7 @@ namespace DMSUpdateManager
 
         private string ConstructMutexName(string mutexSuffix)
         {
-            var appName = GetEntryOrExecutingAssembly().GetName().Name.ToLower();
+            var appName = GetEntryOrExecutingAssembly().GetName().Name;
             var parameterFileCleaned = mutexSuffix.Replace("\\", "_").Replace(":", "_").Replace(".", "_").Replace(" ", "_");
             var mutexName = @"Global\" + appName.ToLower() + "_" + parameterFileCleaned.ToLower();
             return mutexName;
@@ -1142,7 +1142,9 @@ namespace DMSUpdateManager
 
             // Populate a List object the with the names of any .delete files in fiFilesInSource
             var deleteFiles = new SortedSet<string>(StringComparer.InvariantCultureIgnoreCase);
-            var filesToDelete = (from sourceFile in filesInSource where sourceFile.Name.EndsWith(DELETE_SUFFIX, StringComparison.InvariantCultureIgnoreCase) select TrimSuffix(sourceFile.Name, DELETE_SUFFIX).ToLower());
+            var filesToDelete = (from sourceFile in filesInSource
+                                 where sourceFile.Name.EndsWith(DELETE_SUFFIX, StringComparison.InvariantCultureIgnoreCase)
+                                 select TrimSuffix(sourceFile.Name, DELETE_SUFFIX).ToLower());
             foreach (var item in filesToDelete)
             {
                 deleteFiles.Add(item);
@@ -1150,7 +1152,9 @@ namespace DMSUpdateManager
 
             // Populate a List object the with the names of any .checkjava files in fiFilesInSource
             var checkJavaFiles = new SortedSet<string>(StringComparer.InvariantCultureIgnoreCase);
-            var javaFilesToCheck = (from sourceFile in filesInSource where sourceFile.Name.EndsWith(CHECK_JAVA_SUFFIX, StringComparison.InvariantCultureIgnoreCase) select TrimSuffix(sourceFile.Name, CHECK_JAVA_SUFFIX).ToLower());
+            var javaFilesToCheck = (from sourceFile in filesInSource
+                                    where sourceFile.Name.EndsWith(CHECK_JAVA_SUFFIX, StringComparison.InvariantCultureIgnoreCase)
+                                    select TrimSuffix(sourceFile.Name, CHECK_JAVA_SUFFIX).ToLower());
             foreach (var item in javaFilesToCheck)
             {
                 checkJavaFiles.Add(item);
