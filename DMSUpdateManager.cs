@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using PRISM;
@@ -442,8 +441,7 @@ namespace DMSUpdateManager
 
             LocalErrorCode = eDMSUpdateManagerErrorCodes.NoError;
 
-            var executingExePath = Assembly.GetExecutingAssembly().Location;
-            var vsHostName = Path.ChangeExtension(mExecutingExeName, "vshost.exe").ToLower();
+            var vsHostName = Path.ChangeExtension(mExecutingExeName, "vshost.exe")?.ToLower();
 
             mProcessesDict.Clear();
             var results = new ManagementObjectSearcher("SELECT ProcessId, ExecutablePath, CommandLine FROM Win32_Process");
@@ -489,8 +487,8 @@ namespace DMSUpdateManager
             mProcessesMatchingTarget = new Dictionary<uint, string>();
 
             // Ignore checking for running processes in the first folder that we are updating
-            mLastFolderProcessesChecked = Path.GetDirectoryName(executingExePath);
-            mLastFolderRunningProcessPath = Path.GetFileName(executingExePath);
+            mLastFolderProcessesChecked = Path.GetDirectoryName(mExecutingExePath);
+            mLastFolderRunningProcessPath = mExecutingExePath;
             mLastFolderRunningProcessId = 0;
         }
 
