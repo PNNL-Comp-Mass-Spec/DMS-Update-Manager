@@ -30,7 +30,7 @@ namespace DMSUpdateManager
         /// </summary>
         public DMSUpdateManager()
         {
-            mFileDate = "November 13, 2017";
+            mFileDate = "February 8, 2018";
 
             mFilesToIgnore = new SortedSet<string>(StringComparer.InvariantCultureIgnoreCase);
             mProcessesDict = new Dictionary<uint, ProcessInfo>();
@@ -460,8 +460,8 @@ namespace DMSUpdateManager
                     continue;
                 }
 
-                // If the ExecutablePath is null/empty, then replace it with the CommandLine string
-                // Otherwise, the next check with throw an exception when the ExecutablePath is null (at the .ToLower() part of line)
+                // If the ExecutablePath is null/empty, replace it with the CommandLine string
+                // Otherwise, the next check will throw an exception when the ExecutablePath is null (at the .ToLower() part of line)
                 // We could also set it to an empty string, but using the CommandLine for pessimistic purposes
                 if (string.IsNullOrWhiteSpace(processPath))
                 {
@@ -470,7 +470,9 @@ namespace DMSUpdateManager
 
                 // Skip this process if it is the active DMSUpdateManager, or DMSUpdateManager.vshost.exe or cmd.exe
                 var exeLCase = Path.GetFileName(processPath).ToLower();
-                if (processPath.Contains(executingExePath) || exeLCase == vsHostName || exeLCase == "cmd.exe")
+
+                // ReSharper disable once AssignNullToNotNullAttribute
+                if (processPath.Contains(mExecutingExeName) || exeLCase == vsHostName || exeLCase == "cmd.exe")
                 {
                     continue;
                 }
@@ -785,9 +787,14 @@ namespace DMSUpdateManager
             }
         }
 
+        /// <summary>
+        /// Check a global mutex keyed on the parameter file path; if it returns false, exit
+        /// </summary>
+        /// <param name="targetFolderPath"></param>
+        /// <param name="parameterFilePath"></param>
+        /// <returns></returns>
         private bool UpdateFolderMutexWrapped(string targetFolderPath, string parameterFilePath)
         {
-            // Check a global mutex keyed on the parameter file path; if it returns false, exit
             Mutex mutex = null;
             var hasMutexHandle = false;
 
@@ -813,13 +820,20 @@ namespace DMSUpdateManager
                 {
                     mutex.ReleaseMutex();
                 }
+
                 mutex?.Dispose();
             }
         }
 
+        /// <summary>
+        /// Check a global mutex keyed on the parameter file path; if it returns false, exit
+        /// </summary>
+        /// <param name="diTargetFolder"></param>
+        /// <param name="diSourceFolder"></param>
+        /// <param name="parameterFilePath"></param>
+        /// <returns></returns>
         private bool UpdateFolderCopyToParentMutexWrapped(DirectoryInfo diTargetFolder, DirectoryInfo diSourceFolder, string parameterFilePath)
         {
-            // Check a global mutex keyed on the parameter file path; if it returns false, exit
             Mutex mutex = null;
             var hasMutexHandle = false;
 
@@ -1550,6 +1564,7 @@ namespace DMSUpdateManager
                         break;
                     }
                 }
+
                 if (!treesMatch)
                     continue;
 

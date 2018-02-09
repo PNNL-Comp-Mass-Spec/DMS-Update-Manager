@@ -38,7 +38,6 @@ namespace DMSUpdateManager
         /// <returns></returns>
         public string CommandLineArgs { get; }
 
-        // ReSharper disable once CollectionNeverUpdated.Global
         /// <summary>
         /// FolderPath, split on path separators
         /// </summary>
