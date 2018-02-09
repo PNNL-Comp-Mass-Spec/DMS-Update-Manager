@@ -443,7 +443,8 @@ namespace DMSUpdateManager
 
             // This list tracks processes that appear to be using a folder, but for which we likely can still update files in that folder
             var executablesToIgnore = new SortedSet<string>(StringComparer.OrdinalIgnoreCase) {
-                "cmd.exe", "BC2.exe", "BCompare.exe", "BComp.com", "BComp.exe"
+                "cmd.exe", "BC2.exe", "BCompare.exe", "BComp.com", "BComp.exe",
+                "EditPadLite7.exe", "EditPadPro7.exe", "notepad.exe", "notepad++.exe"
             };
 
             var runningExeName = mExecutingExeName ?? "UnknownApp.exe";
