@@ -18,7 +18,7 @@ namespace DMSUpdateManager
     /// </remarks>
     public static class Program
     {
-        public const string PROGRAM_DATE = "February 8, 2018";
+        public const string PROGRAM_DATE = "February 9, 2018";
 
         // Either mSourceFolderPath and mTargetFolderPath must be specified, or mParameterFilePath needs to be specified
 

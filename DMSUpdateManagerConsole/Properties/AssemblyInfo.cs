@@ -7,11 +7,11 @@ using System.Runtime.InteropServices;
 
 // Review the values of the assembly attributes
 
-[assembly: AssemblyTitle("DMS_Update_Manager")]
+[assembly: AssemblyTitle("DMSUpdateManagerConsole")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyCompany("Pacific Northwest National Laboratory")]
-[assembly: AssemblyProduct("DMS_Update_Manager")]
-[assembly: AssemblyCopyright("Copyright © Pacific Northwest National Laboratory 2009")]
+[assembly: AssemblyProduct("DMSUpdateManagerConsole")]
+[assembly: AssemblyCopyright("Copyright © PNNL 2018")]
 [assembly: AssemblyTrademark("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
