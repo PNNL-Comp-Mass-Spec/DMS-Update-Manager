@@ -8,7 +8,7 @@ The program compares the files on a central distribution share to files on the l
 updating any files that are out of date.  It supports rolling back local files to an older version
 and auto-deleting extra files (see the special flag files described below).
 
-## Program Syntax
+## DMSUpdateManagerConsole Syntax
 
 ```
 DMSUpdateManager.exe
@@ -28,13 +28,20 @@ Use /NM to not use a mutex, allowing multiple instances of this program to run s
 
 Use /WaitTimeout:minutes to specify how long the program should wait for another instance to finish before exiting.
 
+### DLL
+
+The DMSUpdateManager.dll can be referenced via another application to update files in a given folder.
+
+## Special Files
+
 ### File Suffix Flags
 
 These file suffix flags affect how files are processed. Append the flags to the source file name to use them.
 | Suffix   | Description |
 |----------|-------------|
-|.rollback | Rolls back newer target files to match the source |
-| .delete  |Deletes the target file |
+| .rollback  | Rolls back newer target files to match the source |
+| .delete    | Deletes the target file |
+| .checkjava | Check for a running .jar file; do not overwrite if in use |
 
 ### Flag Files 
 
