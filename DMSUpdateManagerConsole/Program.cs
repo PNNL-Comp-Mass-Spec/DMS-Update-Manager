@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using UpdateMgr=DMSUpdateManager;
 using PRISM;
 using PRISM.FileProcessor;
 
-namespace DMSUpdateManager
+namespace DMSUpdateManagerConsole
 {
     /// <summary>
     /// This program copies new and updated files from a source folder to a target folder
@@ -74,7 +75,7 @@ namespace DMSUpdateManager
                 }
                 else
                 {
-                    var dmsUpdateManager = new DMSUpdateManager
+                    var updateManager = new UpdateMgr.DMSUpdateManager
                     {
                         ForceUpdate = mForceUpdate,
                         LogMessagesToFile = mLogMessagesToFile,
@@ -189,15 +190,15 @@ namespace DMSUpdateManager
                 Console.WriteLine();
                 Console.WriteLine("These special flags affect how files are processed");
                 Console.WriteLine("Append the flags to the source file name to use them");
-                Console.WriteLine("  " + DMSUpdateManager.ROLLBACK_SUFFIX + " - Rolls back newer target files to match the source");
-                Console.WriteLine("  " + DMSUpdateManager.DELETE_SUFFIX + " - Deletes the target file");
+                Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.ROLLBACK_SUFFIX + " - Rolls back newer target files to match the source");
+                Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.DELETE_SUFFIX + " - Deletes the target file");
                 Console.WriteLine();
                 Console.WriteLine("These special flag files affect how folders are processed");
                 Console.WriteLine("To use them, create an empty file with the given name in a source folder");
-                Console.WriteLine("  " + DMSUpdateManager.PUSH_DIR_FLAG + " - Pushes the directory to the parent of the target folder");
-                Console.WriteLine("  " + DMSUpdateManager.PUSH_AM_SUBDIR_FLAG + " - Pushes the directory to the target folder as a subfolder");
-                Console.WriteLine("  " + DMSUpdateManager.DELETE_SUBDIR_FLAG + " - Deletes the directory from the parent of the target, but only if the directory is empty");
-                Console.WriteLine("  " + DMSUpdateManager.DELETE_AM_SUBDIR_FLAG + " - Deletes the directory from below the target, but only if it is empty");
+                Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.PUSH_DIR_FLAG + " - Pushes the directory to the parent of the target folder");
+                Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.PUSH_AM_SUBDIR_FLAG + " - Pushes the directory to the target folder as a subfolder");
+                Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.DELETE_SUBDIR_FLAG + " - Deletes the directory from the parent of the target, but only if the directory is empty");
+                Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.DELETE_AM_SUBDIR_FLAG + " - Deletes the directory from below the target, but only if it is empty");
                 Console.WriteLine();
                 Console.WriteLine("Program written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA) in 2009");
                 Console.WriteLine("Version: " + PRISM.FileProcessor.ProcessFilesOrFoldersBase.GetAppVersion(PROGRAM_DATE));

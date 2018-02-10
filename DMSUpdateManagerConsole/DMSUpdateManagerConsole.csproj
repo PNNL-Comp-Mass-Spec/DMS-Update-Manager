@@ -6,9 +6,9 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{156A389B-9CFA-472E-8079-E6CFA1D5E205}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <StartupObject>DMSUpdateManager.Program</StartupObject>
-    <RootNamespace>DMSUpdateManager</RootNamespace>
-    <AssemblyName>DMSUpdateManager</AssemblyName>
+    <StartupObject>DMSUpdateManagerConsole.Program</StartupObject>
+    <RootNamespace>DMSUpdateManagerConsole</RootNamespace>
+    <AssemblyName>DMSUpdateManagerConsole</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -20,7 +20,7 @@
     <Optimize>false</Optimize>
     <OutputPath>bin\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DocumentationFile>bin\DMSUpdateManager.xml</DocumentationFile>
+    <DocumentationFile>bin\DMSUpdateManagerConsole.xml</DocumentationFile>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -33,7 +33,7 @@
     <Optimize>true</Optimize>
     <OutputPath>bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <DocumentationFile>bin\DMSUpdateManager.xml</DocumentationFile>
+    <DocumentationFile>bin\DMSUpdateManagerConsole.xml</DocumentationFile>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
