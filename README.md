@@ -37,6 +37,7 @@ The DMSUpdateManager.dll can be referenced via another application to update fil
 ### File Suffix Flags
 
 These file suffix flags affect how files are processed. Append the flags to the source file name to use them.
+
 | Suffix   | Description |
 |----------|-------------|
 | .rollback  | Rolls back newer target files to match the source |
