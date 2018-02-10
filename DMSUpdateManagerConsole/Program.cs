@@ -19,6 +19,9 @@ namespace DMSUpdateManagerConsole
     /// </remarks>
     public static class Program
     {
+        /// <summary>
+        /// Program date
+        /// </summary>
         public const string PROGRAM_DATE = "February 9, 2018";
 
         // Either mSourceFolderPath and mTargetFolderPath must be specified, or mParameterFilePath needs to be specified
@@ -41,6 +44,11 @@ namespace DMSUpdateManagerConsole
         private static bool mNoMutex;
         private static double mWaitTimeoutMinutes;
 
+        /// <summary>
+        /// Main entry point
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
         public static int Main(string[] args)
         {
             // Returns 0 if no error, error code if an error
@@ -88,18 +96,18 @@ namespace DMSUpdateManagerConsole
                         WriteToConsoleIfNoListener = false
                     };
 
-                    RegisterEvents(dmsUpdateManager);
+                    RegisterEvents(updateManager);
 
-                    if (dmsUpdateManager.UpdateFolder(mTargetFolderPath, mParameterFilePath))
+                    if (updateManager.UpdateFolder(mTargetFolderPath, mParameterFilePath))
                     {
                         returnCode = 0;
                     }
                     else
                     {
-                        returnCode = (int)dmsUpdateManager.ErrorCode;
+                        returnCode = (int)updateManager.ErrorCode;
                         if (returnCode != 0)
                         {
-                            ConsoleMsgUtils.ShowError("Error while processing: " + dmsUpdateManager.GetErrorMessage());
+                            ConsoleMsgUtils.ShowError("Error while processing: " + updateManager.GetErrorMessage());
                         }
                     }
                 }
@@ -201,7 +209,7 @@ namespace DMSUpdateManagerConsole
                 Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.DELETE_AM_SUBDIR_FLAG + " - Deletes the directory from below the target, but only if it is empty");
                 Console.WriteLine();
                 Console.WriteLine("Program written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA) in 2009");
-                Console.WriteLine("Version: " + PRISM.FileProcessor.ProcessFilesOrFoldersBase.GetAppVersion(PROGRAM_DATE));
+                Console.WriteLine("Version: " + ProcessFilesOrFoldersBase.GetAppVersion(PROGRAM_DATE));
                 Console.WriteLine();
 
                 Console.WriteLine("E-mail: matthew.monroe@pnnl.gov or proteomics@pnnl.gov");
