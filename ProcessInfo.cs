@@ -5,6 +5,9 @@ using System.Linq;
 
 namespace DMSUpdateManager
 {
+    /// <summary>
+    /// Track information about a process
+    /// </summary>
     public class ProcessInfo
     {
         /// <summary>
@@ -79,12 +82,21 @@ namespace DMSUpdateManager
             }
         }
 
+        /// <summary>
+        /// Split the given folder path on the system directory separator character
+        /// </summary>
+        /// <param name="folderPath"></param>
+        /// <returns>List of folders</returns>
         public static List<string> GetFolderHierarchy(string folderPath)
         {
             var folderPathHierarchy = folderPath.Split(Path.DirectorySeparatorChar).ToList();
             return folderPathHierarchy;
         }
 
+        /// <summary>
+        /// Show the command line or the executable path
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             if (CommandLine.Contains(ExePath))

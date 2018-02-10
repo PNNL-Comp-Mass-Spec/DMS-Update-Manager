@@ -42,10 +42,19 @@ namespace DMSUpdateManager
 
         #region "Constants and Enums"
 
-        // Error codes specialized for this class
+        /// <summary>
+        /// Error codes specialized for this class
+        /// </summary>
         public enum eDMSUpdateManagerErrorCodes
         {
+            /// <summary>
+            /// No error
+            /// </summary>
             NoError = 0,
+
+            /// <summary>
+            /// Unspecified error
+            /// </summary>
             UnspecifiedError = -1
         }
 
@@ -63,14 +72,39 @@ namespace DMSUpdateManager
             FolderInUse = 2
         }
 
+        /// <summary>
+        /// Rolls back newer target files to match the source
+        /// </summary>
         public const string ROLLBACK_SUFFIX = ".rollback";
+
+        /// <summary>
+        /// Deletes the target file
+        /// </summary>
         public const string DELETE_SUFFIX = ".delete";
+
+        /// <summary>
+        /// Check for a running .jar file; do not overwrite if in use
+        /// </summary>
         public const string CHECK_JAVA_SUFFIX = ".checkjava";
 
+        /// <summary>
+        /// Pushes the directory to the parent of the target folder
+        /// </summary>
         public const string PUSH_DIR_FLAG = "_PushDir_.txt";
+
+        /// <summary>
+        /// Pushes the directory to the target folder as a subfolder
+        /// </summary>
         public const string PUSH_AM_SUBDIR_FLAG = "_AMSubDir_.txt";
 
+        /// <summary>
+        /// Deletes the directory from the parent of the target, but only if the directory is empty
+        /// </summary>
         public const string DELETE_SUBDIR_FLAG = "_DeleteSubDir_.txt";
+
+        /// <summary>
+        /// Deletes the directory from below the target, but only if it is empty
+        /// </summary>
         public const string DELETE_AM_SUBDIR_FLAG = "_DeleteAMSubDir_.txt";
 
         #endregion
@@ -141,12 +175,25 @@ namespace DMSUpdateManager
         /// </remarks>
         public bool CopySubdirectoriesToParentFolder { get; set; }
 
+        /// <summary>
+        /// Mutex wait timeout (minutes)
+        /// </summary>
         public double MutexWaitTimeoutMinutes { get; set; }
 
+        /// <summary>
+        /// When true, use a Mutex to assure that multiple copies of the update manager are not started simulatenously
+        /// </summary>
         public bool DoNotUseMutex { get; set; }
 
+        /// <summary>
+        /// When true, force the update to occur, even if the previous update occurred less than 30 seconds ago 
+        /// (or the time specified by mMinimumRepeatThresholdSeconds)
+        /// </summary>
         public bool ForceUpdate { get; set; }
 
+        /// <summary>
+        /// Local error code
+        /// </summary>
         public eDMSUpdateManagerErrorCodes LocalErrorCode { get; private set; }
 
         /// <summary>
@@ -159,6 +206,9 @@ namespace DMSUpdateManager
         /// </summary>
         public bool PreviewMode { get; set; }
 
+        /// <summary>
+        /// Source folder path
+        /// </summary>
         public string SourceFolderPath
         {
             get
@@ -495,6 +545,10 @@ namespace DMSUpdateManager
             mLastFolderRunningProcessId = 0;
         }
 
+        /// <summary>
+        /// Get the current error message
+        /// </summary>
+        /// <returns></returns>
         public override string GetErrorMessage()
         {
             // Returns an empty string if no error
