@@ -12,8 +12,8 @@ using PRISM.FileProcessor;
 namespace DMSUpdateManager
 {
     /// <summary>
-    /// This program copies new and updated files from a source folder (master file folder)
-    /// to a target folder
+    /// This program copies new and updated files from a source directory (master file folder)
+    /// to a target directory
     /// </summary>
     /// <remarks>
     /// Written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA)
@@ -69,7 +69,7 @@ namespace DMSUpdateManager
         {
             NotInUse = 0,
             ItemInUse = 1,
-            FolderInUse = 2
+            DirectoryInUse = 2
         }
 
         /// <summary>
@@ -88,12 +88,12 @@ namespace DMSUpdateManager
         public const string CHECK_JAVA_SUFFIX = ".checkjava";
 
         /// <summary>
-        /// Pushes the directory to the parent of the target folder
+        /// Pushes the directory to the parent of the target directory
         /// </summary>
         public const string PUSH_DIR_FLAG = "_PushDir_.txt";
 
         /// <summary>
-        /// Pushes the directory to the target folder as a subfolder
+        /// Pushes the directory to the target directory as a subdirectory
         /// </summary>
         public const string PUSH_AM_SUBDIR_FLAG = "_AMSubDir_.txt";
 
@@ -114,12 +114,12 @@ namespace DMSUpdateManager
         private bool mProcessesShown;
 
         /// <summary>
-        /// Source folder path
+        /// Source directory path
         /// </summary>
         private string mSourceFolderPath;
 
         /// <summary>
-        /// Target folder path
+        /// Target directory path
         /// </summary>
         private string mTargetFolderPath;
 
@@ -160,18 +160,19 @@ namespace DMSUpdateManager
         #region "Properties"
 
         /// <summary>
-        /// When mCopySubdirectoriesToParentFolder=True, then will copy any subdirectories of the source folder into a subdirectory off the parent folder of the target folder
+        /// When mCopySubdirectoriesToParentFolder=True, will copy any subdirectories of the source directory
+        /// into a subdirectory off the parent directory the target directory
         /// </summary>
         /// <remarks>
         /// For example:
-        ///   The .Exe resides at folder C:\DMS_Programs\AnalysisToolManager\DMSUpdateManager.exe
+        ///   The .Exe resides in directory C:\DMS_Programs\AnalysisToolManager\DMSUpdateManager.exe
         ///   mSourceFolderPath = "\\gigasax\DMS_Programs\AnalysisToolManagerDistribution"
         ///   mTargetFolderPath = "."
         ///   Files are synced from "\\gigasax\DMS_Programs\AnalysisToolManagerDistribution" to "C:\DMS_Programs\AnalysisToolManager\"
-        ///   Next, folder \\gigasax\DMS_Programs\AnalysisToolManagerDistribution\MASIC\ will get sync'd with ..\MASIC (but only if ..\MASIC exists)
+        ///   Next, directory \\gigasax\DMS_Programs\AnalysisToolManagerDistribution\MASIC\ will get sync'd with ..\MASIC (but only if ..\MASIC exists)
         ///     Note that ..\MASIC is actually C:\DMS_Programs\MASIC\
-        ///   When sync'ing the MASIC folders, will recursively sync additional folders that match
-        ///   If the source folder contains file _PushDir_.txt or _AMSubDir_.txt then the directory will be copied to the target even if it doesn't exist there
+        ///   When sync'ing the MASIC directories, will recursively sync additional directories that match
+        ///   If the source directory contains file _PushDir_.txt or _AMSubDir_.txt then the directory will be copied to the target even if it doesn't exist there
         /// </remarks>
         public bool CopySubdirectoriesToParentFolder { get; set; }
 
@@ -197,7 +198,7 @@ namespace DMSUpdateManager
         public eDMSUpdateManagerErrorCodes LocalErrorCode { get; private set; }
 
         /// <summary>
-        /// If False, then will not overwrite files in the target folder that are newer than files in the source folder
+        /// If False, then will not overwrite files in the target directory that are newer than files in the source directory
         /// </summary>
         public bool OverwriteNewerFiles { get; set; }
 
@@ -207,7 +208,7 @@ namespace DMSUpdateManager
         public bool PreviewMode { get; set; }
 
         /// <summary>
-        /// Source folder path
+        /// Source directory path
         /// </summary>
         public string SourceFolderPath
         {
@@ -342,11 +343,12 @@ namespace DMSUpdateManager
         /// Compare the source file to the target file and update it if they differ
         /// </summary>
         /// <param name="sourceFile">Source file</param>
-        /// <param name="targetFolderPath">Target folder</param>
+        /// <param name="targetFolderInfo">Target directory info</param>
+        /// <param name="targetFolderPath">Target directory path</param>
         /// <param name="fileUpdateCount">Number of files that have been updated (Input/output)</param>
         /// <param name="eDateComparisonMode">Date comparison mode</param>
-        /// <param name="itemInUse">Used to track when a file or folder is in use by another process (log a message if the source and target files differ)</param>
-        /// <param name="fileUsageMessage">Message to log when the file (or folder) is in use and the source and targets differ</param>
+        /// <param name="itemInUse">Used to track when a file or directory is in use by another process (log a message if the source and target files differ)</param>
+        /// <param name="fileUsageMessage">Message to log when the file (or directory) is in use and the source and targets differ</param>
         /// <returns>True if the file was updated, otherwise false</returns>
         /// <remarks></remarks>
         private bool CopyFileIfNeeded(
@@ -366,7 +368,7 @@ namespace DMSUpdateManager
             if (!targetFile.Exists)
             {
                 // File not present in the target; copy it now
-                copyReason = "not found in target folder";
+                copyReason = "not found in target directory";
                 needToCopy = true;
             }
             else
@@ -429,7 +431,7 @@ namespace DMSUpdateManager
                 {
                     if (targetFile.Name == mExecutingExeName)
                     {
-                        // Update DMSUpdateManager.exe if it is not in the same folder as the starting folder
+                        // Update DMSUpdateManager.exe if it is not in the same directory as the starting directory
                         if (!string.Equals(targetFile.DirectoryName, mOutputFolderPath))
                         {
                             itemInUse = eItemInUseConstants.NotInUse;
@@ -439,16 +441,18 @@ namespace DMSUpdateManager
 
                 if (itemInUse != eItemInUseConstants.NotInUse)
                 {
-                    // Do not update this file; it is in use (or another file in this folder is in use)
+                    // Do not update this file; it is in use (or another file in this directory is in use)
                     if (string.IsNullOrWhiteSpace(fileUsageMessage))
                     {
-                        if (itemInUse == eItemInUseConstants.FolderInUse)
+                        if (itemInUse == eItemInUseConstants.DirectoryInUse)
                         {
-                            ShowMessage("Skipping " + sourceFile.Name + " because folder " + AbbreviatePath(targetFile.DirectoryName) + " is in use (by an unknown process)");
+                            ShowMessage("Skipping " + sourceFile.Name + " because directory " +
+                                        AbbreviatePath(targetFile.DirectoryName) + " is in use (by an unknown process)");
                         }
                         else
                         {
-                            ShowMessage("Skipping " + sourceFile.Name + " in folder " + AbbreviatePath(targetFile.DirectoryName) + " because currently in use (by an unknown process)");
+                            ShowMessage("Skipping " + sourceFile.Name + " in directory " +
+                                        AbbreviatePath(targetFile.DirectoryName) + " because currently in use (by an unknown process)");
                         }
                     }
                     else
@@ -491,7 +495,7 @@ namespace DMSUpdateManager
 
             LocalErrorCode = eDMSUpdateManagerErrorCodes.NoError;
 
-            // This list tracks processes that appear to be using a folder, but for which we likely can still update files in that folder
+            // This list tracks processes that appear to be using a directory, but for which we likely can still update files in that directory
             var executablesToIgnore = new SortedSet<string>(StringComparer.OrdinalIgnoreCase) {
                 "cmd.exe", "BC2.exe", "BCompare.exe", "BComp.com", "BComp.exe",
                 "EditPadLite7.exe", "EditPadPro7.exe", "notepad.exe", "notepad++.exe"
@@ -531,7 +535,7 @@ namespace DMSUpdateManager
                 var newProcess = new ProcessInfo(processId, processPath, cmd);
                 if (newProcess.FolderHierarchy.Count < 3)
                 {
-                    // Process running in the root folder or one below the root folder; ignore it
+                    // Process running in the root directory or one below the root directory; ignore it
                     continue;
                 }
                 mProcessesDict.Add(processId, newProcess);
@@ -539,7 +543,7 @@ namespace DMSUpdateManager
 
             mProcessesMatchingTarget = new Dictionary<uint, string>();
 
-            // Ignore checking for running processes in the first folder that we are updating
+            // Ignore checking for running processes in the first directory that we are updating
             mLastFolderProcessesChecked = Path.GetDirectoryName(mExecutingExePath);
             mLastFolderRunningProcessPath = mExecutingExePath;
             mLastFolderRunningProcessId = 0;
@@ -599,7 +603,7 @@ namespace DMSUpdateManager
                     if (!hasMutexHandle)
                     {
                         if (updatingTargetFolder)
-                            ConsoleMsgUtils.ShowWarning("Other instance already running on target folder, waiting for finish before continuing...");
+                            ConsoleMsgUtils.ShowWarning("Other instance already running on target directory, waiting for finish before continuing...");
                         else
                             ConsoleMsgUtils.ShowWarning("Other instance already running, waiting for finish before continuing...");
 
@@ -619,7 +623,7 @@ namespace DMSUpdateManager
 
                 if (!hasMutexHandle)
                 {
-                    // If we don't have the mutex handle, don't try to update the parent folder
+                    // If we don't have the mutex handle, don't try to update the parent directory
                     doNotUpdateParent = true;
                 }
 
@@ -745,14 +749,14 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
-        /// Update files in folder strInputFolderPath
+        /// Update files in directory inputFolderPath
         /// </summary>
-        /// <param name="inputFolderPath">Target folder to update</param>
+        /// <param name="inputFolderPath">Target directory to update</param>
         /// <param name="outputFolderAlternatePath">Ignored by this method</param>
-        /// <param name="parameterFilePath">Parameter file defining the source folder path and other options</param>
+        /// <param name="parameterFilePath">Parameter file defining the source directory path and other options</param>
         /// <param name="resetErrorCode">Ignored by this method</param>
         /// <returns>True if success, False if failure</returns>
-        /// <remarks>If TargetFolder is defined in the parameter file, strInputFolderPath will be ignored</remarks>
+        /// <remarks>If TargetFolder is defined in the parameter file, inputFolderPath will be ignored</remarks>
         public override bool ProcessFolder(string inputFolderPath, string outputFolderAlternatePath, string parameterFilePath, bool resetErrorCode)
         {
             return UpdateFolder(inputFolderPath, parameterFilePath);
@@ -778,10 +782,10 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
-        /// Update files in folder targetFolderPath
+        /// Update files in directory targetFolderPath
         /// </summary>
-        /// <param name="targetFolderPath">Target folder to update</param>
-        /// <param name="parameterFilePath">Parameter file defining the source folder path and other options</param>
+        /// <param name="targetFolderPath">Target directory to update</param>
+        /// <param name="parameterFilePath">Parameter file defining the source directory path and other options</param>
         /// <returns>True if success, False if failure</returns>
         /// <remarks>If TargetFolder is defined in the parameter file, targetFolderPath will be ignored</remarks>
         public bool UpdateFolder(string targetFolderPath, string parameterFilePath)
@@ -812,14 +816,14 @@ namespace DMSUpdateManager
 
                 if (string.IsNullOrEmpty(mSourceFolderPath))
                 {
-                    ShowWarning("Source folder path is not defined; either specify it at the command line or include it in the parameter file");
+                    ShowWarning("Source directory path is not defined; either specify it at the command line or include it in the parameter file");
                     SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidInputFolderPath);
                     return false;
                 }
 
                 if (string.IsNullOrWhiteSpace(targetFolderPath))
                 {
-                    ShowWarning("Target folder path is not defined; either specify it at the command line or include it in the parameter file");
+                    ShowWarning("Target directory path is not defined; either specify it at the command line or include it in the parameter file");
                     SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidInputFolderPath);
                     return false;
                 }
@@ -930,7 +934,7 @@ namespace DMSUpdateManager
 
             if (sourceFolder.Parent == null)
             {
-                OnErrorEvent("Unable to determine the parent directory of the source folder: " + sourceFolder.FullName);
+                OnErrorEvent("Unable to determine the parent directory of the source directory: " + sourceFolder.FullName);
                 return false;
             }
 
@@ -1111,7 +1115,7 @@ namespace DMSUpdateManager
         {
             if (string.IsNullOrWhiteSpace(folderDescription))
             {
-                folderDescription = "folder";
+                folderDescription = "directory";
             }
 
             if (!targetSubFolder.Exists)
@@ -1189,7 +1193,7 @@ namespace DMSUpdateManager
                 targetFolder.Create();
             }
 
-            // Obtain a list of files in the source folder
+            // Obtain a list of files in the source directory
             var sourceFolder = new DirectoryInfo(sourceFolderPath);
 
             var fileUpdateCount = 0;
@@ -1260,9 +1264,9 @@ namespace DMSUpdateManager
                             {
                                 if (TargetFolderInUseByProcess(targetFolder.FullName, targetFileName, out fileUsageMessage))
                                 {
-                                    // The folder is in use
+                                    // The directory is in use
                                     // Allow new files to be copied, but do not overwrite existing files
-                                    itemInUse = eItemInUseConstants.FolderInUse;
+                                    itemInUse = eItemInUseConstants.DirectoryInUse;
                                 }
                             }
 
@@ -1274,7 +1278,7 @@ namespace DMSUpdateManager
                         {
                             // This is a Delete file
                             // Do not copy this file
-                            // However, do look for a corresponding file that does not have .delete and delete that file in the target folder
+                            // However, do look for a corresponding file that does not have .delete and delete that file in the target directory
 
                             ProcessDeleteFile(sourceFile, targetFolder.FullName);
                             break; // Break out of the while, continue the for loop
@@ -1315,9 +1319,9 @@ namespace DMSUpdateManager
                         {
                             if (TargetFolderInUseByProcess(targetFolder.FullName, sourceFile.Name, out fileUsageMessage))
                             {
-                                // The folder is in use
+                                // The directory is in use
                                 // Allow new files to be copied, but do not overwrite existing files
-                                itemInUse = eItemInUseConstants.FolderInUse;
+                                itemInUse = eItemInUseConstants.DirectoryInUse;
                             }
                         }
 
@@ -1353,9 +1357,9 @@ namespace DMSUpdateManager
                 ShowMessage(statusMessage);
             }
 
-            // Process each subdirectory in the source folder
-            // If the folder exists at the target, copy it
-            // Additionally, if the source folder contains file _PushDir_.txt, it gets copied even if it doesn't exist at the target
+            // Process each subdirectory in the source directory
+            // If the directory exists at the target, copy it
+            // Additionally, if the source directory contains file _PushDir_.txt, it gets copied even if it doesn't exist at the target
             foreach (var sourceSubFolder in sourceFolder.GetDirectories())
             {
                 var targetSubFolderPath = Path.Combine(targetFolder.FullName, sourceSubFolder.Name);
@@ -1507,10 +1511,10 @@ namespace DMSUpdateManager
                 }
 
                 // Example log messages:
-                // Skipping UIMFLibrary.dll because folder DeconTools is in use by process DeconConsole.exe (PID 343243)
-                // Skipping DeconConsole.exe because folder DeconTools is in use by 2 processes on this system, including DeconConsole.exe (PID 343243)
+                // Skipping UIMFLibrary.dll because directory DeconTools is in use by process DeconConsole.exe (PID 343243)
+                // Skipping DeconConsole.exe because directory DeconTools is in use by 2 processes on this system, including DeconConsole.exe (PID 343243)
 
-                folderUsageMessage = "Skipping " + targetFileName + " because folder " + AbbreviatePath(targetFolderPath) + " is in use by ";
+                folderUsageMessage = "Skipping " + targetFileName + " because directory " + AbbreviatePath(targetFolderPath) + " is in use by ";
 
                 string processPathToShow;
 
@@ -1580,12 +1584,12 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
-        /// Determine the number of processes using files in the given folder
+        /// Determine the number of processes using files in the given directory
         /// </summary>
-        /// <param name="targetFolderPath">Folder to examine</param>
-        /// <param name="firstProcessPath">Output parameter: first process using files in this folder; empty string if no processes</param>
-        /// <param name="firstProcessId">Output parameter: Process ID of first process using files in this folder</param>
-        /// <returns>Count of processes using this folder</returns>
+        /// <param name="targetFolderPath">Directory to examine</param>
+        /// <param name="firstProcessPath">Output parameter: first process using files in this directory; empty string if no processes</param>
+        /// <param name="firstProcessId">Output parameter: Process ID of first process using files in this directory</param>
+        /// <returns>Count of processes using this directory</returns>
         private int GetNumTargetFolderProcesses(string targetFolderPath, out string firstProcessPath, out uint firstProcessId)
         {
             firstProcessPath = string.Empty;
@@ -1607,7 +1611,7 @@ namespace DMSUpdateManager
             mLastFolderRunningProcessPath = string.Empty;
             mLastFolderRunningProcessId = 0;
 
-            // Look for running processes with a .exe in the target folder (or in a parent of the target folder)
+            // Look for running processes with a .exe in the target directory (or in a parent of the target directory)
             // Ignore cmd.exe
             foreach (var item in mProcessesDict)
             {
@@ -1694,7 +1698,7 @@ namespace DMSUpdateManager
                 }
             }
 
-            // Make sure the .delete is also not in the target folder
+            // Make sure the .delete is also not in the target directory
             var targetDeleteFilePath = Path.Combine(targetFolderPath, deleteFile.Name);
             var targetDeleteFile = new FileInfo(targetDeleteFilePath);
 
@@ -1716,10 +1720,10 @@ namespace DMSUpdateManager
         /// Rollback the target file if it differs from the source
         /// </summary>
         /// <param name="rollbackFile">Rollback file path</param>
-        /// <param name="targetFolderPath">Target folder</param>
+        /// <param name="targetFolderPath">Target directory path</param>
         /// <param name="fileUpdateCount">Number of files that have been updated (Input/output)</param>
-        /// <param name="itemInUse">Used to track when a file or folder is in use by another process (log a message if the source and target files differ)</param>
-        /// <param name="fileUsageMessage">Message to log when the file (or folder) is in use and the source and targets differ</param>
+        /// <param name="itemInUse">Used to track when a file or directory is in use by another process (log a message if the source and target files differ)</param>
+        /// <param name="fileUsageMessage">Message to log when the file (or directory) is in use and the source and targets differ</param>
         private void ProcessRollbackFile(
             FileSystemInfo rollbackFile,
             string targetFolderPath,
