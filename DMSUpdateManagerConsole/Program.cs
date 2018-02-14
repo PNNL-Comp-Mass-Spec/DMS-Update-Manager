@@ -22,7 +22,7 @@ namespace DMSUpdateManagerConsole
         /// <summary>
         /// Program date
         /// </summary>
-        public const string PROGRAM_DATE = "February 12, 2018";
+        public const string PROGRAM_DATE = "February 13, 2018";
 
         // Either mSourceFolderPath and mTargetFolderPath must be specified, or mParameterFilePath needs to be specified
 
@@ -48,12 +48,10 @@ namespace DMSUpdateManagerConsole
         /// Main entry point
         /// </summary>
         /// <param name="args"></param>
-        /// <returns></returns>
+        /// <returns>0 if no error, error code if an error</returns>
         public static int Main(string[] args)
         {
-            // Returns 0 if no error, error code if an error
 
-            int returnCode;
             var commandLineParser = new clsParseCommandLine();
             var proceed = false;
 
@@ -79,46 +77,43 @@ namespace DMSUpdateManagerConsole
                     !(mSourceFolderPath.Length > 0 & mTargetFolderPath.Length > 0 | mParameterFilePath.Length > 0))
                 {
                     ShowProgramHelp();
-                    returnCode = -1;
+                    return -1;
                 }
-                else
+
+                var updateManager = new UpdateMgr.DMSUpdateManager
                 {
-                    var updateManager = new UpdateMgr.DMSUpdateManager
-                    {
-                        ForceUpdate = mForceUpdate,
-                        LogMessagesToFile = mLogMessagesToFile,
-                        PreviewMode = mPreviewMode,
-                        SourceFolderPath = mSourceFolderPath,
-                        DoNotUseMutex = mNoMutex,
-                        MutexWaitTimeoutMinutes = mWaitTimeoutMinutes,
-                        LoggingLevel = ProcessFilesOrFoldersBase.LogLevel.Normal,
-                        ProgressOutputLevel = ProcessFilesOrFoldersBase.LogLevel.Suppress,
-                        WriteToConsoleIfNoListener = false
-                    };
+                    ForceUpdate = mForceUpdate,
+                    LogMessagesToFile = mLogMessagesToFile,
+                    PreviewMode = mPreviewMode,
+                    SourceFolderPath = mSourceFolderPath,
+                    DoNotUseMutex = mNoMutex,
+                    MutexWaitTimeoutMinutes = mWaitTimeoutMinutes,
+                    LoggingLevel = ProcessFilesOrFoldersBase.LogLevel.Normal,
+                    ProgressOutputLevel = ProcessFilesOrFoldersBase.LogLevel.Suppress,
+                    WriteToConsoleIfNoListener = false
+                };
 
-                    RegisterEvents(updateManager);
+                RegisterEvents(updateManager);
 
-                    if (updateManager.UpdateFolder(mTargetFolderPath, mParameterFilePath))
-                    {
-                        returnCode = 0;
-                    }
-                    else
-                    {
-                        returnCode = (int)updateManager.ErrorCode;
-                        if (returnCode != 0)
-                        {
-                            ConsoleMsgUtils.ShowError("Error while processing: " + updateManager.GetErrorMessage());
-                        }
-                    }
+                if (updateManager.UpdateFolder(mTargetFolderPath, mParameterFilePath))
+                {
+                    return 0;
                 }
+
+                var returnCode = (int)updateManager.ErrorCode;
+                if (returnCode != 0)
+                {
+                    ConsoleMsgUtils.ShowError("Error while processing: " + updateManager.GetErrorMessage());
+                }
+
+                return returnCode;
             }
             catch (Exception ex)
             {
                 ShowErrorMessage("Error occurred in modMain->Main: " + Environment.NewLine + ex.Message, ex);
-                returnCode = -1;
+                return -1;
             }
 
-            return returnCode;
         }
 
         private static bool SetOptionsUsingCommandLineParameters(clsParseCommandLine commandLineParser)

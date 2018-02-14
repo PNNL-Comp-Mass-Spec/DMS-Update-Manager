@@ -277,23 +277,21 @@ namespace DMSUpdateManager
         /// <param name="fileName">Full filename (no wildcards)</param>
         public void AddFileToIgnore(string fileName)
         {
-            if (!string.IsNullOrWhiteSpace(fileName))
+            if (string.IsNullOrWhiteSpace(fileName))
+                return;
+
+            if (!mFilesToIgnore.Contains(fileName))
             {
-                if (!mFilesToIgnore.Contains(fileName))
-                {
-                    mFilesToIgnore.Add(fileName);
-                }
+                mFilesToIgnore.Add(fileName);
             }
         }
 
         private string CombinePaths(DirectoryContainer targetFolderInfo, string parentFolder, string folderToAppend)
         {
-
             if (targetFolderInfo.TrackingRemoteHostDirectory)
                 return parentFolder + '/' + folderToAppend;
 
             return Path.Combine(parentFolder, folderToAppend);
-
         }
 
         private string ConstructMutexName(string mutexSuffix)
@@ -503,7 +501,7 @@ namespace DMSUpdateManager
                 }
             }
 
-            CopyFile(sourceFile, targetFolderInfo,  targetFile, ref fileUpdateCount, copyReason);
+            CopyFile(sourceFile, targetFolderInfo, targetFile, ref fileUpdateCount, copyReason);
             return true;
         }
 
@@ -900,7 +898,7 @@ namespace DMSUpdateManager
         /// </summary>
         /// <param name="targetFolderPath">Target directory to update</param>
         /// <param name="parameterFilePath">Parameter file defining the source directory path and other options</param>
-        /// <returns>True if success, False if failure</returns>
+        /// <returns>True if success, false if an error</returns>
         /// <remarks>If TargetFolder is defined in the parameter file, targetFolderPath will be ignored</remarks>
         public bool UpdateFolder(string targetFolderPath, string parameterFilePath)
         {
@@ -1236,7 +1234,7 @@ namespace DMSUpdateManager
                         if (ForceUpdate)
                         {
                             OnStatusEvent(
-                                string.Format("Last update ran {0:N0} seconds ago; forcing update due to /Force swich", lastUpdateSeconds));
+                                string.Format("Last update ran {0:N0} seconds ago; forcing update due to /Force switch", lastUpdateSeconds));
                             Console.WriteLine();
                         }
                         else
@@ -1372,7 +1370,7 @@ namespace DMSUpdateManager
             if (fileCount > 0)
             {
                 ShowWarning(
-                    "Folder flagged for deletion, but it is not empty (File Count  = " + fileCount + "): " +
+                    "Folder flagged for deletion, but it is not empty (File Count = " + fileCount + "): " +
                     AbbreviatePath(targetSubFolder.FullName));
                 return false;
             }
@@ -1588,6 +1586,7 @@ namespace DMSUpdateManager
                         if (!errorLogged)
                         {
                             ShowErrorMessage("Error synchronizing " + sourceFile.Name + ": " + ex.Message);
+                            ConsoleMsgUtils.ShowWarning(clsStackTraceFormatter.GetExceptionStackTraceMultiLine(ex));
                             errorLogged = true;
                         }
 
@@ -1938,7 +1937,7 @@ namespace DMSUpdateManager
 
             var targetFile = targetFolderInfo.GetFileInfo(targetFilePath);
 
-           if (targetFile.Exists)
+            if (targetFile.Exists)
             {
                 if (PreviewMode)
                 {
@@ -1951,8 +1950,8 @@ namespace DMSUpdateManager
                 }
             }
 
-            // Make sure the .delete is also not in the target directory
-            var targetDeleteFilePath = Path.Combine(targetFolderPath, deleteFile.Name);
+            // Make sure the .delete file is also not in the target directory
+            var targetDeleteFilePath = CombinePaths(targetFolderInfo, targetFolderPath, deleteFile.Name);
             var targetDeleteFile = targetFolderInfo.GetFileInfo(targetDeleteFilePath);
 
             if (targetDeleteFile.Exists)

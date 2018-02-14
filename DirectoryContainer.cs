@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Renci.SshNet;
 using Renci.SshNet.Sftp;
 
@@ -224,6 +225,11 @@ namespace DMSUpdateManager
             var newDirectory = GetDirectoryInfo(directoryPath, true);
             return newDirectory;
         }
+
+        /// <summary>
+        /// Delete a file or directory
+        /// </summary>
+        /// <param name="fileOrDirectory"></param>
         public void DeleteFileOrDirectory(FileOrDirectoryInfo fileOrDirectory)
         {
             if (!TrackingRemoteHostDirectory)
@@ -231,7 +237,7 @@ namespace DMSUpdateManager
                 if (fileOrDirectory.IsDirectory)
                 {
                     var item = new DirectoryInfo(fileOrDirectory.FullName);
-                    // Delete the directory, but do not recurse
+                    // Delete the directory, but do not recurse and do not delete it if not empty
                     item.Delete(false);
                 }
                 else
