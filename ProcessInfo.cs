@@ -23,10 +23,10 @@ namespace DMSUpdateManager
         public string ExePath { get; }
 
         /// <summary>
-        /// Parent folder of the .exe
+        /// Parent directory of the .exe
         /// </summary>
         /// <returns></returns>
-        public string FolderPath { get; }
+        public string DirectoryPath { get; }
 
         /// <summary>
         /// Command line, including the .exe and any command line arguments
@@ -42,10 +42,10 @@ namespace DMSUpdateManager
         public string CommandLineArgs { get; }
 
         /// <summary>
-        /// FolderPath, split on path separators
+        /// DirectoryPath, split on path separators
         /// </summary>
         /// <returns></returns>
-        public List<string> FolderHierarchy { get; }
+        public List<string> DirectoryHierarchy { get; }
 
         /// <summary>
         /// Constructor
@@ -59,8 +59,8 @@ namespace DMSUpdateManager
             ExePath = exePath;
             CommandLine = commandLine;
 
-            FolderPath = Path.GetDirectoryName(exePath);
-            FolderHierarchy = GetFolderHierarchy(FolderPath);
+            DirectoryPath = Path.GetDirectoryName(exePath);
+            DirectoryHierarchy = GetDirectoryHierarchy(DirectoryPath);
 
             var exeName = Path.GetFileName(ExePath);
 
@@ -83,14 +83,14 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
-        /// Split the given folder path on the system directory separator character
+        /// Split the given path on the system directory separator character
         /// </summary>
-        /// <param name="folderPath"></param>
-        /// <returns>List of folders</returns>
-        public static List<string> GetFolderHierarchy(string folderPath)
+        /// <param name="directoryPath"></param>
+        /// <returns>List of directories</returns>
+        public static List<string> GetDirectoryHierarchy(string directoryPath)
         {
-            var folderPathHierarchy = folderPath.Split(Path.DirectorySeparatorChar).ToList();
-            return folderPathHierarchy;
+            var directoryPathHierarchy = directoryPath.Split(Path.DirectorySeparatorChar).ToList();
+            return directoryPathHierarchy;
         }
 
         /// <summary>

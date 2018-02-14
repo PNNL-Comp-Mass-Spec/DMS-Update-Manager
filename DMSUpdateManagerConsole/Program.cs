@@ -85,7 +85,7 @@ namespace DMSUpdateManagerConsole
                     ForceUpdate = mForceUpdate,
                     LogMessagesToFile = mLogMessagesToFile,
                     PreviewMode = mPreviewMode,
-                    SourceFolderPath = mSourceFolderPath,
+                    SourceDirectoryPath = mSourceFolderPath,
                     DoNotUseMutex = mNoMutex,
                     MutexWaitTimeoutMinutes = mWaitTimeoutMinutes,
                     LoggingLevel = ProcessFilesOrFoldersBase.LogLevel.Normal,

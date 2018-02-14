@@ -362,11 +362,11 @@ namespace DMSUpdateManager
 
             var subdirectoryPaths = new List<string>();
 
-            List<SftpFile> filesAndFolders;
+            List<SftpFile> remoteFilesAndDirectories;
 
             try
             {
-                filesAndFolders = sftp.ListDirectory(remoteDirectoryPath).ToList();
+                remoteFilesAndDirectories = sftp.ListDirectory(remoteDirectoryPath).ToList();
             }
             catch (SftpPathNotFoundException)
             {
@@ -374,7 +374,7 @@ namespace DMSUpdateManager
                 return;
             }
 
-            foreach (var item in filesAndFolders)
+            foreach (var item in remoteFilesAndDirectories)
             {
                 if (item.IsDirectory)
                 {

@@ -170,7 +170,7 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
-        /// Copy a file to the folder tracked by DirectoryPath
+        /// Copy a file to the directory tracked by DirectoryPath
         /// </summary>
         /// <param name="sourceFile"></param>
         /// <param name="targetFilePath"></param>

@@ -13,7 +13,7 @@ using Renci.SshNet.Common;
 namespace DMSUpdateManager
 {
     /// <summary>
-    /// This program copies new and updated files from a source directory (master file folder)
+    /// This program copies new and updated files from a source directory
     /// to a target directory
     /// </summary>
     /// <remarks>
@@ -119,13 +119,13 @@ namespace DMSUpdateManager
         /// <summary>
         /// Source directory path
         /// </summary>
-        private string mSourceFolderPath;
+        private string mSourceDirectoryPath;
 
         /// <summary>
         /// Target directory path
         /// </summary>
         /// <remarks>Ignored if updating a remote host</remarks>
-        private string mTargetFolderPath;
+        private string mTargetDirectoryPath;
 
         /// <summary>
         /// List of files that will not be copied
@@ -145,11 +145,11 @@ namespace DMSUpdateManager
         // Values are the full command line for the process
         private Dictionary<uint, string> mProcessesMatchingTarget;
 
-        private string mLastFolderProcessesChecked;
-        private string mLastFolderRunningProcessPath;
-        private uint mLastFolderRunningProcessId;
+        private string mLastDirectoryProcessesChecked;
+        private string mLastDirectoryRunningProcessPath;
+        private uint mLastDirectoryRunningProcessId;
 
-        private string mTargetFolderPathBase;
+        private string mTargetDirectoryPathBase;
 
         /// <summary>
         /// Minimum time between updates
@@ -164,21 +164,21 @@ namespace DMSUpdateManager
         #region "Properties"
 
         /// <summary>
-        /// When mCopySubdirectoriesToParentFolder=True, will copy any subdirectories of the source directory
+        /// When mCopySubdirectoriesToParentDirectory=True, will copy any subdirectories of the source directory
         /// into a subdirectory off the parent directory the target directory
         /// </summary>
         /// <remarks>
         /// For example:
         ///   The .Exe resides in directory C:\DMS_Programs\AnalysisToolManager\DMSUpdateManager.exe
-        ///   mSourceFolderPath = "\\gigasax\DMS_Programs\AnalysisToolManagerDistribution"
-        ///   mTargetFolderPath = "."
+        ///   mSourceDirectoryPath = "\\gigasax\DMS_Programs\AnalysisToolManagerDistribution"
+        ///   mTargetDirectoryPath = "."
         ///   Files are synced from "\\gigasax\DMS_Programs\AnalysisToolManagerDistribution" to "C:\DMS_Programs\AnalysisToolManager\"
         ///   Next, directory \\gigasax\DMS_Programs\AnalysisToolManagerDistribution\MASIC\ will get sync'd with ..\MASIC (but only if ..\MASIC exists)
         ///     Note that ..\MASIC is actually C:\DMS_Programs\MASIC\
         ///   When sync'ing the MASIC directories, will recursively sync additional directories that match
         ///   If the source directory contains file _PushDir_.txt or _AMSubDir_.txt then the directory will be copied to the target even if it doesn't exist there
         /// </remarks>
-        public bool CopySubdirectoriesToParentFolder { get; set; }
+        public bool CopySubdirectoriesToParentDirectory { get; set; }
 
         /// <summary>
         /// Mutex wait timeout (minutes)
@@ -219,22 +219,22 @@ namespace DMSUpdateManager
         /// <summary>
         /// Source directory path
         /// </summary>
-        public string SourceFolderPath
+        public string SourceDirectoryPath
         {
             get
             {
-                if (mSourceFolderPath == null)
+                if (mSourceDirectoryPath == null)
                 {
                     return string.Empty;
                 }
 
-                return mSourceFolderPath;
+                return mSourceDirectoryPath;
             }
             set
             {
                 if (value != null)
                 {
-                    mSourceFolderPath = value;
+                    mSourceDirectoryPath = value;
                 }
             }
         }
@@ -242,33 +242,33 @@ namespace DMSUpdateManager
         #endregion
 
         /// <summary>
-        /// Shorten folderPath if it starts with mTargetFolderPathBase
+        /// Shorten the file or directory path if it starts with mTargetDirectoryPathBase
         /// </summary>
-        /// <param name="fileOrFolderPath"></param>
+        /// <param name="fileOrDirectoryPath"></param>
         /// <returns></returns>
-        private string AbbreviatePath(string fileOrFolderPath)
+        private string AbbreviatePath(string fileOrDirectoryPath)
         {
-            return AbbreviatePath(fileOrFolderPath, mTargetFolderPathBase);
+            return AbbreviatePath(fileOrDirectoryPath, mTargetDirectoryPathBase);
         }
 
         /// <summary>
-        /// Shorten folderPath if it starts with folderPathBase
+        /// Shorten the file or directory path if it starts with directoryPathBase
         /// </summary>
-        /// <param name="fileOrFolderPath"></param>
-        /// <param name="folderPathBase"></param>
+        /// <param name="fileOrDirectoryPath"></param>
+        /// <param name="directoryPathBase"></param>
         /// <returns></returns>
-        private string AbbreviatePath(string fileOrFolderPath, string folderPathBase)
+        private string AbbreviatePath(string fileOrDirectoryPath, string directoryPathBase)
         {
-            if (fileOrFolderPath.StartsWith(folderPathBase))
+            if (fileOrDirectoryPath.StartsWith(directoryPathBase))
             {
-                if (fileOrFolderPath.Length > folderPathBase.Length)
+                if (fileOrDirectoryPath.Length > directoryPathBase.Length)
                 {
-                    return fileOrFolderPath.Substring(folderPathBase.Length + 1);
+                    return fileOrDirectoryPath.Substring(directoryPathBase.Length + 1);
                 }
                 return ".";
             }
 
-            return fileOrFolderPath;
+            return fileOrDirectoryPath;
         }
 
         /// <summary>
@@ -286,12 +286,12 @@ namespace DMSUpdateManager
             }
         }
 
-        private string CombinePaths(DirectoryContainer targetFolderInfo, string parentFolder, string folderToAppend)
+        private string CombinePaths(DirectoryContainer targetDirectoryInfo, string parentDirectory, string directoryToAppend)
         {
-            if (targetFolderInfo.TrackingRemoteHostDirectory)
-                return parentFolder + '/' + folderToAppend;
+            if (targetDirectoryInfo.TrackingRemoteHostDirectory)
+                return parentDirectory + '/' + directoryToAppend;
 
-            return Path.Combine(parentFolder, folderToAppend);
+            return Path.Combine(parentDirectory, directoryToAppend);
         }
 
         private string ConstructMutexName(string mutexSuffix)
@@ -306,13 +306,13 @@ namespace DMSUpdateManager
         /// Copy the file (or preview the copy)
         /// </summary>
         /// <param name="sourceFile">Source file</param>
-        /// <param name="targetFolderInfo">Target directory info</param>
+        /// <param name="targetDirectoryInfo">Target directory info</param>
         /// <param name="targetFile">Target file</param>
         /// <param name="fileUpdateCount">Total number of files updated (input/output)</param>
         /// <param name="copyReason">Reason for the copy</param>
         private void CopyFile(
             FileInfo sourceFile,
-            DirectoryContainer targetFolderInfo,
+            DirectoryContainer targetDirectoryInfo,
             FileOrDirectoryInfo targetFile,
             ref int fileUpdateCount, string copyReason)
         {
@@ -339,7 +339,7 @@ namespace DMSUpdateManager
 
                 try
                 {
-                    var copiedFile = targetFolderInfo.CopyFile(sourceFile, targetFile.FullName);
+                    var copiedFile = targetDirectoryInfo.CopyFile(sourceFile, targetFile.FullName);
 
                     if (copiedFile.Length != sourceFile.Length)
                     {
@@ -362,7 +362,7 @@ namespace DMSUpdateManager
                 catch (Exception ex)
                 {
                     string msg;
-                    if (targetFolderInfo.TrackingRemoteHostDirectory)
+                    if (targetDirectoryInfo.TrackingRemoteHostDirectory)
                         msg = string.Format("Error copying {0} to {1}: {2} for user {3}",
                                             sourceFile.Name, targetFile.FullName, ex.Message, RemoteHostInfo.Username);
                     else
@@ -378,8 +378,8 @@ namespace DMSUpdateManager
         /// Compare the source file to the target file and update it if they differ
         /// </summary>
         /// <param name="sourceFile">Source file</param>
-        /// <param name="targetFolderInfo">Target directory info</param>
-        /// <param name="targetFolderPath">Target directory path</param>
+        /// <param name="targetDirectoryInfo">Target directory info</param>
+        /// <param name="targetDirectoryPath">Target directory path</param>
         /// <param name="fileUpdateCount">Number of files that have been updated (Input/output)</param>
         /// <param name="eDateComparisonMode">Date comparison mode</param>
         /// <param name="itemInUse">Used to track when a file or directory is in use by another process (log a message if the source and target files differ)</param>
@@ -388,16 +388,16 @@ namespace DMSUpdateManager
         /// <remarks></remarks>
         private bool CopyFileIfNeeded(
             FileInfo sourceFile,
-            DirectoryContainer targetFolderInfo,
-            string targetFolderPath,
+            DirectoryContainer targetDirectoryInfo,
+            string targetDirectoryPath,
             ref int fileUpdateCount,
             eDateComparisonModeConstants eDateComparisonMode,
             eItemInUseConstants itemInUse = eItemInUseConstants.NotInUse,
             string fileUsageMessage = "")
         {
 
-            var targetFilePath = CombinePaths(targetFolderInfo, targetFolderPath, sourceFile.Name);
-            var targetFile = targetFolderInfo.GetFileInfo(targetFilePath);
+            var targetFilePath = CombinePaths(targetDirectoryInfo, targetDirectoryPath, sourceFile.Name);
+            var targetFile = targetDirectoryInfo.GetFileInfo(targetFilePath);
 
             var copyReason = string.Empty;
             var needToCopy = false;
@@ -501,11 +501,11 @@ namespace DMSUpdateManager
                 }
             }
 
-            CopyFile(sourceFile, targetFolderInfo, targetFile, ref fileUpdateCount, copyReason);
+            CopyFile(sourceFile, targetDirectoryInfo, targetFile, ref fileUpdateCount, copyReason);
             return true;
         }
 
-        private FileOrDirectoryInfo CreateDirectoryIfMissing(DirectoryContainer targetFolderInfo, string directoryPath)
+        private FileOrDirectoryInfo CreateDirectoryIfMissing(DirectoryContainer targetDirectoryInfo, string directoryPath)
         {
 
             var currentTask = "validating";
@@ -513,14 +513,14 @@ namespace DMSUpdateManager
             try
             {
                 // Make sure the target directory exists
-                var targetDirectory = targetFolderInfo.GetDirectoryInfo(directoryPath);
+                var targetDirectory = targetDirectoryInfo.GetDirectoryInfo(directoryPath);
 
                 if (targetDirectory.Exists)
                     return targetDirectory;
 
+
                 currentTask = "creating";
-                var newDirectory = targetFolderInfo.CreateDirectoryIfMissing(directoryPath);
-                return newDirectory;
+                return targetDirectoryInfo.CreateDirectoryIfMissing(directoryPath);
             }
             catch (Exception ex)
             {
@@ -547,7 +547,7 @@ namespace DMSUpdateManager
             ForceUpdate = false;
             PreviewMode = false;
             OverwriteNewerFiles = false;
-            CopySubdirectoriesToParentFolder = false;
+            CopySubdirectoriesToParentDirectory = false;
 
             MutexWaitTimeoutMinutes = 5;
             DoNotUseMutex = false;
@@ -555,8 +555,8 @@ namespace DMSUpdateManager
 
             mMinimumRepeatThresholdSeconds = 30;
 
-            mSourceFolderPath = string.Empty;
-            mTargetFolderPath = string.Empty;
+            mSourceDirectoryPath = string.Empty;
+            mTargetDirectoryPath = string.Empty;
 
             RemoteHostInfo = new RemoteHostConnectionInfo();
             mRemoteHostInfoDefined = false;
@@ -607,7 +607,7 @@ namespace DMSUpdateManager
                 }
 
                 var newProcess = new ProcessInfo(processId, processPath, cmd);
-                if (newProcess.FolderHierarchy.Count < 3)
+                if (newProcess.DirectoryHierarchy.Count < 3)
                 {
                     // Process running in the root directory or one below the root directory; ignore it
                     continue;
@@ -618,9 +618,9 @@ namespace DMSUpdateManager
             mProcessesMatchingTarget = new Dictionary<uint, string>();
 
             // Ignore checking for running processes in the first directory that we are updating
-            mLastFolderProcessesChecked = Path.GetDirectoryName(mExecutingExePath);
-            mLastFolderRunningProcessPath = mExecutingExePath;
-            mLastFolderRunningProcessId = 0;
+            mLastDirectoryProcessesChecked = Path.GetDirectoryName(mExecutingExePath);
+            mLastDirectoryRunningProcessPath = mExecutingExePath;
+            mLastDirectoryRunningProcessId = 0;
         }
 
         /// <summary>
@@ -662,7 +662,7 @@ namespace DMSUpdateManager
             return fileInfo.LastWriteTimeUtc.ToString("yyyy-MM-dd hh:mm:ss tt") + " and " + fileInfo.Length + " bytes";
         }
 
-        private bool GetMutex(string mutexName, bool updatingTargetFolder, out Mutex mutex, out bool doNotUpdateParent)
+        private bool GetMutex(string mutexName, bool updatingTargetDirectory, out Mutex mutex, out bool doNotUpdateParent)
         {
             doNotUpdateParent = false;
 
@@ -676,7 +676,7 @@ namespace DMSUpdateManager
                     hasMutexHandle = mutex.WaitOne(0, false);
                     if (!hasMutexHandle)
                     {
-                        if (updatingTargetFolder)
+                        if (updatingTargetDirectory)
                             ConsoleMsgUtils.ShowWarning("Other instance already running on target directory, waiting for finish before continuing...");
                         else
                             ConsoleMsgUtils.ShowWarning("Other instance already running, waiting for finish before continuing...");
@@ -738,11 +738,11 @@ namespace DMSUpdateManager
                 if (!File.Exists(parameterFilePath))
                 {
                     // See if parameterFilePath points to a file in the same directory as the application
-                    var exeFolder = Path.GetDirectoryName(mExecutingExePath);
-                    if (exeFolder == null)
+                    var exeDirectory = Path.GetDirectoryName(mExecutingExePath);
+                    if (exeDirectory == null)
                         parameterFilePath = Path.GetFileName(parameterFilePath);
                     else
-                        parameterFilePath = Path.Combine(exeFolder, Path.GetFileName(parameterFilePath));
+                        parameterFilePath = Path.Combine(exeDirectory, Path.GetFileName(parameterFilePath));
 
                     if (!File.Exists(parameterFilePath))
                     {
@@ -767,10 +767,11 @@ namespace DMSUpdateManager
                     }
 
                     OverwriteNewerFiles = settingsFile.GetParam(OPTIONS_SECTION, "OverwriteNewerFiles", OverwriteNewerFiles);
-                    CopySubdirectoriesToParentFolder = settingsFile.GetParam(OPTIONS_SECTION, "CopySubdirectoriesToParentFolder", CopySubdirectoriesToParentFolder);
 
-                    mSourceFolderPath = settingsFile.GetParam(OPTIONS_SECTION, "SourceFolderPath", mSourceFolderPath);
-                    mTargetFolderPath = settingsFile.GetParam(OPTIONS_SECTION, "TargetFolderPath", mTargetFolderPath);
+                    CopySubdirectoriesToParentDirectory = settingsFile.GetParam(OPTIONS_SECTION, "CopySubdirectoriesToParentFolder", CopySubdirectoriesToParentDirectory);
+
+                    mSourceDirectoryPath = settingsFile.GetParam(OPTIONS_SECTION, "SourceFolderPath", mSourceDirectoryPath);
+                    mTargetDirectoryPath = settingsFile.GetParam(OPTIONS_SECTION, "TargetFolderPath", mTargetDirectoryPath);
 
                     RemoteHostInfo.HostName = settingsFile.GetParam(OPTIONS_SECTION, "RemoteHostName", RemoteHostInfo.HostName);
                     RemoteHostInfo.Username = settingsFile.GetParam(OPTIONS_SECTION, "RemoteHostUserName", RemoteHostInfo.Username);
@@ -780,7 +781,7 @@ namespace DMSUpdateManager
                     if (!string.IsNullOrWhiteSpace(RemoteHostInfo.HostName) ||
                         !string.IsNullOrWhiteSpace(RemoteHostInfo.HostName))
                     {
-                        RemoteHostInfo.DestinationPath = mTargetFolderPath;
+                        RemoteHostInfo.DestinationPath = mTargetDirectoryPath;
                         mRemoteHostInfoDefined = true;
                     }
 
@@ -835,7 +836,7 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
-        /// Update files in directory inputFolderPath
+        /// Update files in directory inputDirectoryPath
         /// </summary>
         /// <param name="inputFolderPath">Target directory to update</param>
         /// <param name="outputFolderAlternatePath">Ignored by this method</param>
@@ -894,21 +895,21 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
-        /// Update files in directory targetFolderPath
+        /// Update files in directory targetDirectoryPath
         /// </summary>
-        /// <param name="targetFolderPath">Target directory to update</param>
+        /// <param name="targetDirectoryPath">Target directory to update</param>
         /// <param name="parameterFilePath">Parameter file defining the source directory path and other options</param>
         /// <returns>True if success, false if an error</returns>
-        /// <remarks>If TargetFolder is defined in the parameter file, targetFolderPath will be ignored</remarks>
-        public bool UpdateFolder(string targetFolderPath, string parameterFilePath)
+        /// <remarks>If TargetFolder is defined in the parameter file, targetDirectoryPath will be ignored</remarks>
+        public bool UpdateFolder(string targetDirectoryPath, string parameterFilePath)
         {
             SetLocalErrorCode(eDMSUpdateManagerErrorCodes.NoError);
 
-            if (!string.IsNullOrEmpty(targetFolderPath))
+            if (!string.IsNullOrEmpty(targetDirectoryPath))
             {
-                // Update mTargetFolderPath using targetFolderPath
+                // Update mtargetDirectoryPath using targetDirectoryPath
                 // Note: If TargetFolder is defined in the parameter file, this value will get overridden
-                mTargetFolderPath = string.Copy(targetFolderPath);
+                mTargetDirectoryPath = string.Copy(targetDirectoryPath);
             }
 
             if (!LoadParameterFileSettings(parameterFilePath))
@@ -929,39 +930,39 @@ namespace DMSUpdateManager
                     return UpdateRemoteHostWork(RemoteHostInfo, parameterFilePath);
                 }
 
-                targetFolderPath = string.Copy(mTargetFolderPath);
+                targetDirectoryPath = string.Copy(mTargetDirectoryPath);
 
-                if (string.IsNullOrEmpty(mSourceFolderPath))
+                if (string.IsNullOrEmpty(mSourceDirectoryPath))
                 {
                     ShowWarning("Source directory path is not defined; either specify it at the command line or include it in the parameter file");
                     SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidInputFolderPath);
                     return false;
                 }
 
-                if (string.IsNullOrWhiteSpace(targetFolderPath))
+                if (string.IsNullOrWhiteSpace(targetDirectoryPath))
                 {
                     ShowWarning("Target directory path is not defined; either specify it at the command line or include it in the parameter file");
                     SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidInputFolderPath);
                     return false;
                 }
 
-                // Note that CleanupFilePaths() will update mOutputFolderPath, which is used by LogMessage()
+                // Note that CleanupFilePaths() will update mOutputDirectoryPath, which is used by LogMessage()
                 // Since we're updating files on the local computer, use the target directory path for parameter inputFolderPath of CleanupFolderPaths
                 var tempStr = string.Empty;
-                if (!CleanupFolderPaths(ref targetFolderPath, ref tempStr))
+                if (!CleanupFolderPaths(ref targetDirectoryPath, ref tempStr))
                 {
                     SetBaseClassErrorCode(eProcessFoldersErrorCodes.FilePathError);
                     return false;
                 }
 
-                var targetFolderInfo = new DirectoryContainer(targetFolderPath);
+                var targetDirectoryInfo = new DirectoryContainer(targetDirectoryPath);
 
                 if (DoNotUseMutex)
                 {
-                    return UpdateFolderRun(mSourceFolderPath, targetFolderInfo, parameterFilePath);
+                    return UpdateDirectoryRun(mSourceDirectoryPath, targetDirectoryInfo, parameterFilePath);
                 }
 
-                return UpdateFolderMutexWrapped(mSourceFolderPath, targetFolderInfo, parameterFilePath);
+                return UpdateDirectoryMutexWrapped(mSourceDirectoryPath, targetDirectoryInfo, parameterFilePath);
             }
             catch (Exception ex)
             {
@@ -1009,7 +1010,7 @@ namespace DMSUpdateManager
 
             try
             {
-                if (string.IsNullOrEmpty(mSourceFolderPath))
+                if (string.IsNullOrEmpty(mSourceDirectoryPath))
                 {
                     ShowWarning("Source directory path is not defined; either specify it at the command line or include it in the parameter file");
                     SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidInputFolderPath);
@@ -1024,7 +1025,7 @@ namespace DMSUpdateManager
                     return false;
                 }
 
-                // Note that CleanupFilePaths() will update mOutputFolderPath, which is used by LogMessage()
+                // Note that CleanupFilePaths() will update mOutputDirectoryPath, which is used by LogMessage()
                 // Since we're updating a files on a remote host, use the entry assembly's path for parameter inputFolderPath of CleanupFolderPaths
                 var appFolderPath = GetAppFolderPath();
                 var tempStr = string.Empty;
@@ -1034,18 +1035,18 @@ namespace DMSUpdateManager
                     return false;
                 }
 
-                var targetFolderInfo = new DirectoryContainer(targetHostInfo);
+                var targetDirectoryInfo = new DirectoryContainer(targetHostInfo);
 
                 if (DoNotUseMutex)
                 {
-                    return UpdateFolderRun(mSourceFolderPath, targetFolderInfo, parameterFilePath);
+                    return UpdateDirectoryRun(mSourceDirectoryPath, targetDirectoryInfo, parameterFilePath);
                 }
 
-                return UpdateFolderMutexWrapped(mSourceFolderPath, targetFolderInfo, parameterFilePath);
+                return UpdateDirectoryMutexWrapped(mSourceDirectoryPath, targetDirectoryInfo, parameterFilePath);
             }
             catch (Exception ex)
             {
-                HandleException("Error in UpdateFolder", ex);
+                HandleException("Error in UpdateRemoteHostWork", ex);
                 return false;
             }
         }
@@ -1053,11 +1054,11 @@ namespace DMSUpdateManager
         /// <summary>
         /// Check a global mutex keyed on the parameter file path; if it returns false, exit
         /// </summary>
-        /// <param name="sourceFolderPath">Source directory path</param>
-        /// <param name="targetFolderInfo">Target directory info</param>
+        /// <param name="sourceDirectoryPath">Source directory path</param>
+        /// <param name="targetDirectoryInfo">Target directory info</param>
         /// <param name="parameterFilePath">Parameter file defining the source directory path and other options</param>
         /// <returns></returns>
-        private bool UpdateFolderMutexWrapped(string sourceFolderPath, DirectoryContainer targetFolderInfo, string parameterFilePath)
+        private bool UpdateDirectoryMutexWrapped(string sourceDirectoryPath, DirectoryContainer targetDirectoryInfo, string parameterFilePath)
         {
             Mutex mutex = null;
             var hasMutexHandle = false;
@@ -1076,7 +1077,7 @@ namespace DMSUpdateManager
                     hasMutexHandle = GetMutex(mutexName, false, out mutex, out doNotUpdateParent);
                 }
 
-                return UpdateFolderRun(sourceFolderPath, targetFolderInfo, parameterFilePath, doNotUpdateParent);
+                return UpdateDirectoryRun(sourceDirectoryPath, targetDirectoryInfo, parameterFilePath, doNotUpdateParent);
             }
             finally
             {
@@ -1092,13 +1093,13 @@ namespace DMSUpdateManager
         /// <summary>
         /// Check a global mutex keyed on the parameter file path; if it returns false, exit
         /// </summary>
-        /// <param name="sourceFolder">Source directory info</param>
-        /// <param name="targetFolderInfo">Target directory info</param>
+        /// <param name="sourceDirectory">Source directory info</param>
+        /// <param name="targetDirectoryInfo">Target directory info</param>
         /// <param name="parameterFilePath">Parameter file defining the source directory path and other options</param>
         /// <returns></returns>
-        private bool UpdateFolderCopyToParentMutexWrapped(
-            DirectoryInfo sourceFolder,
-            DirectoryContainer targetFolderInfo,
+        private bool UpdateDirectoryCopyToParentMutexWrapped(
+            DirectoryInfo sourceDirectory,
+            DirectoryContainer targetDirectoryInfo,
             string parameterFilePath)
         {
             Mutex mutex = null;
@@ -1107,17 +1108,17 @@ namespace DMSUpdateManager
             try
             {
                 var doNotUpdateParent = false;
-                var targetFolderParent = targetFolderInfo.ParentPath;
-                if (!string.IsNullOrWhiteSpace(targetFolderParent))
+                var targetDirectoryParent = targetDirectoryInfo.ParentPath;
+                if (!string.IsNullOrWhiteSpace(targetDirectoryParent))
                 {
-                    var mutexName = ConstructMutexName(targetFolderParent);
+                    var mutexName = ConstructMutexName(targetDirectoryParent);
 
                     hasMutexHandle = GetMutex(mutexName, true, out mutex, out doNotUpdateParent);
                 }
 
                 if (!doNotUpdateParent)
                 {
-                    return UpdateFolderCopyToParentRun(sourceFolder, targetFolderInfo, parameterFilePath);
+                    return UpdateDirectoryCopyToParentRun(sourceDirectory, targetDirectoryInfo, parameterFilePath);
                 }
                 return true;
             }
@@ -1132,10 +1133,10 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
-        /// Entry method for updating the target folder
+        /// Entry method for updating the target Directory
         /// </summary>
-        /// <param name="sourceFolderPath">Source directory path</param>
-        /// <param name="targetFolderInfo">Target directory info</param>
+        /// <param name="sourceDirectoryPath">Source directory path</param>
+        /// <param name="targetDirectoryInfo">Target directory info</param>
         /// <param name="parameterFilePath">Parameter file path</param>
         /// <param name="doNotUpdateParent"></param>
         /// <returns></returns>
@@ -1143,47 +1144,47 @@ namespace DMSUpdateManager
         /// Parameter file path is used to determine the checkfile path, which is used to asssure
         /// that a minimum amount of time elapses between sequential runs of the DMS Update Manager
         /// </remarks>
-        private bool UpdateFolderRun(string sourceFolderPath, DirectoryContainer targetFolderInfo, string parameterFilePath, bool doNotUpdateParent = false)
+        private bool UpdateDirectoryRun(string sourceDirectoryPath, DirectoryContainer targetDirectoryInfo, string parameterFilePath, bool doNotUpdateParent = false)
         {
-            var sourceFolder = new DirectoryInfo(sourceFolderPath);
+            var sourceDirectory = new DirectoryInfo(sourceDirectoryPath);
 
-            if (sourceFolder.Parent == null)
+            if (sourceDirectory.Parent == null)
             {
-                OnErrorEvent("Unable to determine the parent directory of the source directory: " + sourceFolder.FullName);
+                OnErrorEvent("Unable to determine the parent directory of the source directory: " + sourceDirectory.FullName);
                 return false;
             }
 
-            if (targetFolderInfo.TrackingRemoteHostDirectory)
+            if (targetDirectoryInfo.TrackingRemoteHostDirectory)
             {
-                mTargetFolderPathBase = targetFolderInfo.ParentPath;
+                mTargetDirectoryPathBase = targetDirectoryInfo.ParentPath;
             }
             else
             {
 
-                var targetFolder = new DirectoryInfo(targetFolderInfo.DirectoryPath);
-                if (targetFolder.Parent == null)
+                var directoryToCheck = new DirectoryInfo(targetDirectoryInfo.DirectoryPath);
+                if (directoryToCheck.Parent == null)
                 {
-                    OnErrorEvent("Unable to determine the parent directory of the target directory: " + targetFolder.FullName);
+                    OnErrorEvent("Unable to determine the parent directory of the target directory: " + directoryToCheck.FullName);
                     return false;
                 }
 
-                mTargetFolderPathBase = targetFolder.Parent.FullName;
+                mTargetDirectoryPathBase = directoryToCheck.Parent.FullName;
             }
 
             ResetProgress();
 
-            var success = UpdateFolderWork(sourceFolder.FullName, targetFolderInfo, targetFolderInfo.DirectoryPath, pushNewSubfolders: false);
+            var success = UpdateDirectoryWork(sourceDirectory.FullName, targetDirectoryInfo, targetDirectoryInfo.DirectoryPath, pushNewSubdirectories: false);
 
-            if (!CopySubdirectoriesToParentFolder || doNotUpdateParent)
+            if (!CopySubdirectoriesToParentDirectory || doNotUpdateParent)
                 return success;
 
             if (DoNotUseMutex)
             {
-                success = UpdateFolderCopyToParentRun(sourceFolder, targetFolderInfo, parameterFilePath);
+                success = UpdateDirectoryCopyToParentRun(sourceDirectory, targetDirectoryInfo, parameterFilePath);
             }
             else
             {
-                success = UpdateFolderCopyToParentMutexWrapped(sourceFolder, targetFolderInfo, parameterFilePath);
+                success = UpdateDirectoryCopyToParentMutexWrapped(sourceDirectory, targetDirectoryInfo, parameterFilePath);
             }
 
             return success;
@@ -1192,15 +1193,15 @@ namespace DMSUpdateManager
         /// <summary>
         /// Update directory and copy subdirectories to the parent directory
         /// </summary>
-        /// <param name="sourceFolder">Source directory info</param>
-        /// <param name="targetFolderInfo">Target directory info</param>
+        /// <param name="sourceDirectory">Source directory info</param>
+        /// <param name="targetDirectoryInfo">Target directory info</param>
         /// <param name="parameterFilePath">Parameter file path</param>
         /// <returns></returns>
         /// <remarks>
         /// Parameter file path is used to determine the checkfile path, which is used to asssure
         /// that a minimum amount of time elapses between sequential runs of the DMS Update Manager
         /// </remarks>
-        private bool UpdateFolderCopyToParentRun(DirectoryInfo sourceFolder, DirectoryContainer targetFolderInfo, string parameterFilePath)
+        private bool UpdateDirectoryCopyToParentRun(DirectoryInfo sourceDirectory, DirectoryContainer targetDirectoryInfo, string parameterFilePath)
         {
             var success = true;
             var skipShared = false;
@@ -1210,15 +1211,15 @@ namespace DMSUpdateManager
             if (!string.IsNullOrWhiteSpace(LogFilePath))
             {
                 var logFileInfo = new FileInfo(LogFilePath);
-                var logFileFolder = logFileInfo.DirectoryName;
+                var logFileDirectory = logFileInfo.DirectoryName;
 
-                if (logFileFolder == null)
+                if (logFileDirectory == null)
                 {
                     OnErrorEvent("Unable to determine the parent directory of the log file: " + logFileInfo.FullName);
                     return false;
                 }
 
-                checkFilePath = Path.Combine(logFileFolder, Path.GetFileNameWithoutExtension(parameterFilePath) + "_parentCheck.txt");
+                checkFilePath = Path.Combine(logFileDirectory, Path.GetFileNameWithoutExtension(parameterFilePath) + "_parentCheck.txt");
                 var checkFileInfo = new FileInfo(checkFilePath);
                 if (checkFileInfo.Exists)
                 {
@@ -1258,7 +1259,7 @@ namespace DMSUpdateManager
                 // Update the check file's date
                 TouchCheckFile(checkFilePath);
 
-                success = UpdateFolderCopyToParent(sourceFolder, targetFolderInfo);
+                success = UpdateDirectoryCopyToParent(sourceDirectory, targetDirectoryInfo);
 
                 // Update the check file's date one more itme
                 TouchCheckFile(checkFilePath);
@@ -1283,64 +1284,64 @@ namespace DMSUpdateManager
             }
         }
 
-        private bool UpdateFolderCopyToParent(DirectoryInfo sourceFolder, DirectoryContainer targetFolderInfo)
+        private bool UpdateDirectoryCopyToParent(DirectoryInfo sourceDirectory, DirectoryContainer targetDirectoryInfo)
         {
             var successOverall = true;
 
-            var parentFolder = targetFolderInfo.ParentPath;
-            if (parentFolder == null)
+            var parentDirectory = targetDirectoryInfo.ParentPath;
+            if (parentDirectory == null)
             {
-                OnWarningEvent("Unable to determine the parent directory of " + targetFolderInfo.DirectoryPath);
+                OnWarningEvent("Unable to determine the parent directory of " + targetDirectoryInfo.DirectoryPath);
                 return false;
             }
 
-            foreach (var sourceSubFolder in sourceFolder.GetDirectories())
+            foreach (var sourceSubdirectory in sourceDirectory.GetDirectories())
             {
 
                 // The target directory is treated as a subdirectory of the parent directory
-                var targetSubFolderPath = CombinePaths(targetFolderInfo, parentFolder, sourceSubFolder.Name);
+                var targetSubdirectoryPath = CombinePaths(targetDirectoryInfo, parentDirectory, sourceSubdirectory.Name);
 
                 // Initially assume we'll process this directory if it exists at the target
-                var targetSubFolder = targetFolderInfo.GetDirectoryInfo(targetSubFolderPath);
+                var targetSubdirectory = targetDirectoryInfo.GetDirectoryInfo(targetSubdirectoryPath);
 
-                var processSubfolder = targetSubFolder.Exists;
+                var processSubdirectory = targetSubdirectory.Exists;
 
-                if (processSubfolder && sourceSubFolder.GetFiles(DELETE_SUBDIR_FLAG).Length > 0)
+                if (processSubdirectory && sourceSubdirectory.GetFiles(DELETE_SUBDIR_FLAG).Length > 0)
                 {
-                    // Remove this subfolder (but only if it's empty)
-                    var folderDeleted = DeleteSubFolder(sourceSubFolder, targetFolderInfo, targetSubFolder, "parent subfolder", DELETE_SUBDIR_FLAG);
-                    if (folderDeleted)
-                        processSubfolder = false;
+                    // Remove this subDirectory (but only if it's empty)
+                    var directoryDeleted = DeleteSubdirectory(sourceSubdirectory, targetDirectoryInfo, targetSubdirectory, "parent subdirectory", DELETE_SUBDIR_FLAG);
+                    if (directoryDeleted)
+                        processSubdirectory = false;
                 }
 
-                if (sourceSubFolder.GetFiles(DELETE_AM_SUBDIR_FLAG).Length > 0)
+                if (sourceSubdirectory.GetFiles(DELETE_AM_SUBDIR_FLAG).Length > 0)
                 {
-                    // Remove this subfolder (but only if it's empty)
-                    var analysisMgrSubDirPath = CombinePaths(targetFolderInfo, targetFolderInfo.DirectoryPath, sourceSubFolder.Name);
-                    var analysisMgrSubDir = targetFolderInfo.GetDirectoryInfo(analysisMgrSubDirPath);
+                    // Remove this subdirectory (but only if it's empty)
+                    var analysisMgrSubDirPath = CombinePaths(targetDirectoryInfo, targetDirectoryInfo.DirectoryPath, sourceSubdirectory.Name);
+                    var analysisMgrSubDir = targetDirectoryInfo.GetDirectoryInfo(analysisMgrSubDirPath);
 
-                    var folderDeleted = DeleteSubFolder(sourceSubFolder, targetFolderInfo, analysisMgrSubDir, "subfolder", DELETE_AM_SUBDIR_FLAG);
-                    if (folderDeleted)
-                        processSubfolder = false;
+                    var directoryDeleted = DeleteSubdirectory(sourceSubdirectory, targetDirectoryInfo, analysisMgrSubDir, "subdirectory", DELETE_AM_SUBDIR_FLAG);
+                    if (directoryDeleted)
+                        processSubdirectory = false;
                 }
 
-                if (sourceSubFolder.GetFiles(PUSH_AM_SUBDIR_FLAG).Length > 0)
+                if (sourceSubdirectory.GetFiles(PUSH_AM_SUBDIR_FLAG).Length > 0)
                 {
                     // Push this directory as a subdirectory of the target directory, not as a subdirectory of the parent directory
-                    targetSubFolderPath = CombinePaths(targetFolderInfo, targetFolderInfo.DirectoryPath, sourceSubFolder.Name);
-                    processSubfolder = true;
+                    targetSubdirectoryPath = CombinePaths(targetDirectoryInfo, targetDirectoryInfo.DirectoryPath, sourceSubdirectory.Name);
+                    processSubdirectory = true;
                 }
                 else
                 {
-                    if (sourceSubFolder.GetFiles(PUSH_DIR_FLAG).Length > 0)
+                    if (sourceSubdirectory.GetFiles(PUSH_DIR_FLAG).Length > 0)
                     {
-                        processSubfolder = true;
+                        processSubdirectory = true;
                     }
                 }
 
-                if (processSubfolder)
+                if (processSubdirectory)
                 {
-                    var success = UpdateFolderWork(sourceSubFolder.FullName, targetFolderInfo, targetSubFolderPath, pushNewSubfolders: true);
+                    var success = UpdateDirectoryWork(sourceSubdirectory.FullName, targetDirectoryInfo, targetSubdirectoryPath, pushNewSubdirectories: true);
                     if (!success)
                         successOverall = false;
                 }
@@ -1349,55 +1350,55 @@ namespace DMSUpdateManager
             return successOverall;
         }
 
-        private bool DeleteSubFolder(
-            FileSystemInfo sourceSubFolder,
-            DirectoryContainer targetFolderInfo,
-            FileOrDirectoryInfo targetSubFolder,
-            string folderDescription,
+        private bool DeleteSubdirectory(
+            FileSystemInfo sourceSubdirectory,
+            DirectoryContainer targetDirectoryInfo,
+            FileOrDirectoryInfo targetSubdirectory,
+            string directoryDescription,
             string deleteFlag)
         {
-            if (string.IsNullOrWhiteSpace(folderDescription))
+            if (string.IsNullOrWhiteSpace(directoryDescription))
             {
-                folderDescription = "directory";
+                directoryDescription = "directory";
             }
 
-            if (!targetSubFolder.Exists)
+            if (!targetSubdirectory.Exists)
                 return false;
 
-            var fileCount = targetFolderInfo.GetFiles(targetSubFolder).Count;
-            var folders = targetFolderInfo.GetDirectories(targetSubFolder);
+            var fileCount = targetDirectoryInfo.GetFiles(targetSubdirectory).Count;
+            var directories = targetDirectoryInfo.GetDirectories(targetSubdirectory);
 
             if (fileCount > 0)
             {
                 ShowWarning(
                     "Folder flagged for deletion, but it is not empty (File Count = " + fileCount + "): " +
-                    AbbreviatePath(targetSubFolder.FullName));
+                    AbbreviatePath(targetSubdirectory.FullName));
                 return false;
             }
 
-            if (folders.Count > 0)
+            if (directories.Count > 0)
             {
                 // Check each sub directory for file _DeleteSubDir_.txt
-                foreach (var folder in folders)
+                foreach (var subDir in directories)
                 {
-                    var newSourceSubDir = new DirectoryInfo(Path.Combine(sourceSubFolder.FullName, folder.Name));
+                    var newSourceSubDir = new DirectoryInfo(Path.Combine(sourceSubdirectory.FullName, subDir.Name));
                     var deleteSubDirFile = new FileInfo(Path.Combine(newSourceSubDir.FullName, deleteFlag));
 
                     if (deleteSubDirFile.Exists)
                     {
                         // Recursively call this method
-                        DeleteSubFolder(newSourceSubDir, targetFolderInfo, folder, folderDescription, deleteFlag);
+                        DeleteSubdirectory(newSourceSubDir, targetDirectoryInfo, subDir, directoryDescription, deleteFlag);
                     }
                 }
 
                 // Refresh the subdirectories
-                var folderCount = targetFolderInfo.GetDirectories(targetSubFolder, true).Count;
+                var dirCount = targetDirectoryInfo.GetDirectories(targetSubdirectory, true).Count;
 
-                if (folderCount > 0)
+                if (dirCount > 0)
                 {
                     ShowWarning(
-                        "Directory flagged for deletion, but it is not empty (Directory Count = " + folderCount + "): " +
-                        AbbreviatePath(targetSubFolder.FullName));
+                        "Directory flagged for deletion, but it is not empty (Directory Count = " + dirCount + "): " +
+                        AbbreviatePath(targetSubdirectory.FullName));
                     return false;
                 }
             }
@@ -1406,39 +1407,46 @@ namespace DMSUpdateManager
             {
                 if (PreviewMode)
                 {
-                    ShowMessage("Preview " + folderDescription + " delete: " + targetSubFolder.FullName);
+                    ShowMessage("Preview " + directoryDescription + " delete: " + targetSubdirectory.FullName, false);
                 }
                 else
                 {
-                    targetFolderInfo.DeleteFileOrDirectory(targetSubFolder);
-                    ShowMessage("Deleted " + folderDescription + " " + targetSubFolder.FullName);
+                    targetDirectoryInfo.DeleteFileOrDirectory(targetSubdirectory);
+                    ShowMessage("Deleted " + directoryDescription + " " + targetSubdirectory.FullName);
                 }
 
                 return true;
             }
             catch (Exception ex)
             {
-                HandleException("Error removing empty " + folderDescription + " flagged with " + deleteFlag + " at " + targetSubFolder.FullName, ex);
+                HandleException("Error removing empty " + directoryDescription + " flagged with " + deleteFlag + " at " + targetSubdirectory.FullName, ex);
                 return false;
             }
 
         }
 
-        private bool UpdateFolderWork(string sourceFolderPath, DirectoryContainer targetFolderInfo, string targetFolderPath, bool pushNewSubfolders)
+        private bool UpdateDirectoryWork(
+            string sourceDirectoryPath,
+            DirectoryContainer targetDirectoryInfo,
+            FileOrDirectoryInfo targetDirectory,
+            bool pushNewSubdirectories)
         {
 
-            ShowMessage("Updating " + AbbreviatePath(targetFolderPath), false, eMessageType: eMessageTypeConstants.Debug);
-
-            var targetFolder = CreateDirectoryIfMissing(targetFolderInfo, targetFolderPath);
-            if (!targetFolder.Exists)
+            if (!targetDirectory.Exists && !PreviewMode)
+            {
+                ShowMessage("Skipping non-existent directory: " + AbbreviatePath(targetDirectory.FullName), false, eMessageType: eMessageTypeConstants.Debug);
                 return false;
+            }
+
+            ShowMessage("Updating " + AbbreviatePath(targetDirectory.FullName), false, eMessageType: eMessageTypeConstants.Debug);
+
 
             // Obtain a list of files in the source directory
-            var sourceFolder = new DirectoryInfo(sourceFolderPath);
+            var sourceDirectory = new DirectoryInfo(sourceDirectoryPath);
 
             var fileUpdateCount = 0;
 
-            var filesInSource = sourceFolder.GetFiles();
+            var filesInSource = sourceDirectory.GetFiles();
 
             // Populate a SortedSet with the names of any .delete files in fiFilesInSource
             var deleteFiles = new SortedSet<string>(StringComparer.InvariantCultureIgnoreCase);
@@ -1502,8 +1510,8 @@ namespace DMSUpdateManager
                             }
                             else
                             {
-                                if (!targetFolderInfo.TrackingRemoteHostDirectory &&
-                                    TargetFolderInUseByProcess(targetFolder.FullName, targetFileName, out fileUsageMessage))
+                                if (!targetDirectoryInfo.TrackingRemoteHostDirectory &&
+                                    TargetDirectoryInUseByProcess(targetDirectory.FullName, targetFileName, out fileUsageMessage))
                                 {
                                     // The directory is in use
                                     // Allow new files to be copied, but do not overwrite existing files
@@ -1515,7 +1523,7 @@ namespace DMSUpdateManager
                                 }
                             }
 
-                            ProcessRollbackFile(sourceFile, targetFolderInfo, targetFolderPath, ref fileUpdateCount, itemInUse, fileUsageMessage);
+                            ProcessRollbackFile(sourceFile, targetDirectoryInfo, targetDirectory.FullName, ref fileUpdateCount, itemInUse, fileUsageMessage);
                             break; // Break out of the while, continue the for loop
                         }
 
@@ -1525,7 +1533,7 @@ namespace DMSUpdateManager
                             // Do not copy this file
                             // However, do look for a corresponding file that does not have .delete and delete that file in the target directory
 
-                            ProcessDeleteFile(sourceFile, targetFolderInfo, targetFolderPath);
+                            ProcessDeleteFile(sourceFile, targetDirectoryInfo, targetDirectory.FullName);
                             break; // Break out of the while, continue the for loop
                         }
 
@@ -1553,7 +1561,7 @@ namespace DMSUpdateManager
                             eDateComparisonMode = eDateComparisonModeConstants.RetainNewerTargetIfDifferentSize;
                         }
 
-                        if (!targetFolderInfo.TrackingRemoteHostDirectory &&
+                        if (!targetDirectoryInfo.TrackingRemoteHostDirectory &&
                             checkJavaFiles.Contains(fileNameLCase))
                         {
                             if (JarFileInUseByJava(sourceFile, out fileUsageMessage))
@@ -1563,8 +1571,8 @@ namespace DMSUpdateManager
                         }
                         else
                         {
-                            if (!targetFolderInfo.TrackingRemoteHostDirectory &&
-                                TargetFolderInUseByProcess(targetFolder.FullName, sourceFile.Name, out fileUsageMessage))
+                            if (!targetDirectoryInfo.TrackingRemoteHostDirectory &&
+                                TargetDirectoryInUseByProcess(targetDirectory.FullName, sourceFile.Name, out fileUsageMessage))
                             {
                                 // The directory is in use
                                 // Allow new files to be copied, but do not overwrite existing files
@@ -1576,7 +1584,7 @@ namespace DMSUpdateManager
                             }
                         }
 
-                        CopyFileIfNeeded(sourceFile, targetFolderInfo, targetFolderPath, ref fileUpdateCount, eDateComparisonMode, itemInUse, fileUsageMessage);
+                        CopyFileIfNeeded(sourceFile, targetDirectoryInfo, targetDirectory.FullName, ref fileUpdateCount, eDateComparisonMode, itemInUse, fileUsageMessage);
 
                         // File processed; move on to the next file
                         break;
@@ -1604,7 +1612,7 @@ namespace DMSUpdateManager
                 if (fileUpdateCount > 1)
                     statusMessage += "s";
 
-                statusMessage += " using " + sourceFolder.FullName + "\\";
+                statusMessage += " using " + sourceDirectory.FullName + "\\";
 
                 ShowMessage(statusMessage);
             }
@@ -1612,27 +1620,27 @@ namespace DMSUpdateManager
             // Process each subdirectory in the source directory
             // If the directory exists at the target, copy it
             // Additionally, if the source directory contains file _PushDir_.txt, it gets copied even if it doesn't exist at the target
-            foreach (var sourceSubFolder in sourceFolder.GetDirectories())
+            foreach (var sourceSubdirectory in sourceDirectory.GetDirectories())
             {
-                var targetSubFolderPath = CombinePaths(targetFolderInfo, targetFolderPath, sourceSubFolder.Name);
-                var targetSubFolder = targetFolderInfo.GetDirectoryInfo(targetSubFolderPath);
+                var targetSubdirectoryPath = CombinePaths(targetDirectoryInfo, targetDirectory.FullName, sourceSubdirectory.Name);
+                var targetSubdirectory = targetDirectoryInfo.GetDirectoryInfo(targetSubdirectoryPath);
 
                 // Initially assume we'll process this directory if it exists at the target
-                var processSubfolder = targetSubFolder.Exists;
-                if (processSubfolder && sourceSubFolder.GetFiles(DELETE_SUBDIR_FLAG).Length > 0)
+                var processSubdirectory = targetSubdirectory.Exists;
+                if (processSubdirectory && sourceSubdirectory.GetFiles(DELETE_SUBDIR_FLAG).Length > 0)
                 {
-                    // Remove this subfolder (but only if it's empty)
-                    var folderDeleted = DeleteSubFolder(sourceSubFolder, targetFolderInfo, targetSubFolder, "subfolder", DELETE_SUBDIR_FLAG);
-                    if (folderDeleted)
-                        processSubfolder = false;
+                    // Remove this subdirectory (but only if it's empty)
+                    var directoryDeleted = DeleteSubdirectory(sourceSubdirectory, targetDirectoryInfo, targetSubdirectory, "subdirectory", DELETE_SUBDIR_FLAG);
+                    if (directoryDeleted)
+                        processSubdirectory = false;
                 }
 
-                if (pushNewSubfolders && sourceSubFolder.GetFiles(PUSH_DIR_FLAG).Length > 0)
+                if (pushNewSubdirectories && sourceSubdirectory.GetFiles(PUSH_DIR_FLAG).Length > 0)
                 {
-                    processSubfolder = true;
+                    processSubdirectory = true;
                 }
 
-                if (processSubfolder)
+                if (processSubdirectory)
                 {
                     UpdateFolderWork(sourceSubFolder.FullName, targetFolderInfo, targetSubFolder.FullName, pushNewSubfolders);
                 }
@@ -1742,19 +1750,19 @@ namespace DMSUpdateManager
             return commandLine.ToString();
         }
 
-        private bool TargetFolderInUseByProcess(string targetFolderPath, string targetFileName, out string folderUsageMessage)
+        private bool TargetDirectoryInUseByProcess(string targetDirectoryPath, string targetFileName, out string directoryUsageMessage)
         {
-            folderUsageMessage = string.Empty;
+            directoryUsageMessage = string.Empty;
 
-            if (string.IsNullOrWhiteSpace(targetFolderPath))
+            if (string.IsNullOrWhiteSpace(targetDirectoryPath))
             {
-                OnWarningEvent("Empty target directory path passed to TargetFolderInUseByProcess");
+                OnWarningEvent("Empty target directory path passed to TargetDirectoryInUseByProcess");
                 return false;
             }
 
             try
             {
-                var processCount = GetNumTargetFolderProcesses(targetFolderPath, out var firstProcessPath, out var firstProcessId);
+                var processCount = GetNumTargetDirectoryProcesses(targetDirectoryPath, out var firstProcessPath, out var firstProcessId);
 
                 if (processCount <= 0)
                 {
@@ -1765,7 +1773,7 @@ namespace DMSUpdateManager
                 // Skipping UIMFLibrary.dll because directory DeconTools is in use by process DeconConsole.exe (PID 343243)
                 // Skipping DeconConsole.exe because directory DeconTools is in use by 2 processes on this system, including DeconConsole.exe (PID 343243)
 
-                folderUsageMessage = "Skipping " + targetFileName + " because directory " + AbbreviatePath(targetFolderPath) + " is in use by ";
+                directoryUsageMessage = "Skipping " + targetFileName + " because directory " + AbbreviatePath(targetDirectoryPath) + " is in use by ";
 
                 string processPathToShow;
 
@@ -1784,11 +1792,11 @@ namespace DMSUpdateManager
                         return false;
                     }
 
-                    if (processFile.DirectoryName == targetFolderPath)
+                    if (processFile.DirectoryName == targetDirectoryPath)
                     {
                         processPathToShow = Path.GetFileName(firstProcessPath) + processIdAppend;
                     }
-                    else if (targetFolderPath.StartsWith(processFile.DirectoryName))
+                    else if (targetDirectoryPath.StartsWith(processFile.DirectoryName))
                     {
                         if (processFile.Directory?.Parent == null)
                         {
@@ -1817,18 +1825,18 @@ namespace DMSUpdateManager
 
                 if (processCount == 1)
                 {
-                    folderUsageMessage += "process " + processPathToShow;
+                    directoryUsageMessage += "process " + processPathToShow;
                 }
                 else
                 {
-                    folderUsageMessage += processCount + " processes on this system, including " + processPathToShow;
+                    directoryUsageMessage += processCount + " processes on this system, including " + processPathToShow;
                 }
 
                 return true;
             }
             catch (Exception ex)
             {
-                ShowErrorMessage("Error looking for processes using files in " + targetFolderPath + ": " + ex.Message);
+                ShowErrorMessage("Error looking for processes using files in " + targetDirectoryPath + ": " + ex.Message);
                 return false;
             }
 
@@ -1837,38 +1845,38 @@ namespace DMSUpdateManager
         /// <summary>
         /// Determine the number of processes using files in the given directory
         /// </summary>
-        /// <param name="targetFolderPath">Directory to examine</param>
+        /// <param name="targetDirectoryPath">Directory to examine</param>
         /// <param name="firstProcessPath">Output parameter: first process using files in this directory; empty string if no processes</param>
         /// <param name="firstProcessId">Output parameter: Process ID of first process using files in this directory</param>
         /// <returns>Count of processes using this directory</returns>
-        private int GetNumTargetFolderProcesses(string targetFolderPath, out string firstProcessPath, out uint firstProcessId)
+        private int GetNumTargetDirectoryProcesses(string targetDirectoryPath, out string firstProcessPath, out uint firstProcessId)
         {
             firstProcessPath = string.Empty;
             firstProcessId = 0;
 
             // Filter the queried results for each call to this method
 
-            var targetFolderPathHierarchy = ProcessInfo.GetFolderHierarchy(targetFolderPath);
+            var targetDirectoryPathHierarchy = ProcessInfo.GetDirectoryHierarchy(targetDirectoryPath);
 
-            if (string.Equals(targetFolderPath, mLastFolderProcessesChecked, StringComparison.InvariantCultureIgnoreCase))
+            if (string.Equals(targetDirectoryPath, mLastDirectoryProcessesChecked, StringComparison.InvariantCultureIgnoreCase))
             {
-                firstProcessPath = mLastFolderRunningProcessPath;
-                firstProcessId = mLastFolderRunningProcessId;
+                firstProcessPath = mLastDirectoryRunningProcessPath;
+                firstProcessId = mLastDirectoryRunningProcessId;
                 return mProcessesMatchingTarget.Count;
             }
 
             mProcessesMatchingTarget.Clear();
-            mLastFolderProcessesChecked = targetFolderPath;
-            mLastFolderRunningProcessPath = string.Empty;
-            mLastFolderRunningProcessId = 0;
+            mLastDirectoryProcessesChecked = targetDirectoryPath;
+            mLastDirectoryRunningProcessPath = string.Empty;
+            mLastDirectoryRunningProcessId = 0;
 
             // Look for running processes with a .exe in the target directory (or in a parent of the target directory)
             // Ignore cmd.exe
             foreach (var item in mProcessesDict)
             {
-                var exeFolderHierarchy = item.Value.FolderHierarchy;
+                var exeFolderHierarchy = item.Value.DirectoryHierarchy;
 
-                if (exeFolderHierarchy.Count > targetFolderPathHierarchy.Count)
+                if (exeFolderHierarchy.Count > targetDirectoryPathHierarchy.Count)
                 {
                     continue;
                 }
@@ -1876,7 +1884,7 @@ namespace DMSUpdateManager
                 var treesMatch = true;
                 for (var index = 0; index <= exeFolderHierarchy.Count - 1; index++)
                 {
-                    if (targetFolderPathHierarchy[index] != exeFolderHierarchy[index])
+                    if (targetDirectoryPathHierarchy[index] != exeFolderHierarchy[index])
                     {
                         treesMatch = false;
                         break;
@@ -1902,7 +1910,7 @@ namespace DMSUpdateManager
             // This can help check for .jar files that don't have a .checkjava flag file
             foreach (var item in mProcessesDict)
             {
-                if (item.Value.CommandLineArgs.IndexOf(targetFolderPath, StringComparison.InvariantCultureIgnoreCase) < 0)
+                if (item.Value.CommandLineArgs.IndexOf(targetDirectoryPath, StringComparison.InvariantCultureIgnoreCase) < 0)
                 {
                     continue;
                 }
@@ -1924,45 +1932,45 @@ namespace DMSUpdateManager
 
             if (mProcessesMatchingTarget.Count > 0)
             {
-                mLastFolderRunningProcessPath = firstProcessPath;
-                mLastFolderRunningProcessId = firstProcessId;
+                mLastDirectoryRunningProcessPath = firstProcessPath;
+                mLastDirectoryRunningProcessId = firstProcessId;
             }
 
             return mProcessesMatchingTarget.Count;
         }
 
-        private void ProcessDeleteFile(FileSystemInfo deleteFile, DirectoryContainer targetFolderInfo, string targetFolderPath)
+        private void ProcessDeleteFile(FileSystemInfo deleteFile, DirectoryContainer targetDirectoryInfo, string targetDirectoryPath)
         {
-            var targetFilePath = CombinePaths(targetFolderInfo, targetFolderPath, TrimSuffix(deleteFile.Name, DELETE_SUFFIX));
+            var targetFilePath = CombinePaths(targetDirectoryInfo, targetDirectoryPath, TrimSuffix(deleteFile.Name, DELETE_SUFFIX));
 
-            var targetFile = targetFolderInfo.GetFileInfo(targetFilePath);
+            var targetFile = targetDirectoryInfo.GetFileInfo(targetFilePath);
 
             if (targetFile.Exists)
             {
                 if (PreviewMode)
                 {
-                    ShowMessage("Preview delete: " + targetFile.FullName);
+                    ShowMessage("Preview delete: " + targetFile.FullName, false);
                 }
                 else
                 {
-                    targetFolderInfo.DeleteFileOrDirectory(targetFile);
+                    targetDirectoryInfo.DeleteFileOrDirectory(targetFile);
                     ShowMessage("Deleted file " + targetFile.FullName);
                 }
             }
 
             // Make sure the .delete file is also not in the target directory
-            var targetDeleteFilePath = CombinePaths(targetFolderInfo, targetFolderPath, deleteFile.Name);
-            var targetDeleteFile = targetFolderInfo.GetFileInfo(targetDeleteFilePath);
+            var targetDeleteFilePath = CombinePaths(targetDirectoryInfo, targetDirectoryPath, deleteFile.Name);
+            var targetDeleteFile = targetDirectoryInfo.GetFileInfo(targetDeleteFilePath);
 
             if (targetDeleteFile.Exists)
             {
                 if (PreviewMode)
                 {
-                    ShowMessage("Preview delete: " + targetDeleteFile.FullName);
+                    ShowMessage("Preview delete: " + targetDeleteFile.FullName, false);
                 }
                 else
                 {
-                    targetFolderInfo.DeleteFileOrDirectory(targetDeleteFile);
+                    targetDirectoryInfo.DeleteFileOrDirectory(targetDeleteFile);
                     ShowMessage("Deleted file " + targetDeleteFile.FullName);
                 }
             }
@@ -1972,15 +1980,15 @@ namespace DMSUpdateManager
         /// Rollback the target file if it differs from the source
         /// </summary>
         /// <param name="rollbackFile">Rollback file path</param>
-        /// <param name="targetFolderInfo">Target directory info</param>
-        /// <param name="targetFolderPath">Target directory path</param>
+        /// <param name="targetDirectoryInfo">Target directory info</param>
+        /// <param name="targetDirectoryPath">Target directory path</param>
         /// <param name="fileUpdateCount">Number of files that have been updated (Input/output)</param>
         /// <param name="itemInUse">Used to track when a file or directory is in use by another process (log a message if the source and target files differ)</param>
         /// <param name="fileUsageMessage">Message to log when the file (or directory) is in use and the source and targets differ</param>
         private void ProcessRollbackFile(
             FileSystemInfo rollbackFile,
-            DirectoryContainer targetFolderInfo,
-            string targetFolderPath,
+            DirectoryContainer targetDirectoryInfo,
+            string targetDirectoryPath,
             ref int fileUpdateCount,
             eItemInUseConstants itemInUse = eItemInUseConstants.NotInUse,
             string fileUsageMessage = "")
@@ -1992,7 +2000,7 @@ namespace DMSUpdateManager
 
             if (sourceFile.Exists)
             {
-                var copied = CopyFileIfNeeded(sourceFile, targetFolderInfo, targetFolderPath, ref fileUpdateCount, eDateComparisonModeConstants.CopyIfSizeOrDateDiffers, itemInUse, fileUsageMessage);
+                var copied = CopyFileIfNeeded(sourceFile, targetDirectoryInfo, targetDirectoryPath, ref fileUpdateCount, eDateComparisonModeConstants.CopyIfSizeOrDateDiffers, itemInUse, fileUsageMessage);
                 if (copied)
                 {
                     string prefix;
