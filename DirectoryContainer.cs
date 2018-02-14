@@ -400,7 +400,7 @@ namespace DMSUpdateManager
                 fileOrDirectoryPath = fileOrDirectoryPath.Substring(0, fileOrDirectoryPath.Length - 1);
 
             var lastSlash = fileOrDirectoryPath.LastIndexOf('/');
-            var remoteDirectory = lastSlash < 1 ? "/" : fileOrDirectoryPath.Substring(lastSlash);
+            var remoteDirectory = lastSlash < 1 ? "/" : fileOrDirectoryPath.Substring(0, lastSlash);
             return remoteDirectory;
 
         }
