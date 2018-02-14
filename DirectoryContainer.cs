@@ -96,6 +96,11 @@ namespace DMSUpdateManager
                 ParentPath = GetRemoteDirectoryParent(DirectoryPath);
 
                 mSftpClient = mUpdateUtility.ConnectToRemoteHost();
+                if (!mSftpClient.IsConnected)
+                {
+                    throw new Exception(string.Format("Unable to connect to remote host {0} as user {1}; unknown error",
+                                                      RemoteHostInfo.HostName, RemoteHostInfo.Username));
+                }
             }
             else
             {
