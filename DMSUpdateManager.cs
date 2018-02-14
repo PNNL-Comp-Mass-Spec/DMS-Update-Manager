@@ -1171,7 +1171,8 @@ namespace DMSUpdateManager
 
             ResetProgress();
 
-            var success = UpdateDirectoryWork(sourceDirectory.FullName, targetDirectoryInfo, targetDirectoryInfo.DirectoryPath, pushNewSubdirectories: false);
+            var targetDirectory = targetDirectoryInfo.GetDirectoryInfo(targetDirectoryInfo.DirectoryPath);
+            var success = UpdateDirectoryWork(sourceDirectory.FullName, targetDirectoryInfo, targetDirectory, pushNewSubdirectories: false);
 
             if (!CopySubdirectoriesToParentDirectory || doNotUpdateParent)
                 return success;
@@ -1339,7 +1340,8 @@ namespace DMSUpdateManager
 
                 if (processSubdirectory)
                 {
-                    var success = UpdateDirectoryWork(sourceSubdirectory.FullName, targetDirectoryInfo, targetSubdirectoryPath, pushNewSubdirectories: true);
+                    var verifiedSubdirectory = CreateDirectoryIfMissing(targetDirectoryInfo, targetSubdirectoryPath);
+                    var success = UpdateDirectoryWork(sourceSubdirectory.FullName, targetDirectoryInfo, verifiedSubdirectory, pushNewSubdirectories: true);
                     if (!success)
                         successOverall = false;
                 }
@@ -1640,7 +1642,8 @@ namespace DMSUpdateManager
 
                 if (processSubdirectory)
                 {
-                    UpdateFolderWork(sourceSubFolder.FullName, targetFolderInfo, targetSubFolder.FullName, pushNewSubfolders);
+                    var verifiedSubdirectory = CreateDirectoryIfMissing(targetDirectoryInfo, targetSubdirectory.FullName);
+                    UpdateDirectoryWork(sourceSubdirectory.FullName, targetDirectoryInfo, verifiedSubdirectory, pushNewSubdirectories);
                 }
             }
 
