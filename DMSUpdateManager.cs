@@ -331,7 +331,7 @@ namespace DMSUpdateManager
 
             if (PreviewMode)
             {
-                ShowOldAndNewFileInfo("Preview: Update file: ", targetFile, existingFileInfo, updatedFileInfo, copyReason, true);
+                ShowOldAndNewFileInfo("Preview: Update file: ", targetFile, existingFileInfo, updatedFileInfo, copyReason, false);
             }
             else
             {
@@ -484,17 +484,17 @@ namespace DMSUpdateManager
                         if (itemInUse == eItemInUseConstants.DirectoryInUse)
                         {
                             ShowMessage("Skipping " + sourceFile.Name + " because directory " +
-                                        AbbreviatePath(targetFile.DirectoryName) + " is in use (by an unknown process)");
+                                        AbbreviatePath(targetFile.DirectoryName) + " is in use (by an unknown process)", !PreviewMode);
                         }
                         else
                         {
                             ShowMessage("Skipping " + sourceFile.Name + " in directory " +
-                                        AbbreviatePath(targetFile.DirectoryName) + " because currently in use (by an unknown process)");
+                                        AbbreviatePath(targetFile.DirectoryName) + " because currently in use (by an unknown process)", !PreviewMode);
                         }
                     }
                     else
                     {
-                        ShowMessage(fileUsageMessage);
+                        ShowMessage(fileUsageMessage, !PreviewMode);
                     }
 
                     return false;
@@ -861,9 +861,9 @@ namespace DMSUpdateManager
 
             if (targetFile.Exists)
             {
-                ShowMessage(spacePad + existingFileInfo);
+                ShowMessage(spacePad + existingFileInfo, logToFile);
             }
-            ShowMessage(spacePad + updatedFileInfo);
+            ShowMessage(spacePad + updatedFileInfo, logToFile);
         }
 
         /// <summary>
@@ -1023,6 +1023,9 @@ namespace DMSUpdateManager
                     return false;
                 }
 
+                var msg = string.Format("Updating files on remote host {0}; connecting as user {1}", targetHostInfo.HostName, targetHostInfo.Username);
+                ShowMessage(msg, false);
+
                 // Note that CleanupFilePaths() will update mOutputDirectoryPath, which is used by LogMessage()
                 // Since we're updating a files on a remote host, use the entry assembly's path for parameter inputFolderPath of CleanupFolderPaths
                 var appFolderPath = GetAppFolderPath();
@@ -1155,6 +1158,7 @@ namespace DMSUpdateManager
             if (targetDirectoryInfo.TrackingRemoteHostDirectory)
             {
                 mTargetDirectoryPathBase = targetDirectoryInfo.ParentPath;
+                Console.WriteLine();
             }
             else
             {
@@ -1233,8 +1237,8 @@ namespace DMSUpdateManager
 
                         if (ForceUpdate)
                         {
-                            OnStatusEvent(
-                                string.Format("Last update ran {0:N0} seconds ago; forcing update due to /Force switch", lastUpdateSeconds));
+                            var msg = string.Format("Last update ran {0:N0} seconds ago; forcing update due to /Force switch", lastUpdateSeconds);
+                            ShowMessage(msg, false);
                             Console.WriteLine();
                         }
                         else
@@ -2004,18 +2008,12 @@ namespace DMSUpdateManager
                 var copied = CopyFileIfNeeded(sourceFile, targetDirectoryInfo, targetDirectoryPath, ref fileUpdateCount, eDateComparisonModeConstants.CopyIfSizeOrDateDiffers, itemInUse, fileUsageMessage);
                 if (copied)
                 {
-                    string prefix;
+                    var prefix = PreviewMode ? "Preview rollback of file " : "Rolled back file ";
 
-                    if (PreviewMode)
-                    {
-                        prefix = "Preview rollback of file ";
-                    }
-                    else
-                    {
-                        prefix = "Rolled back file ";
-                    }
+                    var msg = string.Format("{0} {1} to version from {2} with size {3:0.0} KB",
+                                            prefix, sourceFile.Name, sourceFile.LastWriteTime, sourceFile.Length / 1024.0);
 
-                    ShowMessage(prefix + sourceFile.Name + " to version from " + sourceFile.LastWriteTimeUtc.ToLocalTime() + " with size " + (sourceFile.Length / 1024.0).ToString("0.0") + " KB");
+                    ShowMessage(msg, !PreviewMode);
                 }
             }
             else
