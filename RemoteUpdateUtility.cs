@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using PRISM;
 using Renci.SshNet;
+using Renci.SshNet.Common;
 using Renci.SshNet.Sftp;
 
 namespace DMSUpdateManager
@@ -359,8 +360,19 @@ namespace DMSUpdateManager
                 throw new ArgumentException("Remote directory path cannot be empty", nameof(remoteDirectoryPath));
             }
 
-            var filesAndFolders = sftp.ListDirectory(remoteDirectoryPath);
             var subdirectoryPaths = new List<string>();
+
+            List<SftpFile> filesAndFolders;
+
+            try
+            {
+                filesAndFolders = sftp.ListDirectory(remoteDirectoryPath).ToList();
+            }
+            catch (SftpPathNotFoundException)
+            {
+                OnDebugEvent("Directory does not exist: " + remoteDirectoryPath);
+                return;
+            }
 
             foreach (var item in filesAndFolders)
             {
