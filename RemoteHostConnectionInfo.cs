@@ -102,5 +102,14 @@ namespace DMSUpdateManager
             errorMessage = string.Empty;
             return true;
         }
+
+        /// <summary>
+        /// Host name and user name
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return string.IsNullOrWhiteSpace(HostName) ? "Host not defined" : string.Format("Host {0}, user {1}", HostName, Username);
+        }
     }
 }

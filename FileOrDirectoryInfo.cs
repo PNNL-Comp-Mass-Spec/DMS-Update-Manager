@@ -214,5 +214,13 @@ namespace DMSUpdateManager
             }
         }
 
+        /// <summary>
+        /// File or directory path
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return FullName;
+        }
     }
 }

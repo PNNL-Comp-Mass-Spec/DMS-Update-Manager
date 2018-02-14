@@ -414,5 +414,14 @@ namespace DMSUpdateManager
             }
         }
 
+        /// <summary>
+        /// Target directory path
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return DirectoryPath;
+        }
+
     }
 }
