@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using PRISM;
 using PRISM.FileProcessor;
+using Renci.SshNet.Common;
 
 namespace DMSUpdateManager
 {
@@ -29,7 +30,7 @@ namespace DMSUpdateManager
         /// </summary>
         public DMSUpdateManager()
         {
-            mFileDate = "February 12, 2018";
+            mFileDate = "February 13, 2018";
 
             mFilesToIgnore = new SortedSet<string>(StringComparer.InvariantCultureIgnoreCase);
             mProcessesDict = new Dictionary<uint, ProcessInfo>();
@@ -112,6 +113,8 @@ namespace DMSUpdateManager
         #region "Classwide Variables"
 
         private bool mProcessesShown;
+
+        private bool mRemoteHostInfoDefined;
 
         /// <summary>
         /// Source directory path
@@ -207,6 +210,11 @@ namespace DMSUpdateManager
         /// When true, then messages will be displayed and logged showing the files that would be copied
         /// </summary>
         public bool PreviewMode { get; set; }
+
+        /// <summary>
+        /// Connection info for uploading files to a remote linux host
+        /// </summary>
+        public RemoteHostConnectionInfo RemoteHostInfo { get; set; }
 
         /// <summary>
         /// Source directory path
@@ -539,6 +547,9 @@ namespace DMSUpdateManager
             mSourceFolderPath = string.Empty;
             mTargetFolderPath = string.Empty;
 
+            RemoteHostInfo = new RemoteHostConnectionInfo();
+            mRemoteHostInfoDefined = false;
+
             mFilesToIgnore.Clear();
             mFilesToIgnore.Add(PUSH_DIR_FLAG);
             mFilesToIgnore.Add(PUSH_AM_SUBDIR_FLAG);
@@ -749,6 +760,18 @@ namespace DMSUpdateManager
 
                     mSourceFolderPath = settingsFile.GetParam(OPTIONS_SECTION, "SourceFolderPath", mSourceFolderPath);
                     mTargetFolderPath = settingsFile.GetParam(OPTIONS_SECTION, "TargetFolderPath", mTargetFolderPath);
+
+                    RemoteHostInfo.HostName = settingsFile.GetParam(OPTIONS_SECTION, "RemoteHostName", RemoteHostInfo.HostName);
+                    RemoteHostInfo.Username = settingsFile.GetParam(OPTIONS_SECTION, "RemoteHostUserName", RemoteHostInfo.Username);
+                    RemoteHostInfo.PrivateKeyFile = settingsFile.GetParam(OPTIONS_SECTION, "PrivateKeyFilePath", RemoteHostInfo.PrivateKeyFile);
+                    RemoteHostInfo.PassphraseFile = settingsFile.GetParam(OPTIONS_SECTION, "PassphraseFilePath", RemoteHostInfo.PassphraseFile);
+
+                    if (!string.IsNullOrWhiteSpace(RemoteHostInfo.HostName) ||
+                        !string.IsNullOrWhiteSpace(RemoteHostInfo.HostName))
+                    {
+                        RemoteHostInfo.DestinationPath = mTargetFolderPath;
+                        mRemoteHostInfoDefined = true;
+                    }
 
                     mMutexNameSuffix = settingsFile.GetParam(OPTIONS_SECTION, "MutexNameSuffix", string.Empty);
 
