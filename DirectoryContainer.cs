@@ -267,24 +267,21 @@ namespace DMSUpdateManager
         {
             var subDirectories = new List<FileOrDirectoryInfo>();
 
-            if (TrackingRemoteHostDirectory)
-            {
-                var remoteDirectory = GetDirectoryInfo(directoryPath.FullName, refreshRemoteData);
-                if (!remoteDirectory.Exists || !RemoteHostDirectories.TryGetValue(directoryPath.FullName, out var remoteDirectoryInfo))
-                    return subDirectories;
-
-                foreach (var item in remoteDirectoryInfo)
-                {
-                    subDirectories.Add(new FileOrDirectoryInfo(item));
-                }
-            }
-            else
+            if (!TrackingRemoteHostDirectory)
             {
                 var dirInfo = new DirectoryInfo(directoryPath.FullName);
-                foreach (var item in dirInfo.GetDirectories())
-                {
-                    subDirectories.Add(new FileOrDirectoryInfo(item));
-                }
+                subDirectories.AddRange(dirInfo.GetDirectories().Select(item => new FileOrDirectoryInfo(item)));
+
+                return subDirectories;
+            }
+
+            var remoteDirectory = GetDirectoryInfo(directoryPath.FullName, refreshRemoteData);
+            if (!remoteDirectory.Exists || !RemoteHostDirectories.TryGetValue(directoryPath.FullName, out var remoteDirectoryInfo))
+                return subDirectories;
+
+            foreach (var item in remoteDirectoryInfo)
+            {
+                subDirectories.Add(new FileOrDirectoryInfo(item));
             }
 
             return subDirectories;
@@ -332,24 +329,21 @@ namespace DMSUpdateManager
         {
             var files = new List<FileOrDirectoryInfo>();
 
-            if (TrackingRemoteHostDirectory)
-            {
-                var remoteDirectory = GetDirectoryInfo(directoryPath.FullName, refreshRemoteData);
-                if (!remoteDirectory.Exists || !RemoteHostFiles.TryGetValue(directoryPath.FullName, out var remoteDirectoryInfo))
-                    return files;
-
-                foreach (var item in remoteDirectoryInfo)
-                {
-                    files.Add(new FileOrDirectoryInfo(item));
-                }
-            }
-            else
+            if (!TrackingRemoteHostDirectory)
             {
                 var dirInfo = new DirectoryInfo(directoryPath.FullName);
-                foreach (var item in dirInfo.GetFiles())
-                {
-                    files.Add(new FileOrDirectoryInfo(item));
-                }
+                files.AddRange(dirInfo.GetFiles().Select(item => new FileOrDirectoryInfo(item)));
+
+                return files;
+            }
+
+            var remoteDirectory = GetDirectoryInfo(directoryPath.FullName, refreshRemoteData);
+            if (!remoteDirectory.Exists || !RemoteHostFiles.TryGetValue(directoryPath.FullName, out var remoteDirectoryInfo))
+                return files;
+
+            foreach (var item in remoteDirectoryInfo)
+            {
+                files.Add(new FileOrDirectoryInfo(item));
             }
 
             return files;

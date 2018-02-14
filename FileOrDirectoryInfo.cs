@@ -12,32 +12,14 @@ namespace DMSUpdateManager
         #region "Properties"
 
         /// <summary>
+        /// Full path of the parent directory
+        /// </summary>
+        public string DirectoryName { get; }
+
+        /// <summary>
         /// True if the file or directory exists
         /// </summary>
         public bool Exists { get; set; }
-
-        /// <summary>
-        /// Last write time of the file
-        /// DateTime.Now if a directory
-        /// </summary>
-        public DateTime LastWriteTime { get; set; }
-
-        /// <summary>
-        /// Last write time of the directory
-        /// DateTime.Now if a directory
-        /// </summary>
-        public DateTime LastWriteTimeUtc { get; set; }
-
-        /// <summary>
-        /// File size, in bytes
-        /// 0 if a directory
-        /// </summary>
-        public long Length { get; set; }
-
-        /// <summary>
-        /// True if a Linux file or directory
-        /// </summary>
-        private bool LinuxPath { get; }
 
         /// <summary>
         /// Full path to the file or directory
@@ -77,15 +59,34 @@ namespace DMSUpdateManager
         /// </summary>
         public bool IsDirectory { get; }
 
+
+        /// <summary>
+        /// Last write time of the file
+        /// DateTime.Now if a directory
+        /// </summary>
+        public DateTime LastWriteTime { get; set; }
+
+        /// <summary>
+        /// Last write time of the directory
+        /// DateTime.Now if a directory
+        /// </summary>
+        public DateTime LastWriteTimeUtc { get; set; }
+
+        /// <summary>
+        /// File size, in bytes
+        /// 0 if a directory
+        /// </summary>
+        public long Length { get; set; }
+
+        /// <summary>
+        /// True if a Linux file or directory
+        /// </summary>
+        private bool LinuxPath { get; }
+
         /// <summary>
         /// Name of the file or directory
         /// </summary>
         public string Name { get; }
-
-        /// <summary>
-        /// Full path of the parent directory
-        /// </summary>
-        public string DirectoryName { get; }
 
         #endregion
 
