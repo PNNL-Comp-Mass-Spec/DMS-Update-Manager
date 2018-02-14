@@ -191,6 +191,35 @@ namespace DMSUpdateManager
             return new FileOrDirectoryInfo(copiedFile);
         }
 
+        /// <summary>
+        /// Check whether the directory exists; create it if missing
+        /// </summary>
+        /// <param name="directoryPath"></param>
+        /// <returns>Instance of FileOrDirectoryInfo for the directory</returns>
+        public FileOrDirectoryInfo CreateDirectoryIfMissing(string directoryPath)
+        {
+
+            if (!TrackingRemoteHostDirectory)
+            {
+
+                var dirInfo = new DirectoryInfo(directoryPath);
+                if (!dirInfo.Exists)
+                {
+                    dirInfo.Create();
+                    dirInfo.Refresh();
+                }
+
+                return new FileOrDirectoryInfo(dirInfo);
+            }
+
+            var remoteDirectory = GetDirectoryInfo(directoryPath);
+            if (remoteDirectory.Exists)
+                return remoteDirectory;
+
+            mSftpClient.CreateDirectory(directoryPath);
+            var newDirectory = GetDirectoryInfo(directoryPath, true);
+            return newDirectory;
+        }
         public void DeleteFileOrDirectory(FileOrDirectoryInfo fileOrDirectory)
         {
             if (!TrackingRemoteHostDirectory)

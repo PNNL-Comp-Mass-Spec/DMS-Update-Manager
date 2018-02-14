@@ -486,6 +486,40 @@ namespace DMSUpdateManager
             return true;
         }
 
+        private FileOrDirectoryInfo CreateDirectoryIfMissing(DirectoryContainer targetFolderInfo, string directoryPath)
+        {
+
+            var currentTask = "validating";
+
+            try
+            {
+                // Make sure the target directory exists
+                var targetDirectory = targetFolderInfo.GetDirectoryInfo(directoryPath);
+
+                if (targetDirectory.Exists)
+                    return targetDirectory;
+
+                currentTask = "creating";
+                var newDirectory = targetFolderInfo.CreateDirectoryIfMissing(directoryPath);
+                return newDirectory;
+            }
+            catch (Exception ex)
+            {
+                ShowErrorMessage(string.Format("Error {0} directory {1}: {2}", currentTask, directoryPath, ex.Message));
+                ConsoleMsgUtils.ShowWarning(clsStackTraceFormatter.GetExceptionStackTraceMultiLine(ex));
+
+                var missingDirectory = new FileOrDirectoryInfo(
+                    directoryPath,
+                    exists: false,
+                    lastWrite: DateTime.MinValue,
+                    lastWriteUtc: DateTime.MinValue,
+                    linuxDirectory: targetFolderInfo.TrackingRemoteHostDirectory);
+
+                return missingDirectory;
+
+            }
+        }
+       
         private void InitializeLocalVariables()
         {
             ReThrowEvents = false;
@@ -1295,20 +1329,9 @@ namespace DMSUpdateManager
 
             ShowMessage("Updating " + AbbreviatePath(targetFolderPath), false, eMessageType: eMessageTypeConstants.Debug);
 
-            DirectoryInfo targetFolder;
-            if (!targetFolderInfo.TrackingRemoteHostDirectory)
-            {
-                // Make sure the target directory exists
-                targetFolder = new DirectoryInfo(targetFolderPath);
-                if (!targetFolder.Exists)
-                {
-                    targetFolder.Create();
-                }
-            }
-            else
-            {
-                targetFolder = null;
-            }
+            var targetFolder = CreateDirectoryIfMissing(targetFolderInfo, targetFolderPath);
+            if (!targetFolder.Exists)
+                return false;
 
             // Obtain a list of files in the source directory
             var sourceFolder = new DirectoryInfo(sourceFolderPath);
