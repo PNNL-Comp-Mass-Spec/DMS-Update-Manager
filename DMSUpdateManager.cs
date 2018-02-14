@@ -347,7 +347,7 @@ namespace DMSUpdateManager
                     {
                         ShowErrorMessage("Copy of " + sourceFile.Name + " failed; sizes differ");
                     }
-                    else if (copiedFile.LastWriteTimeUtc != sourceFile.LastWriteTimeUtc)
+                    else if (!TimesMatch(copiedFile.LastWriteTimeUtc, sourceFile.LastWriteTimeUtc))
                     {
                         ShowErrorMessage("Copy of " + sourceFile.Name + " failed; modification times differ");
                     }
@@ -356,9 +356,22 @@ namespace DMSUpdateManager
                         fileUpdateCount += 1;
                     }
                 }
+                catch (SftpPermissionDeniedException ex)
+                {
+                    ShowErrorMessage(string.Format("Error copying {0} to {1}: {2} for user {3}",
+                                                   sourceFile.Name, targetFile.FullName, ex.Message, RemoteHostInfo.Username));
+                }
                 catch (Exception ex)
                 {
-                    ShowErrorMessage("Error copying " + sourceFile.Name + ": " + ex.Message);
+                    string msg;
+                    if (targetFolderInfo.TrackingRemoteHostDirectory)
+                        msg = string.Format("Error copying {0} to {1}: {2} for user {3}",
+                                            sourceFile.Name, targetFile.FullName, ex.Message, RemoteHostInfo.Username);
+                    else
+                        msg = string.Format("Error copying {0} to {1}: {2}",
+                                            sourceFile.Name, targetFile.FullName, ex.Message);
+
+                    ShowErrorMessage(msg);
                 }
             }
         }
@@ -407,7 +420,7 @@ namespace DMSUpdateManager
                         needToCopy = true;
                         copyReason = "sizes are different";
                     }
-                    else if (sourceFile.LastWriteTimeUtc != targetFile.LastWriteTimeUtc)
+                    else if (!TimesMatch(sourceFile.LastWriteTimeUtc, targetFile.LastWriteTimeUtc))
                     {
                         needToCopy = true;
                         copyReason = "dates are different";
@@ -420,7 +433,7 @@ namespace DMSUpdateManager
                         needToCopy = true;
                         copyReason = "sizes are different";
                     }
-                    else if (sourceFile.LastWriteTimeUtc > targetFile.LastWriteTimeUtc)
+                    else if (TimeIsNewer(sourceFile.LastWriteTimeUtc, targetFile.LastWriteTimeUtc))
                     {
                         needToCopy = true;
                         copyReason = "source file is newer";
@@ -428,7 +441,7 @@ namespace DMSUpdateManager
 
                     if (needToCopy && eDateComparisonMode == eDateComparisonModeConstants.RetainNewerTargetIfDifferentSize)
                     {
-                        if (targetFile.LastWriteTimeUtc > sourceFile.LastWriteTimeUtc)
+                        if (TimeIsNewer(targetFile.LastWriteTimeUtc, sourceFile.LastWriteTimeUtc))
                         {
                             // Target file is newer than the source; do not overwrite
 
@@ -857,6 +870,32 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
+        /// Compare two DateTime values, returning true if the first value is newer than the second, with the given tolerance
+        /// </summary>
+        /// <param name="time1"></param>
+        /// <param name="time2"></param>
+        /// <param name="toleranceMilliseconds"></param>
+        /// <returns>True if time1 is newer than time2, within the given tolerance</returns>
+        private bool TimeIsNewer(DateTime time1, DateTime time2, int toleranceMilliseconds = 1000)
+        {
+            var timeDiffMilliseconds = time1.Subtract(time2).TotalMilliseconds;
+            return timeDiffMilliseconds > toleranceMilliseconds;
+        }
+
+        /// <summary>
+        /// Compare two DateTime values, returning true if the times are the same, with the given tolerance
+        /// </summary>
+        /// <param name="time1"></param>
+        /// <param name="time2"></param>
+        /// <param name="toleranceMilliseconds"></param>
+        /// <returns>True if time1 equals time2, within the given tolerance</returns>
+        private bool TimesMatch(DateTime time1, DateTime time2, int toleranceMilliseconds = 1000)
+        {
+            var timeDiffMilliseconds = time1.Subtract(time2).TotalMilliseconds;
+            return Math.Abs(timeDiffMilliseconds) <= toleranceMilliseconds;
+        }
+
+        /// <summary>
         /// Update files in directory targetFolderPath
         /// </summary>
         /// <param name="targetFolderPath">Target directory to update</param>
@@ -887,6 +926,11 @@ namespace DMSUpdateManager
 
             try
             {
+                if (mRemoteHostInfoDefined)
+                {
+                    return UpdateRemoteHostWork(RemoteHostInfo, parameterFilePath);
+                }
+
                 targetFolderPath = string.Copy(mTargetFolderPath);
 
                 if (string.IsNullOrEmpty(mSourceFolderPath))
@@ -916,10 +960,10 @@ namespace DMSUpdateManager
 
                 if (DoNotUseMutex)
                 {
-                    return UpdateFolderRun(targetFolderInfo, parameterFilePath);
+                    return UpdateFolderRun(mSourceFolderPath, targetFolderInfo, parameterFilePath);
                 }
 
-                return UpdateFolderMutexWrapped(targetFolderInfo, parameterFilePath);
+                return UpdateFolderMutexWrapped(mSourceFolderPath, targetFolderInfo, parameterFilePath);
             }
             catch (Exception ex)
             {
@@ -931,9 +975,9 @@ namespace DMSUpdateManager
         /// <summary>
         /// Update files on a remote Linux host
         /// </summary>
-        /// <param name="targetHostInfo"></param>
-        /// <param name="parameterFilePath"></param>
-        /// <returns></returns>
+        /// <param name="targetHostInfo">Target host info</param>
+        /// <param name="parameterFilePath">Parameter file defining the source directory path and other options</param>
+        /// <returns>True if success, false if an error</returns>
         public bool UpdateRemoteHost(RemoteHostConnectionInfo targetHostInfo, string parameterFilePath)
         {
             SetLocalErrorCode(eDMSUpdateManagerErrorCodes.NoError);
@@ -948,6 +992,22 @@ namespace DMSUpdateManager
                 }
                 return false;
             }
+
+            return UpdateRemoteHostWork(RemoteHostInfo, parameterFilePath);
+        }
+
+        /// <summary>
+        /// Update files on a remote Linux host
+        /// </summary>
+        /// <param name="targetHostInfo">Target host info</param>
+        /// <param name="parameterFilePath">Parameter file path</param>
+        /// <returns>True if success, false if an error</returns>
+        /// <remarks>
+        /// Parameter file path is used to determine the checkfile path, which is used to asssure
+        /// that a minimum amount of time elapses between sequential runs of the DMS Update Manager
+        /// </remarks>
+        private bool UpdateRemoteHostWork(RemoteHostConnectionInfo targetHostInfo, string parameterFilePath)
+        {
 
             try
             {
@@ -980,10 +1040,10 @@ namespace DMSUpdateManager
 
                 if (DoNotUseMutex)
                 {
-                    return UpdateFolderRun(targetFolderInfo, parameterFilePath);
+                    return UpdateFolderRun(mSourceFolderPath, targetFolderInfo, parameterFilePath);
                 }
 
-                return UpdateFolderMutexWrapped(targetFolderInfo, parameterFilePath);
+                return UpdateFolderMutexWrapped(mSourceFolderPath, targetFolderInfo, parameterFilePath);
             }
             catch (Exception ex)
             {
@@ -995,10 +1055,11 @@ namespace DMSUpdateManager
         /// <summary>
         /// Check a global mutex keyed on the parameter file path; if it returns false, exit
         /// </summary>
-        /// <param name="targetFolderInfo"></param>
-        /// <param name="parameterFilePath"></param>
+        /// <param name="sourceFolderPath">Source directory path</param>
+        /// <param name="targetFolderInfo">Target directory info</param>
+        /// <param name="parameterFilePath">Parameter file defining the source directory path and other options</param>
         /// <returns></returns>
-        private bool UpdateFolderMutexWrapped(DirectoryContainer targetFolderInfo, string parameterFilePath)
+        private bool UpdateFolderMutexWrapped(string sourceFolderPath, DirectoryContainer targetFolderInfo, string parameterFilePath)
         {
             Mutex mutex = null;
             var hasMutexHandle = false;
@@ -1017,7 +1078,7 @@ namespace DMSUpdateManager
                     hasMutexHandle = GetMutex(mutexName, false, out mutex, out doNotUpdateParent);
                 }
 
-                return UpdateFolderRun(targetFolderInfo, parameterFilePath, doNotUpdateParent);
+                return UpdateFolderRun(sourceFolderPath, targetFolderInfo, parameterFilePath, doNotUpdateParent);
             }
             finally
             {
@@ -1033,12 +1094,12 @@ namespace DMSUpdateManager
         /// <summary>
         /// Check a global mutex keyed on the parameter file path; if it returns false, exit
         /// </summary>
-        /// <param name="diSourceFolder"></param>
-        /// <param name="targetFolderInfo"></param>
-        /// <param name="parameterFilePath"></param>
+        /// <param name="sourceFolder">Source directory info</param>
+        /// <param name="targetFolderInfo">Target directory info</param>
+        /// <param name="parameterFilePath">Parameter file defining the source directory path and other options</param>
         /// <returns></returns>
         private bool UpdateFolderCopyToParentMutexWrapped(
-            DirectoryInfo diSourceFolder,
+            DirectoryInfo sourceFolder,
             DirectoryContainer targetFolderInfo,
             string parameterFilePath)
         {
@@ -1058,7 +1119,7 @@ namespace DMSUpdateManager
 
                 if (!doNotUpdateParent)
                 {
-                    return UpdateFolderCopyToParentRun(diSourceFolder, targetFolderInfo, parameterFilePath);
+                    return UpdateFolderCopyToParentRun(sourceFolder, targetFolderInfo, parameterFilePath);
                 }
                 return true;
             }
@@ -1072,9 +1133,21 @@ namespace DMSUpdateManager
             }
         }
 
-        private bool UpdateFolderRun(DirectoryContainer targetFolderInfo, string parameterFilePath, bool doNotUpdateParent = false)
+        /// <summary>
+        /// Entry method for updating the target folder
+        /// </summary>
+        /// <param name="sourceFolderPath">Source directory path</param>
+        /// <param name="targetFolderInfo">Target directory info</param>
+        /// <param name="parameterFilePath">Parameter file path</param>
+        /// <param name="doNotUpdateParent"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Parameter file path is used to determine the checkfile path, which is used to asssure
+        /// that a minimum amount of time elapses between sequential runs of the DMS Update Manager
+        /// </remarks>
+        private bool UpdateFolderRun(string sourceFolderPath, DirectoryContainer targetFolderInfo, string parameterFilePath, bool doNotUpdateParent = false)
         {
-            var sourceFolder = new DirectoryInfo(mSourceFolderPath);
+            var sourceFolder = new DirectoryInfo(sourceFolderPath);
 
             if (sourceFolder.Parent == null)
             {
@@ -1101,12 +1174,7 @@ namespace DMSUpdateManager
 
             ResetProgress();
 
-            bool success;
-
-            if (targetFolderInfo.TrackingRemoteHostDirectory)
-                success = UpdateFolderWork(sourceFolder.FullName, targetFolderInfo, targetFolderInfo.RemoteHostInfo.DestinationPath, pushNewSubfolders: false);
-            else
-                success = UpdateFolderWork(sourceFolder.FullName, targetFolderInfo, targetFolderInfo.DirectoryPath, pushNewSubfolders: false);
+            var success = UpdateFolderWork(sourceFolder.FullName, targetFolderInfo, targetFolderInfo.DirectoryPath, pushNewSubfolders: false);
 
             if (!CopySubdirectoriesToParentFolder || doNotUpdateParent)
                 return success;
@@ -1123,6 +1191,17 @@ namespace DMSUpdateManager
             return success;
         }
 
+        /// <summary>
+        /// Update directory and copy subdirectories to the parent directory
+        /// </summary>
+        /// <param name="sourceFolder">Source directory info</param>
+        /// <param name="targetFolderInfo">Target directory info</param>
+        /// <param name="parameterFilePath">Parameter file path</param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Parameter file path is used to determine the checkfile path, which is used to asssure
+        /// that a minimum amount of time elapses between sequential runs of the DMS Update Manager
+        /// </remarks>
         private bool UpdateFolderCopyToParentRun(DirectoryInfo sourceFolder, DirectoryContainer targetFolderInfo, string parameterFilePath)
         {
             var success = true;
@@ -1536,26 +1615,8 @@ namespace DMSUpdateManager
             // Additionally, if the source directory contains file _PushDir_.txt, it gets copied even if it doesn't exist at the target
             foreach (var sourceSubFolder in sourceFolder.GetDirectories())
             {
-                FileOrDirectoryInfo targetSubFolder;
-
-                if (targetFolderInfo.TrackingRemoteHostDirectory)
-                {
-                    var targetSubFolderPath = targetFolderPath + '/' + sourceSubFolder.Name;
-                    targetSubFolder = targetFolderInfo.GetDirectoryInfo(targetSubFolderPath);
-                }
-                else
-                {
-                    var targetSubFolderPath = Path.Combine(targetFolder.FullName, sourceSubFolder.Name);
-
-                    var folderInfo = new DirectoryInfo(targetSubFolderPath);
-
-                    targetSubFolder = new FileOrDirectoryInfo(
-                        folderInfo.FullName,
-                        folderInfo.Exists,
-                        lastWrite: folderInfo.LastWriteTime,
-                        lastWriteUtc: folderInfo.LastWriteTimeUtc,
-                        linuxDirectory: false);
-                }
+                var targetSubFolderPath = CombinePaths(targetFolderInfo, targetFolderPath, sourceSubFolder.Name);
+                var targetSubFolder = targetFolderInfo.GetDirectoryInfo(targetSubFolderPath);
 
                 // Initially assume we'll process this directory if it exists at the target
                 var processSubfolder = targetSubFolder.Exists;
