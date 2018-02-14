@@ -188,6 +188,10 @@ namespace DMSUpdateManager
             }
 
             var copiedFile = mSftpClient.Get(targetFilePath);
+            copiedFile.LastWriteTimeUtc = sourceFile.LastWriteTimeUtc;
+
+            mSftpClient.SetAttributes(targetFilePath, copiedFile.Attributes);
+
             return new FileOrDirectoryInfo(copiedFile);
         }
 
