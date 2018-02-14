@@ -65,7 +65,7 @@ namespace DMSUpdateManager
         /// Constructor for a local directory (or Windows share)
         /// </summary>
         public DirectoryContainer(string directoryPath) :
-            this(directoryPath, new RemoteHostConnectionInfo("", "", "", "", ""), true)
+            this(directoryPath, new RemoteHostConnectionInfo("", "", "", "", ""), false)
         {
         }
 
@@ -73,7 +73,7 @@ namespace DMSUpdateManager
         /// Constructor for updating a remote host
         /// </summary>
         public DirectoryContainer(RemoteHostConnectionInfo remoteHostInfo) :
-            this("", remoteHostInfo, false)
+            this("", remoteHostInfo, true)
         {
         }
 
