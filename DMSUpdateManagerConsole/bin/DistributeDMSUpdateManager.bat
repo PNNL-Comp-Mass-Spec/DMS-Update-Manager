@@ -7,19 +7,11 @@ pause
 
 @echo On
 
-rem call DistributeDMSUpdateManager_Work.bat DMSUpdateManager.exe
+call DistributeDMSUpdateManager_Work.bat \\pnl\projects\OmicsSW\DMS_Programs\CaptureTaskManagerDistribution\DMSUpdateManager_CTM\
 
-xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\CaptureTaskManagerDistribution\DMSUpdateManager_CTM\
-xcopy /d /y PRISM.dll            \\pnl\projects\OmicsSW\DMS_Programs\CaptureTaskManagerDistribution\DMSUpdateManager_CTM\
+call DistributeDMSUpdateManager_Work.bat \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution\DMSUpdateManager\
 
-xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution\DMSUpdateManager\
-xcopy /d /y PRISM.dll            \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution\DMSUpdateManager\
-
-xcopy /d /y DMSUpdateManager.exe \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution_x86
-xcopy /d /y PRISM.dll            \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution_x86
-
-xcopy /d /y DMSUpdateManager.exe \\protoapps\DMS_Programs\DataPackage_Archive_Manager
-xcopy /d /y PRISM.dll            \\protoapps\DMS_Programs\DataPackage_Archive_Manager
+call DistributeDMSUpdateManager_Work.bat \\protoapps\DMS_Programs\DMSUpdateManager
 
 @echo off
 pause
