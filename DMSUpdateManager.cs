@@ -509,6 +509,7 @@ namespace DMSUpdateManager
         {
 
             var currentTask = "validating";
+            var isLinuxDir = targetDirectoryInfo.TrackingRemoteHostDirectory;
 
             try
             {
@@ -518,6 +519,11 @@ namespace DMSUpdateManager
                 if (targetDirectory.Exists)
                     return targetDirectory;
 
+                if (PreviewMode)
+                {
+                    ShowMessage("Preview: Create directory " + directoryPath, false);
+                    return FileOrDirectoryInfo.InitializeMissingDirectoryInfo(directoryPath, isLinuxDir);
+                }
 
                 currentTask = "creating";
                 return targetDirectoryInfo.CreateDirectoryIfMissing(directoryPath);
@@ -527,18 +533,10 @@ namespace DMSUpdateManager
                 ShowErrorMessage(string.Format("Error {0} directory {1}: {2}", currentTask, directoryPath, ex.Message));
                 ConsoleMsgUtils.ShowWarning(clsStackTraceFormatter.GetExceptionStackTraceMultiLine(ex));
 
-                var missingDirectory = new FileOrDirectoryInfo(
-                    directoryPath,
-                    exists: false,
-                    lastWrite: DateTime.MinValue,
-                    lastWriteUtc: DateTime.MinValue,
-                    linuxDirectory: targetFolderInfo.TrackingRemoteHostDirectory);
-
-                return missingDirectory;
-
+                return FileOrDirectoryInfo.InitializeMissingDirectoryInfo(directoryPath, isLinuxDir);
             }
         }
-       
+
         private void InitializeLocalVariables()
         {
             ReThrowEvents = false;

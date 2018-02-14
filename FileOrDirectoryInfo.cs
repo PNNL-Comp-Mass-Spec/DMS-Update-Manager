@@ -214,6 +214,23 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
+        /// Create an instance of this class for a missing directory
+        /// </summary>
+        /// <param name="directoryPath"></param>
+        /// <param name="linuxDirectory"></param>
+        /// <returns>FileOrDirectoryInfo instance</returns>
+        /// <remarks>For a missing file, use the constructor that takes a file path and a bool</remarks>
+        public static FileOrDirectoryInfo InitializeMissingDirectoryInfo(string directoryPath, bool linuxDirectory)
+        {
+            return new FileOrDirectoryInfo(directoryPath,
+                                           exists: false,
+                                           lastWrite: DateTime.MinValue,
+                                           lastWriteUtc: DateTime.MinValue,
+                                           linuxDirectory: linuxDirectory);
+
+        }
+
+        /// <summary>
         /// File or directory path
         /// </summary>
         /// <returns></returns>
