@@ -118,9 +118,10 @@ namespace DMSUpdateManager
         /// Constructor for an FileInfo instance (assumed to be a Windows file)
         /// </summary>
         public FileOrDirectoryInfo(FileInfo localFile) :
-            this(false, localFile.FullName, localFile.Exists, localFile.Length,
-                 localFile.LastWriteTime, localFile.LastWriteTimeUtc, false)
+            this(false, localFile.FullName, localFile.Exists, 0, localFile.LastWriteTime, localFile.LastWriteTimeUtc, false)
         {
+            if (!localFile.Exists) return;
+            Length = localFile.Length;
         }
 
         /// <summary>
