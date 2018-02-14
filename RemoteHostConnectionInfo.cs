@@ -44,6 +44,14 @@ namespace DMSUpdateManager
         /// <summary>
         /// Constructor
         /// </summary>
+        /// <remarks>All connection info will have empty strings</remarks>
+        public RemoteHostConnectionInfo() : this(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty)
+        {
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
         /// <param name="hostName">Host nane</param>
         /// <param name="userName">Username</param>
         /// <param name="privateKeyFilePath">Private key file path</param>
