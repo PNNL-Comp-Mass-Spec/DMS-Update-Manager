@@ -657,7 +657,7 @@ namespace DMSUpdateManager
 
         private static string GetFileDateAndSize(FileOrDirectoryInfo fileInfo)
         {
-            return fileInfo.LastWriteTimeUtc.ToString("yyyy-MM-dd hh:mm:ss tt") + " and " + fileInfo.Length + " bytes";
+            return fileInfo.LastWriteTime.ToString("yyyy-MM-dd hh:mm:ss tt") + " and " + fileInfo.Length + " bytes";
         }
 
         private bool GetMutex(string mutexName, bool updatingTargetDirectory, out Mutex mutex, out bool doNotUpdateParent)
