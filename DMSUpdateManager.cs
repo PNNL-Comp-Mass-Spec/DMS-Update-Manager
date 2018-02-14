@@ -786,6 +786,7 @@ namespace DMSUpdateManager
                     mMutexNameSuffix = settingsFile.GetParam(OPTIONS_SECTION, "MutexNameSuffix", string.Empty);
 
                     var logFolderPath = settingsFile.GetParam(OPTIONS_SECTION, "LogFolderPath", "Logs");
+
                     mMinimumRepeatThresholdSeconds = settingsFile.GetParam(OPTIONS_SECTION, "MinimumRepeatTimeSeconds", 30);
                     var logLevel = settingsFile.GetParam(OPTIONS_SECTION, "LoggingLevel", string.Empty);
 
@@ -794,15 +795,9 @@ namespace DMSUpdateManager
                         LoggingLevel = level;
                     }
 
-                    if (!string.IsNullOrWhiteSpace(logFolderPath))
+                    if (LogMessagesToFile)
                     {
-                        CloseLogFileNow();
-                        LogFolderPath = logFolderPath;
-                        LogFilePath = string.Empty;
-                        ConfigureLogFilePath();
-                        ConsoleMsgUtils.ShowDebug("Logging to " + LogFilePath);
-                        Console.WriteLine();
-                        ArchiveOldLogFilesNow();
+                        UpdateAutoDefinedLogFilePath(logFolderPath, "DMSUpdateManager");
                     }
 
                     var filesToIgnore = settingsFile.GetParam(OPTIONS_SECTION, "FilesToIgnore", string.Empty);
