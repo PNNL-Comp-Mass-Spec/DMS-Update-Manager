@@ -94,9 +94,8 @@ namespace DMSUpdateManager
         /// Constructor for a DirectoryInfo instance (assumed to be a Windows directory)
         /// </summary>
         // ReSharper disable once SuggestBaseTypeForParameter
-        public FileOrDirectoryInfo(DirectoryInfo dirInfo, bool linuxDirectory = true) :
-            this(true, dirInfo.FullName, dirInfo.Exists, 0,
-                 dirInfo.LastWriteTime, dirInfo.LastWriteTimeUtc, linuxDirectory)
+        public FileOrDirectoryInfo(DirectoryInfo dirInfo, bool linuxDirectory = false) :
+            this(true, dirInfo.FullName, dirInfo.Exists, 0, dirInfo.LastWriteTime, dirInfo.LastWriteTimeUtc, linuxDirectory)
         {
         }
 
@@ -109,8 +108,7 @@ namespace DMSUpdateManager
         /// <param name="lastWriteUtc"></param>
         /// <param name="linuxDirectory"></param>
         public FileOrDirectoryInfo(string directoryPath, bool exists, DateTime lastWrite, DateTime lastWriteUtc, bool linuxDirectory) :
-            this(true, directoryPath, exists, 0,
-                 lastWrite, lastWriteUtc, linuxDirectory)
+            this(true, directoryPath, exists, 0, lastWrite, lastWriteUtc, linuxDirectory)
         {
         }
 
