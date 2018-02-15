@@ -47,7 +47,17 @@ namespace DMSUpdateManager
         /// <summary>
         /// Remote host name
         /// </summary>
-        public RemoteHostConnectionInfo TargetHostOptions { get; }
+        public RemoteHostConnectionInfo RemoteHostInfo { get; }
+
+        /// <summary>
+        /// Remote host name
+        /// </summary>
+        public string RemoteHostName => RemoteHostInfo.HostName;
+
+        /// <summary>
+        /// Remote host username
+        /// </summary>
+        public string RemoteHostUsername => RemoteHostInfo.Username;
 
         #endregion
 
@@ -56,9 +66,9 @@ namespace DMSUpdateManager
         /// <summary>
         /// Constructor
         /// </summary>
-        public RemoteUpdateUtility(RemoteHostConnectionInfo targetHostOptions)
+        public RemoteUpdateUtility(RemoteHostConnectionInfo remoteHostInfo)
         {
-            TargetHostOptions = targetHostOptions;
+            RemoteHostInfo = remoteHostInfo;
             ParametersValidated = false;
         }
 
@@ -183,14 +193,14 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
-        /// Connect to the remote host specified by TargetHostOptions
+        /// Connect to the remote host specified by RemoteHostInfo
         /// </summary>
         /// <returns>sFtp client</returns>
         public SftpClient ConnectToRemoteHost()
         {
             UpdateParameters();
 
-            var sftpClient = new SftpClient(TargetHostOptions.HostName, TargetHostOptions.Username, mPrivateKeyFile);
+            var sftpClient = new SftpClient(RemoteHostInfo.HostName, RemoteHostInfo.Username, mPrivateKeyFile);
             sftpClient.Connect();
             return sftpClient;
         }
@@ -228,11 +238,11 @@ namespace DMSUpdateManager
             try
             {
                 if (sourceFileNames.Count == 1)
-                    OnDebugEvent(string.Format("Retrieving file {0} from {1} on host {2}", sourceFileNames.First(), sourceDirectoryPath, TargetHostOptions.HostName));
+                    OnDebugEvent(string.Format("Retrieving file {0} from {1} on host {2}", sourceFileNames.First(), sourceDirectoryPath, RemoteHostInfo.HostName));
                 else
-                    OnDebugEvent(string.Format("Retrieving {0} files from {1} on host {2}", sourceFileNames.Count, sourceDirectoryPath, TargetHostOptions.HostName));
+                    OnDebugEvent(string.Format("Retrieving {0} files from {1} on host {2}", sourceFileNames.Count, sourceDirectoryPath, RemoteHostInfo.HostName));
 
-                using (var scp = new ScpClient(TargetHostOptions.HostName, TargetHostOptions.Username, mPrivateKeyFile))
+                using (var scp = new ScpClient(RemoteHostInfo.HostName, RemoteHostInfo.Username, mPrivateKeyFile))
                 {
                     scp.Connect();
 
@@ -429,22 +439,22 @@ namespace DMSUpdateManager
                 var uniqueFiles = GetUniqueFileList(sourceFiles).ToList();
                 if (uniqueFiles.Count == 0)
                 {
-                    OnErrorEvent(string.Format("Cannot copy files to {0}; sourceFiles list is empty", TargetHostOptions.HostName));
+                    OnErrorEvent(string.Format("Cannot copy files to {0}; sourceFiles list is empty", RemoteHostInfo.HostName));
                     return false;
                 }
 
                 var success = false;
 
                 if (uniqueFiles.Count == 1)
-                    OnDebugEvent(string.Format("Copying {0} to {1} on {2}", uniqueFiles.First().Name, remoteDirectoryPath, TargetHostOptions.HostName));
+                    OnDebugEvent(string.Format("Copying {0} to {1} on {2}", uniqueFiles.First().Name, remoteDirectoryPath, RemoteHostInfo.HostName));
                 else
-                    OnDebugEvent(string.Format("Copying {0} files to {1} on {2}", uniqueFiles.Count, remoteDirectoryPath, TargetHostOptions.HostName));
+                    OnDebugEvent(string.Format("Copying {0} files to {1} on {2}", uniqueFiles.Count, remoteDirectoryPath, RemoteHostInfo.HostName));
 
                 SftpClient sftp;
 
                 if (useLockFile)
                 {
-                    sftp = new SftpClient(TargetHostOptions.HostName, TargetHostOptions.Username, mPrivateKeyFile);
+                    sftp = new SftpClient(RemoteHostInfo.HostName, RemoteHostInfo.Username, mPrivateKeyFile);
                     sftp.Connect();
                 }
                 else
@@ -452,7 +462,7 @@ namespace DMSUpdateManager
                     sftp = null;
                 }
 
-                using (var scp = new ScpClient(TargetHostOptions.HostName, TargetHostOptions.Username, mPrivateKeyFile))
+                using (var scp = new ScpClient(RemoteHostInfo.HostName, RemoteHostInfo.Username, mPrivateKeyFile))
                 {
                     scp.Connect();
 
@@ -464,7 +474,7 @@ namespace DMSUpdateManager
                         if (!sourceFile.Exists)
                         {
                             OnWarningEvent(string.Format("Source file not found; cannot copy {0} to {1} on {2}",
-                                                         sourceFile.FullName, remoteDirectoryPath, TargetHostOptions.HostName));
+                                                         sourceFile.FullName, remoteDirectoryPath, RemoteHostInfo.HostName));
                             continue;
                         }
 
@@ -538,13 +548,13 @@ namespace DMSUpdateManager
                     return true;
                 }
 
-                OnErrorEvent(string.Format("Cannot copy files to {0}; all of the files in sourceFiles are missing", TargetHostOptions.HostName));
+                OnErrorEvent(string.Format("Cannot copy files to {0}; all of the files in sourceFiles are missing", RemoteHostInfo.HostName));
                 return false;
 
             }
             catch (Exception ex)
             {
-                OnErrorEvent(string.Format("Error copying files to {0} on {1}: {2}", remoteDirectoryPath, TargetHostOptions.HostName, ex.Message), ex);
+                OnErrorEvent(string.Format("Error copying files to {0} on {1}: {2}", remoteDirectoryPath, RemoteHostInfo.HostName, ex.Message), ex);
                 return false;
             }
 
@@ -600,9 +610,9 @@ namespace DMSUpdateManager
 
                 }
 
-                OnDebugEvent("Verifying directories on host " + TargetHostOptions.HostName);
+                OnDebugEvent("Verifying directories on host " + RemoteHostInfo.HostName);
 
-                using (var sftp = new SftpClient(TargetHostOptions.HostName, TargetHostOptions.Username, mPrivateKeyFile))
+                using (var sftp = new SftpClient(RemoteHostInfo.HostName, RemoteHostInfo.Username, mPrivateKeyFile))
                 {
                     sftp.Connect();
                     foreach (var parentDirectory in parentDirectories)
@@ -772,9 +782,9 @@ namespace DMSUpdateManager
                 if (string.IsNullOrEmpty(directoryPath))
                     throw new Exception("directoryPath parameter is empty; nothing to delete");
 
-                OnDebugEvent("Delete directory on host " + TargetHostOptions.HostName + ": " + directoryPath);
+                OnDebugEvent("Delete directory on host " + RemoteHostInfo.HostName + ": " + directoryPath);
 
-                using (var sftp = new SftpClient(TargetHostOptions.HostName, TargetHostOptions.Username, mPrivateKeyFile))
+                using (var sftp = new SftpClient(RemoteHostInfo.HostName, RemoteHostInfo.Username, mPrivateKeyFile))
                 {
                     sftp.Connect();
 
@@ -931,9 +941,9 @@ namespace DMSUpdateManager
                 if (string.IsNullOrWhiteSpace(fileMatchSpec))
                     fileMatchSpec = "*";
 
-                OnDebugEvent(string.Format("Getting file listing for {0} on host {1}", remoteDirectoryPath, TargetHostOptions.HostName));
+                OnDebugEvent(string.Format("Getting file listing for {0} on host {1}", remoteDirectoryPath, RemoteHostInfo.HostName));
 
-                using (var sftp = new SftpClient(TargetHostOptions.HostName, TargetHostOptions.Username, mPrivateKeyFile))
+                using (var sftp = new SftpClient(RemoteHostInfo.HostName, RemoteHostInfo.Username, mPrivateKeyFile))
                 {
                     sftp.Connect();
                     GetRemoteFileListing(sftp, new List<string> { remoteDirectoryPath }, fileMatchSpec, recurse, matchingFiles);
@@ -1029,9 +1039,9 @@ namespace DMSUpdateManager
                 if (string.IsNullOrWhiteSpace(remoteDirectoryPath))
                     throw new ArgumentException("Remote directory path cannot be empty", nameof(remoteDirectoryPath));
 
-                OnDebugEvent(string.Format("Getting file/directory listing for {0} on host {1}", remoteDirectoryPath, TargetHostOptions.HostName));
+                OnDebugEvent(string.Format("Getting file/directory listing for {0} on host {1}", remoteDirectoryPath, RemoteHostInfo.HostName));
 
-                using (var sftp = new SftpClient(TargetHostOptions.HostName, TargetHostOptions.Username, mPrivateKeyFile))
+                using (var sftp = new SftpClient(RemoteHostInfo.HostName, RemoteHostInfo.Username, mPrivateKeyFile))
                 {
                     sftp.Connect();
                     GetRemoteFilesAndDirectories(sftp, remoteDirectoryPath, recurse, maxDepth, filesAndDirectories);
@@ -1123,7 +1133,7 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
-        /// Retrieve a listing of all files and directories below RemoteHostOptions.DirectoryPath
+        /// Retrieve a listing of all files and directories below RemoteHostInfo.DirectoryPath
         /// </summary>
         /// <returns>Dictionary of matching files and directories, where keys are full paths and values are instances of SFtpFile</returns>
         public IDictionary<string, SftpFile> GetTargetHostFilesAndDirectories()
@@ -1166,13 +1176,13 @@ namespace DMSUpdateManager
         {
             OnDebugEvent("Loading RSA private key file");
 
-            var keyFile = new FileInfo(TargetHostOptions.PrivateKeyFile);
+            var keyFile = new FileInfo(RemoteHostInfo.PrivateKeyFile);
             if (!keyFile.Exists)
             {
                 throw new FileNotFoundException("Private key file not found: " + keyFile.FullName);
             }
 
-            var passPhraseFile = new FileInfo(TargetHostOptions.PassphraseFile);
+            var passPhraseFile = new FileInfo(RemoteHostInfo.PassphraseFile);
             if (!passPhraseFile.Exists)
             {
                 throw new FileNotFoundException("Passpharse file not found: " + passPhraseFile.FullName);
@@ -1302,9 +1312,9 @@ namespace DMSUpdateManager
                         fileNamesToDelete.Add(fileName);
                 }
 
-                OnDebugEvent("Moving files on host " + TargetHostOptions.HostName + " to " + targetRemoteDirectory);
+                OnDebugEvent("Moving files on host " + RemoteHostInfo.HostName + " to " + targetRemoteDirectory);
 
-                using (var sftp = new SftpClient(TargetHostOptions.HostName, TargetHostOptions.Username, mPrivateKeyFile))
+                using (var sftp = new SftpClient(RemoteHostInfo.HostName, RemoteHostInfo.Username, mPrivateKeyFile))
                 {
                     sftp.Connect();
                     foreach (var remoteFilePath in sourceFilePaths)
@@ -1365,7 +1375,7 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
-        /// Validate settings in TargetHostOption, then load the private key information
+        /// Validate settings in RemoteHostInfo, then load the private key information
         /// from RemoteHostPrivateKeyFile and RemoteHostPassphraseFile
         /// </summary>
         /// <remarks>
@@ -1378,16 +1388,16 @@ namespace DMSUpdateManager
             // Use settings defined for this manager
             OnDebugEvent("Updating remote transfer settings using manager defaults");
 
-            if (string.IsNullOrWhiteSpace(TargetHostOptions.HostName))
+            if (string.IsNullOrWhiteSpace(RemoteHostInfo.HostName))
                 throw new Exception("Remote HostName parameter is empty; check the manager parameters");
 
-            if (string.IsNullOrWhiteSpace(TargetHostOptions.Username))
+            if (string.IsNullOrWhiteSpace(RemoteHostInfo.Username))
                 throw new Exception("Remote Username parameter is empty; check the manager parameters");
 
-            if (string.IsNullOrWhiteSpace(TargetHostOptions.PrivateKeyFile))
+            if (string.IsNullOrWhiteSpace(RemoteHostInfo.PrivateKeyFile))
                 throw new Exception("Remote PrivateKeyFile parameter is empty; check the manager parameters");
 
-            if (string.IsNullOrWhiteSpace(TargetHostOptions.PassphraseFile))
+            if (string.IsNullOrWhiteSpace(RemoteHostInfo.PassphraseFile))
                 throw new Exception("Remote PassphraseFile parameter is empty; check the manager parameters");
 
             if (string.IsNullOrWhiteSpace(RemoteHostInfo.DirectoryPath))
