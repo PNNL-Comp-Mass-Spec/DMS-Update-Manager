@@ -22,7 +22,7 @@ namespace DMSUpdateManager
 
         /// <summary>
         /// Directory path if updating a local directory
-        /// RemoteHostInfo.DestinationPath if updating a remote host
+        /// RemoteHostInfo.DirectoryPath if updating a remote host
         /// </summary>
         public string DirectoryPath { get; }
 
@@ -56,7 +56,7 @@ namespace DMSUpdateManager
         public bool TrackingRemoteHostDirectory { get; }
 
         /// <summary>
-        /// Full path to the parent directory of either DirectoryPath or RemoteHostInfo.DestinationPath
+        /// Full path to the parent directory of either DirectoryPath or RemoteHostInfo.DirectoryPath
         /// </summary>
         public string ParentPath { get; }
 
@@ -93,7 +93,7 @@ namespace DMSUpdateManager
 
             if (trackingRemoteHostDirectory)
             {
-                DirectoryPath = remoteHostInfo.DestinationPath;
+                DirectoryPath = remoteHostInfo.DirectoryPath;
                 ParentPath = GetRemoteDirectoryParent(DirectoryPath);
 
                 mSftpClient = mUpdateUtility.ConnectToRemoteHost();

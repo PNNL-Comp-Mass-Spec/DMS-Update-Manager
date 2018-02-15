@@ -779,7 +779,7 @@ namespace DMSUpdateManager
                     if (!string.IsNullOrWhiteSpace(RemoteHostInfo.HostName) ||
                         !string.IsNullOrWhiteSpace(RemoteHostInfo.HostName))
                     {
-                        RemoteHostInfo.DestinationPath = mTargetDirectoryPath;
+                        RemoteHostInfo.DirectoryPath = mTargetDirectoryPath;
                         mRemoteHostInfoDefined = true;
                     }
 

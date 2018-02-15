@@ -8,12 +8,12 @@ namespace DMSUpdateManager
     {
 
         /// <summary>
-        /// Directory on the remote host where files will be pushed
+        /// Base directory on the remote host
         /// </summary>
         /// <remarks>
         /// For example, /opt/DMS_Programs
         /// </remarks>
-        public string DestinationPath { get; set; }
+        public string DirectoryPath { get; set; }
 
         /// <summary>
         /// Remote host name
@@ -56,18 +56,18 @@ namespace DMSUpdateManager
         /// <param name="userName">Username</param>
         /// <param name="privateKeyFilePath">Private key file path</param>
         /// <param name="passphraseFilePath">Passpharse file path</param>
-        /// <param name="destinationPath">Destination directory path</param>
+        /// <param name="directoryPath">Base directory on the remote host</param>
         public RemoteHostConnectionInfo(
             string hostName, string userName,
             string privateKeyFilePath, string passphraseFilePath,
-            string destinationPath)
+            string directoryPath)
         {
 
             HostName = hostName;
             Username = userName;
             PrivateKeyFile = privateKeyFilePath;
             PassphraseFile = passphraseFilePath;
-            DestinationPath = destinationPath;
+            DirectoryPath = directoryPath;
         }
 
         /// <summary>
@@ -101,9 +101,9 @@ namespace DMSUpdateManager
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(DestinationPath))
+            if (string.IsNullOrWhiteSpace(DirectoryPath))
             {
-                errorMessage = "Destination directory path not defined";
+                errorMessage = "Remote directory path not defined";
                 return false;
             }
 
