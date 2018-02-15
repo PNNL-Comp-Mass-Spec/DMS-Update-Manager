@@ -460,7 +460,7 @@ namespace DMSUpdateManager
             {
                 if (string.Equals(targetFile.FullName, mExecutingExePath))
                 {
-                    ShowMessage("Skipping " + targetFile.FullName + "; cannot update the currently running copy of the DMSUpdateManager");
+                    ShowMessage("Skipping " + targetFile.FullName + "; cannot update the currently running copy of the DMSUpdateManager", false, 4);
                     return false;
                 }
 
@@ -484,17 +484,17 @@ namespace DMSUpdateManager
                         if (itemInUse == eItemInUseConstants.DirectoryInUse)
                         {
                             ShowMessage("Skipping " + sourceFile.Name + " because directory " +
-                                        AbbreviatePath(targetFile.DirectoryName) + " is in use (by an unknown process)", !PreviewMode);
+                                        AbbreviatePath(targetFile.DirectoryName) + " is in use (by an unknown process)", !PreviewMode, 4);
                         }
                         else
                         {
                             ShowMessage("Skipping " + sourceFile.Name + " in directory " +
-                                        AbbreviatePath(targetFile.DirectoryName) + " because currently in use (by an unknown process)", !PreviewMode);
+                                        AbbreviatePath(targetFile.DirectoryName) + " because currently in use (by an unknown process)", !PreviewMode, 4);
                         }
                     }
                     else
                     {
-                        ShowMessage(fileUsageMessage, !PreviewMode);
+                        ShowMessage(fileUsageMessage, !PreviewMode, 4);
                     }
 
                     return false;
@@ -1673,7 +1673,7 @@ namespace DMSUpdateManager
                     {
                         if (process.ProcessName != lastProcess)
                         {
-                            Console.WriteLine(process.ProcessName);
+                            ConsoleMsgUtils.ShowDebug(process.ProcessName);
                         }
                         lastProcess = process.ProcessName;
                     }
@@ -1689,7 +1689,7 @@ namespace DMSUpdateManager
 
                         if (PreviewMode & !mProcessesShown)
                         {
-                            Console.WriteLine("  " + commandLine);
+                            ConsoleMsgUtils.ShowDebug("  " + commandLine);
                         }
 
                         if (commandLine.ToLower().Contains(sourceFile.Name.ToLower()))
