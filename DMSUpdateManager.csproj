@@ -59,4 +59,7 @@
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>if exist "$(ProjectDir)..\Analysis_Manager\AM_Common" xcopy "$(TargetPath)" "$(ProjectDir)..\Analysis_Manager\AM_Common\" /Y /F</PostBuildEvent>
+  </PropertyGroup>
 </Project>
