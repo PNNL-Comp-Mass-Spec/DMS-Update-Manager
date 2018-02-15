@@ -11,7 +11,7 @@ and auto-deleting extra files (see the special flag files described below).
 ## DMSUpdateManagerConsole Syntax
 
 ```
-DMSUpdateManager.exe
+DMSUpdateManagerConsole.exe
  [/S:SourceFolderPath [/T:TargetFolderPath]
  [/P:ParameterFilePath] [/L] [/V] [/NM] [/WaitTimeout:minutes]
 ```
@@ -89,11 +89,13 @@ The following special flag files affect how folders are processed. To use them, 
 * PRISMWin.dll
 * Protein_Exporter.dll
 
-## Example Usage
+### Example Usage
 
 ```
-DMSUpdateManager.exe /P:DMSUpdateManagerOptions.xml /L
+DMSUpdateManagerConsole.exe /P:DMSUpdateManagerOptions.xml /L
 ```
+
+### Example Parameter File
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -116,6 +118,69 @@ Files will be copied from `\\CentralServer\AnalysisToolManagerDistribution` to `
 When processing subdirectories, the files in the subdirectory will be compared to the corresponding 
 subdirectory below `C:\DMS_Programs`.  The exception is if the subdirectory contains file `_AMSubDir_.txt` in which case
 the folder will be compared to a directory below `C:\DMS_Programs\AnalysisToolManager1`
+
+
+## Linux Server Updates
+
+The DMS Update Manager also supports pushing new/updated files to a Linux server.
+This requires an RSA private key file on the computer running the DMS Update Manager
+along with an RSA public key file on the target Linux server.  Specify the path
+to the private key file in the XML parameter file provided to the DMS Update Manager.
+Also specify the path to a text file that contains the encoded passphrase to decrypt 
+the private key. See below for an example XML parameter file that specifies these options.
+
+When pushing files to a remote server, the parameter file must specify the path
+to a text file with an encoded passphrase for decoding the RSA private key. The
+following commands can be used to convert passwords:
+
+`DMSUpdateManagerConsole.exe PasswordToParse /Encode` \
+`DMSUpdateManagerConsole.exe EncodedPassword /Decode`
+
+### Example RSA private key file
+
+```
+-----BEGIN RSA PRIVATE KEY-----
+Proc-Type: 4,ENCRYPTED
+DEK-Info: DES-EDE3-CBC,3A98E0096FAA85F9
+
+BsYgOkem+lhwJ...
+...TDRHNoeILQI/K2pCpsQ==
+-----END RSA PRIVATE KEY-----
+```
+
+### Example Usage
+
+```
+DMSUpdateManagerConsole.exe /P:DMSUpdateManagerOptionsRemoteHost.xml /L
+```
+
+### Example Parameter File With Remote Host Info
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<sections>
+  <section name="DMSUpdateManager">
+    <item key="OverwriteNewerFiles" value="False" />
+    <item key="SourceFolderPath" value="\\CentralServer\AnalysisToolManagerDistribution" />
+    <item key="TargetFolderPath" value="/opt/DMS_Programs/AnalysisManager" />
+    <item key="RemoteHostName" value="prismweb2" />
+    <item key="RemoteHostUserName" value="svc-dms" />
+    <item key="PrivateKeyFilePath" value="C:\DMS_RemoteInfo\Svc-Dms.key" />
+    <item key="PassphraseFilePath" value="C:\DMS_RemoteInfo\Svc-Dms.pass" />
+    <item key="CopySubdirectoriesToParentFolder" value="True" />
+    <item key="FilesToIgnore" value="AnalysisManagerProg.exe.config, Utils.pyc, Global.pyc" />
+    <item key="LogMessages" value="True" />
+    <item key="MinimumRepeatTimeSeconds" value="60" />
+    <item key="LogFolderPath" value="C:\DMS_Programs\DMSUpdateManager\Logs" />
+  </section>
+</sections>
+```
+
+Files will be copied from `\\CentralServer\AnalysisToolManagerDistribution` to `/opt/DMS_Programs/AnalysisManager`
+
+When processing subdirectories, the files in the subdirectory will be compared to the corresponding 
+subdirectory below `/opt/DMS_Programs`.  The exception is if the subdirectory contains file `_AMSubDir_.txt` in which case
+the folder will be compared to a directory below `/opt/DMS_Programs/AnalysisManager`
 	
 ## Contacts
 
