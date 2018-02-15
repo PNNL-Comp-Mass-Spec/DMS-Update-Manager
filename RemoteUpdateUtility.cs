@@ -33,13 +33,16 @@ namespace DMSUpdateManager
 
         #region "Module variables"
 
-        private bool mParametersValidated;
-
         private PrivateKeyFile mPrivateKeyFile;
 
         #endregion
 
         #region "Properties"
+
+        /// <summary>
+        /// Set to true once the remote host parameters have been validated
+        /// </summary>
+        public bool ParametersValidated { get; private set; }
 
         /// <summary>
         /// Remote host name
@@ -56,7 +59,8 @@ namespace DMSUpdateManager
         public RemoteUpdateUtility(RemoteHostConnectionInfo targetHostOptions)
         {
             TargetHostOptions = targetHostOptions;
-            mParametersValidated = false;
+            ParametersValidated = false;
+        }
 
         /// <summary>
         /// Look for a lock file named dataFileName + ".lock" in directory remoteDirectoryPath
@@ -339,7 +343,7 @@ namespace DMSUpdateManager
                 return false;
             }
 
-            if (!mParametersValidated)
+            if (!ParametersValidated)
             {
                 // Validate that the required parameters are present and load the private key and passphrase from disk
                 // This throws an exception if any parameters are missing
@@ -412,7 +416,7 @@ namespace DMSUpdateManager
             string managerName = "Unknown")
         {
 
-            if (!mParametersValidated)
+            if (!ParametersValidated)
             {
                 // Validate that the required parameters are present and load the private key and passphrase from disk
                 // This throws an exception if any parameters are missing
@@ -1017,7 +1021,7 @@ namespace DMSUpdateManager
 
             var filesAndDirectories = new Dictionary<string, SftpFile>();
 
-            if (!mParametersValidated)
+            if (!ParametersValidated)
                 throw new Exception("Call UpdateParameters before calling GetRemoteFilesAndDirectories");
 
             try
@@ -1392,7 +1396,7 @@ namespace DMSUpdateManager
             // Load the RSA private key info
             LoadRSAPrivateKey();
 
-            mParametersValidated = true;
+            ParametersValidated = true;
         }
 
         #endregion
