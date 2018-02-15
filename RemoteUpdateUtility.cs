@@ -469,7 +469,7 @@ namespace DMSUpdateManager
 
         private void LoadRSAPrivateKey()
         {
-            OnDebugEvent("Loading RSA private key files");
+            OnDebugEvent("Loading RSA private key file");
 
             var keyFile = new FileInfo(TargetHostOptions.PrivateKeyFile);
             if (!keyFile.Exists)
@@ -518,8 +518,8 @@ namespace DMSUpdateManager
             }
             catch (InvalidOperationException ex)
             {
-                if (ex.Message.Contains("Invalid data type"))
-                    throw new Exception("Invalid passphrase for the private key file; see manager params RemoteHostPrivateKeyFile and RemoteHostPassphraseFile", ex);
+                if (ex.Message.Contains("Invalid data type") || ex.Message.Contains("cannot be more than 4 bytes"))
+                    throw new Exception("Invalid passphrase for the private key file; see manager params RemoteHostPrivateKeyFile and RemoteHostPassphraseFile: " + ex.Message, ex);
 
                 throw new Exception("Error instantiating the private key " + ex.Message, ex);
             }
