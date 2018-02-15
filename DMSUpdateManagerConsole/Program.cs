@@ -22,7 +22,7 @@ namespace DMSUpdateManagerConsole
         /// <summary>
         /// Program date
         /// </summary>
-        public const string PROGRAM_DATE = "February 14, 2018";
+        public const string PROGRAM_DATE = "February 15, 2018";
 
         // Either mSourceFolderPath and mTargetFolderPath must be specified, or mParameterFilePath needs to be specified
 
@@ -45,6 +45,15 @@ namespace DMSUpdateManagerConsole
         private static double mWaitTimeoutMinutes;
 
         /// <summary>
+        /// Password to encode or decode if command line switch /E or /D or /Encode or /Decode is present
+        /// </summary>
+        private static string mPassword;
+
+        private static bool mEncodePassword;
+
+        private static bool mDecodePassword;
+
+        /// <summary>
         /// Main entry point
         /// </summary>
         /// <param name="args"></param>
@@ -65,12 +74,22 @@ namespace DMSUpdateManagerConsole
             mNoMutex = false;
             mWaitTimeoutMinutes = 5;
 
+            mPassword = string.Empty;
+            mEncodePassword = false;
+            mDecodePassword = false;
+
             try
             {
                 if (commandLineParser.ParseCommandLine())
                 {
                     if (SetOptionsUsingCommandLineParameters(commandLineParser))
                         proceed = true;
+                }
+
+                if (mEncodePassword || mDecodePassword)
+                {
+                    var success = ShowConvertedPassword();
+                    return success ? 0 : -1;
                 }
 
                 if (!proceed || commandLineParser.NeedToShowHelp || commandLineParser.ParameterCount == 0 ||
@@ -116,11 +135,23 @@ namespace DMSUpdateManagerConsole
 
         }
 
+        private static string GetExeName()
+        {
+            return Path.GetFileName(ProcessFilesOrFoldersBase.GetAppPath());
+        }
+
+        /// <summary>
+        /// Set command line options
+        /// </summary>
+        /// <param name="commandLineParser"></param>
+        /// <returns>True if success, false if an error</returns>
         private static bool SetOptionsUsingCommandLineParameters(clsParseCommandLine commandLineParser)
         {
-            // Returns True if no problems; otherwise, returns false
 
-            var validParameters = new List<string> { "S", "T", "P", "Force", "L", "V", "Preview", "NM", "WaitTimeout" };
+            var validParameters = new List<string> {
+                "S", "T", "P", "Force", "L", "V",
+                "Preview", "NM", "WaitTimeout",
+                "E", "Encode", "D", "Decode"};
 
             try
             {
@@ -155,6 +186,17 @@ namespace DMSUpdateManagerConsole
                     mWaitTimeoutMinutes = double.Parse(timeoutMinutes);
                 }
 
+                if (commandLineParser.NonSwitchParameterCount > 0)
+                {
+                    mPassword = commandLineParser.RetrieveNonSwitchParameter(0);
+                }
+
+                mEncodePassword = commandLineParser.IsParameterPresent("Encode");
+                mEncodePassword = mEncodePassword || commandLineParser.IsParameterPresent("E");
+
+                mDecodePassword = commandLineParser.IsParameterPresent("Decode");
+                mDecodePassword = mDecodePassword || commandLineParser.IsParameterPresent("D");
+
                 return true;
             }
             catch (Exception ex)
@@ -165,43 +207,94 @@ namespace DMSUpdateManagerConsole
             return false;
         }
 
+        private static bool ShowConvertedPassword()
+        {
+            if (string.IsNullOrWhiteSpace(mPassword))
+            {
+                ShowWarning("Please provide the password to encode or decode, plus switch /Encode or /Decode");
+                ShowProgramHelp(true);
+                return false;
+            }
+
+            mPassword = mPassword.Replace("&quot;", "\"").Replace("&quote;", "\"");
+
+            if (mEncodePassword)
+                Console.WriteLine(mPassword + " encodes to " + UpdateMgr.RemoteUpdateUtility.EncodePassword(mPassword));
+            else
+                Console.WriteLine(mPassword + " decodes to " + UpdateMgr.RemoteUpdateUtility.DecodePassword(mPassword));
+
+            return true;
+        }
+
         private static void ShowErrorMessage(string message, Exception ex)
         {
             ConsoleMsgUtils.ShowError(message, ex);
         }
 
-        private static void ShowProgramHelp()
+        private static void ShowProgramHelp(bool limitToPasswordOptions = false)
         {
             try
             {
+                Console.WriteLine();
                 Console.WriteLine("This program copies new and updated files from a source folder to a target folder");
+
+                if (!limitToPasswordOptions)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Program syntax:" + "\n" + GetExeName());
+                    Console.WriteLine(" [/S:SourceFolderPath [/T:TargetFolderPath]");
+                    Console.WriteLine(" [/P:ParameterFilePath] [/Force] [/L] [/V]");
+                    Console.WriteLine(" [/NM] [/WaitTimeout:minutes]");
+                    Console.WriteLine();
+
+                    Console.WriteLine(WrapParagraph(
+                                          "All files present in the source folder will be copied to the target folder " +
+                                          "if the file size or file modification time are different. " +
+                                          "You can either define the source and target folder at the command line, " +
+                                          "or using the parameter file. All settings in the parameter file override command line settings."));
+                    Console.WriteLine();
+                    Console.WriteLine(WrapParagraph(
+                                          "Use /Force to force an update to run, even if the last update ran less than 30 seconds ago " +
+                                          "(or MinimumRepeatTimeSeconds defined in the parameter file)"));
+                    Console.WriteLine("Use /L to log details of the updated files");
+                    Console.WriteLine("Use /V to preview the files that would be updated");
+                    Console.WriteLine();
+                    Console.WriteLine(WrapParagraph(
+                                          "Use /NM to not use a mutex, allowing multiple instances of this program " +
+                                          "to run simultaneously with the same parameter file"));
+                    Console.WriteLine(WrapParagraph(
+                                          "Use /WaitTimeout:minutes to specify how long the program " +
+                                          "should wait for another instance to finish before exiting"));
+                    Console.WriteLine();
+                    Console.WriteLine("These special flags affect how files are processed");
+                    Console.WriteLine("Append the flags to the source file name to use them");
+                    Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.ROLLBACK_SUFFIX + " - Rolls back newer target files to match the source");
+                    Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.DELETE_SUFFIX + " - Deletes the target file");
+                    Console.WriteLine();
+                    Console.WriteLine("These special flag files affect how folders are processed");
+                    Console.WriteLine("To use them, create an empty file with the given name in a source folder");
+                    Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.PUSH_DIR_FLAG + " - Pushes the directory to the parent of the target folder");
+                    Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.PUSH_AM_SUBDIR_FLAG +
+                                      " - Pushes the directory to the target folder as a subfolder");
+                    Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.DELETE_SUBDIR_FLAG +
+                                      " - Deletes the directory from the parent of the target, but only if the directory is empty");
+                    Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.DELETE_AM_SUBDIR_FLAG +
+                                      " - Deletes the directory from below the target, but only if it is empty");
+                    Console.WriteLine();
+
+                    Console.WriteLine(WrapParagraph(
+                                          "The DMS Update Manager also supports pushing new/updated files to a Linux server. " +
+                                          "This requires an RSA private key file be on the computer running the DMS Update Manager " +
+                                          "along with an RSA public key file on the target Linux server. For more info, see the Readme file."));
+                }
+
                 Console.WriteLine();
-                Console.WriteLine("Program syntax:" + "\n" + Path.GetFileName(ProcessFilesOrFoldersBase.GetAppPath()));
-                Console.WriteLine(" [/S:SourceFolderPath [/T:TargetFolderPath]");
-                Console.WriteLine(" [/P:ParameterFilePath] [/Force] [/L] [/V]");
-                Console.WriteLine(" [/NM] [/WaitTimeout:minutes]");
-                Console.WriteLine();
-                Console.WriteLine("All files present in the source folder will be copied to the target folder if the file size or file modification time are different");
-                Console.WriteLine("You can either define the source and target folder at the command line, or using the parameter file.  All settings in the parameter file override command line settings.");
-                Console.WriteLine();
-                Console.WriteLine("Use /Force to force an update to run, even if the last update ran less than 30 seconds ago (or the time defined by MinimumRepeatTimeSeconds in the parameter file)");
-                Console.WriteLine("Use /L to log details of the updated files");
-                Console.WriteLine("Use /V to preview the files that would be updated");
-                Console.WriteLine();
-                Console.WriteLine("Use /NM to not use a mutex, allowing multiple instances of this program to run simultaneously with the same parameter file");
-                Console.WriteLine("Use /WaitTimeout:minutes to specify how long the program should wait for another instance to finish before exiting");
-                Console.WriteLine();
-                Console.WriteLine("These special flags affect how files are processed");
-                Console.WriteLine("Append the flags to the source file name to use them");
-                Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.ROLLBACK_SUFFIX + " - Rolls back newer target files to match the source");
-                Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.DELETE_SUFFIX + " - Deletes the target file");
-                Console.WriteLine();
-                Console.WriteLine("These special flag files affect how folders are processed");
-                Console.WriteLine("To use them, create an empty file with the given name in a source folder");
-                Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.PUSH_DIR_FLAG + " - Pushes the directory to the parent of the target folder");
-                Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.PUSH_AM_SUBDIR_FLAG + " - Pushes the directory to the target folder as a subfolder");
-                Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.DELETE_SUBDIR_FLAG + " - Deletes the directory from the parent of the target, but only if the directory is empty");
-                Console.WriteLine("  " + UpdateMgr.DMSUpdateManager.DELETE_AM_SUBDIR_FLAG + " - Deletes the directory from below the target, but only if it is empty");
+                Console.WriteLine(WrapParagraph(
+                                      "When pushing files to a remote server, the parameter file must specify the path to a text file " +
+                                      "with an encoded passphrase for decoding the RSA private key. " +
+                                      "The following commands can be used to convert passwords:"));
+                Console.WriteLine(GetExeName() + " PasswordToParse /Encode");
+                Console.WriteLine(GetExeName() + " EncodedPassword /Decode");
                 Console.WriteLine();
                 Console.WriteLine("Program written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA) in 2009");
                 Console.WriteLine("Version: " + ProcessFilesOrFoldersBase.GetAppVersion(PROGRAM_DATE));
@@ -218,6 +311,16 @@ namespace DMSUpdateManagerConsole
             {
                 ShowErrorMessage("Error displaying the program syntax: " + ex.Message, ex);
             }
+        }
+
+        static void ShowWarning(string message)
+        {
+            ConsoleMsgUtils.ShowWarning(message);
+        }
+
+        static string WrapParagraph(string message)
+        {
+            return CommandLineParser<clsParseCommandLine>.WrapParagraph(message);
         }
 
         static void RegisterEvents(clsEventNotifier processor)
@@ -245,7 +348,7 @@ namespace DMSUpdateManagerConsole
 
         static void Processor_WarningEvent(string message)
         {
-            ConsoleMsgUtils.ShowWarning(message);
+            ShowWarning(message);
         }
     }
 }
