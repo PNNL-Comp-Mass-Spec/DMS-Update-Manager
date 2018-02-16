@@ -1375,6 +1375,57 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
+        /// Copy new/updated files from the source directory to a target directory on a remote host
+        /// </summary>
+        /// <param name="sourceDirectoryPath">Source directory (typically a Windows share)</param>
+        /// <param name="targetDirectoryPath">Target directory on the remote host, for example /opt/DMS_Programs</param>
+        /// <param name="filesToIgnore">Comma separated list of files to ignore</param>
+        /// <param name="errorMessage">Error message</param>
+        /// <returns>True if successs, false if an error</returns>
+        protected bool StartDMSUpdateManager(string sourceDirectoryPath, string targetDirectoryPath, string filesToIgnore, out string errorMessage)
+        {
+            var ignoreList = !string.IsNullOrWhiteSpace(filesToIgnore) ? filesToIgnore.Split(',').ToList() : new List<string>();
+            return StartDMSUpdateManager(sourceDirectoryPath, targetDirectoryPath, ignoreList, out errorMessage);
+        }
+
+        /// <summary>
+        /// Copy new/updated files from the source directory to a target directory on a remote host
+        /// </summary>
+        /// <param name="sourceDirectoryPath">Source directory (typically a Windows share)</param>
+        /// <param name="targetDirectoryPath">
+        /// Target directory on the remote host, for example /opt/DMS_Programs
+        /// Ignored if RemoteHostInfo.DirectoryPath is defined
+        /// </param>
+        /// <param name="ignoreList">Filenames to ignore</param>
+        /// <param name="errorMessage">Error message</param>
+        /// <returns>True if successs, false if an error</returns>
+        protected bool StartDMSUpdateManager(string sourceDirectoryPath, string targetDirectoryPath, List<string> ignoreList, out string errorMessage)
+        {
+            var dmsUpdateManager = new DMSUpdateManager();
+            RegisterEvents(dmsUpdateManager);
+
+            var success = dmsUpdateManager.UpdateRemoteHost(RemoteHostInfo, sourceDirectoryPath, targetDirectoryPath, ignoreList);
+
+            if (success)
+            {
+                errorMessage = String.Empty;
+                return true;
+            }
+
+            errorMessage = dmsUpdateManager.GetErrorMessage();
+            if (string.IsNullOrWhiteSpace(errorMessage))
+            {
+                errorMessage = string.Format("Error pushing files to {0} using the DMSUpdateManager", targetDirectoryPath);
+            }
+            else
+            {
+                errorMessage = string.Format("Error pushing files to {0} using the DMSUpdateManager: {1}", targetDirectoryPath, errorMessage);
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Validate settings in RemoteHostInfo, then load the private key information
         /// from RemoteHostPrivateKeyFile and RemoteHostPassphraseFile
         /// </summary>
