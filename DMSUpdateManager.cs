@@ -780,7 +780,7 @@ namespace DMSUpdateManager
                     RemoteHostInfo.PassphraseFile = settingsFile.GetParam(OPTIONS_SECTION, "PassphraseFilePath", RemoteHostInfo.PassphraseFile);
 
                     if (!string.IsNullOrWhiteSpace(RemoteHostInfo.HostName) ||
-                        !string.IsNullOrWhiteSpace(RemoteHostInfo.HostName))
+                        !string.IsNullOrWhiteSpace(RemoteHostInfo.Username))
                     {
                         RemoteHostInfo.BaseDirectoryPath = mTargetDirectoryPath;
                         mRemoteHostInfoDefined = true;
@@ -806,7 +806,7 @@ namespace DMSUpdateManager
                     var filesToIgnore = settingsFile.GetParam(OPTIONS_SECTION, "FilesToIgnore", string.Empty);
                     try
                     {
-                        if (filesToIgnore.Length > 0)
+                        if (!string.IsNullOrWhiteSpace(filesToIgnore))
                         {
                             var ignoreList = filesToIgnore.Split(',');
 
