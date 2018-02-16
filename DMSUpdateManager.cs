@@ -991,6 +991,68 @@ namespace DMSUpdateManager
         /// <summary>
         /// Update files on a remote Linux host
         /// </summary>
+        /// <param name="remoteHostInfo">Remote host info</param>
+        /// <param name="sourceDirectoryPath">Source directory (typically a Windows share)</param>
+        /// <param name="targetDirectoryPath">
+        /// Target directory on the remote host, for example /opt/DMS_Programs
+        /// Ignored if remoteHostInfo.DirectoryPath is defined
+        /// </param>
+        /// <param name="overwriteNewerFiles">If False, then will not overwrite files in the target directory that are newer than files in the source directory</param>
+        /// <param name="ignoreList">List of files that will not be copied</param>
+        /// <param name="copySubdirectoriesToParentDirectory">When True, copy any subdirectories of the source directory into a subdirectory off the parent directory the target directory</param>
+        /// <param name="mutexNameSuffix">Suffix applied to the mutex name when checking for other running copies of the DMSUpdateManager</param>
+        /// <param name="minimumRepeatTimeSeconds">Minimum time between updates</param>
+        /// <returns></returns>
+        public bool UpdateRemoteHost(
+            RemoteHostConnectionInfo remoteHostInfo,
+            string sourceDirectoryPath,
+            string targetDirectoryPath,
+            List<string> ignoreList,
+            bool overwriteNewerFiles = false,
+            bool copySubdirectoriesToParentDirectory = true,
+            string mutexNameSuffix = "UpdateRemoteHost",
+            int minimumRepeatTimeSeconds = 30)
+        {
+            SetLocalErrorCode(eDMSUpdateManagerErrorCodes.NoError);
+
+            RemoteHostInfo = remoteHostInfo;
+
+            mSourceDirectoryPath = sourceDirectoryPath;
+            mTargetDirectoryPath = targetDirectoryPath;
+
+            if (string.IsNullOrWhiteSpace(remoteHostInfo.BaseDirectoryPath) && !string.IsNullOrWhiteSpace(targetDirectoryPath))
+            {
+                remoteHostInfo.BaseDirectoryPath = targetDirectoryPath;
+            }
+            else if(!string.IsNullOrWhiteSpace(remoteHostInfo.BaseDirectoryPath))
+            {
+                mTargetDirectoryPath = remoteHostInfo.BaseDirectoryPath;
+            }
+
+            OverwriteNewerFiles = overwriteNewerFiles;
+
+            mFilesToIgnore.Clear();
+            foreach (var item in ignoreList)
+            {
+                AddFileToIgnore(item.Trim());
+            }
+
+            CopySubdirectoriesToParentDirectory = copySubdirectoriesToParentDirectory;
+
+            mMutexNameSuffix = mutexNameSuffix;
+
+            mMinimumRepeatThresholdSeconds = minimumRepeatTimeSeconds;
+
+            LogMessagesToFile = false;
+
+            LoggingLevel = LogLevel.Normal;
+
+            return UpdateRemoteHostWork(RemoteHostInfo, "UpdateRemoteHost.xml");
+        }
+
+        /// <summary>
+        /// Update files on a remote Linux host
+        /// </summary>
         /// <param name="targetHostInfo">Target host info</param>
         /// <param name="parameterFilePath">Parameter file path</param>
         /// <returns>True if success, false if an error</returns>
