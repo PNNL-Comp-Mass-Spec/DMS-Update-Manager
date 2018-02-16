@@ -157,6 +157,9 @@ namespace DMSUpdateManager
         /// <remarks>Ignored if ForceUpdate is true</remarks>
         private int mMinimumRepeatThresholdSeconds;
 
+        /// <summary>
+        /// Suffix applied to the mutex name when checking for other running copies of the DMSUpdateManager
+        /// </summary>
         private string mMutexNameSuffix;
 
         #endregion

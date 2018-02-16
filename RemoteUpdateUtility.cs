@@ -45,7 +45,7 @@ namespace DMSUpdateManager
         public bool ParametersValidated { get; private set; }
 
         /// <summary>
-        /// Remote host name
+        /// Remote host info
         /// </summary>
         public RemoteHostConnectionInfo RemoteHostInfo { get; }
 
@@ -1440,16 +1440,16 @@ namespace DMSUpdateManager
             OnDebugEvent("Updating remote transfer settings using manager defaults");
 
             if (string.IsNullOrWhiteSpace(RemoteHostInfo.HostName))
-                throw new Exception("Remote HostName parameter is empty; check the manager parameters");
+                throw new Exception("Remote HostName parameter is empty; check the parameter file or manager parameters");
 
             if (string.IsNullOrWhiteSpace(RemoteHostInfo.Username))
-                throw new Exception("Remote Username parameter is empty; check the manager parameters");
+                throw new Exception("Remote Username parameter is empty; check the parameter file or manager parameters");
 
             if (string.IsNullOrWhiteSpace(RemoteHostInfo.PrivateKeyFile))
-                throw new Exception("Remote PrivateKeyFile parameter is empty; check the manager parameters");
+                throw new Exception("Remote PrivateKeyFile parameter is empty; check the parameter file or manager parameters");
 
             if (string.IsNullOrWhiteSpace(RemoteHostInfo.PassphraseFile))
-                throw new Exception("Remote PassphraseFile parameter is empty; check the manager parameters");
+                throw new Exception("Remote PassphraseFile parameter is empty; check the parameter file or manager parameters");
 
             if (string.IsNullOrWhiteSpace(RemoteHostInfo.BaseDirectoryPath))
                 throw new Exception("Remote BaseDirectoryPath parameter is empty; check the parameter file or manager parameters");
