@@ -1133,14 +1133,14 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
-        /// Retrieve a listing of all files and directories below RemoteHostInfo.DirectoryPath
+        /// Retrieve a listing of all files and directories below RemoteHostInfo.BaseDirectoryPath
         /// </summary>
         /// <returns>Dictionary of matching files and directories, where keys are full paths and values are instances of SFtpFile</returns>
         public IDictionary<string, SftpFile> GetTargetHostFilesAndDirectories()
         {
             try
             {
-                return GetRemoteFilesAndDirectories(RemoteHostInfo.DirectoryPath, true);
+                return GetRemoteFilesAndDirectories(RemoteHostInfo.BaseDirectoryPath, true);
             }
             catch (Exception ex)
             {
@@ -1400,8 +1400,8 @@ namespace DMSUpdateManager
             if (string.IsNullOrWhiteSpace(RemoteHostInfo.PassphraseFile))
                 throw new Exception("Remote PassphraseFile parameter is empty; check the manager parameters");
 
-            if (string.IsNullOrWhiteSpace(RemoteHostInfo.DirectoryPath))
-                throw new Exception("Remote DirectoryPath parameter is empty; check the manager parameters");
+            if (string.IsNullOrWhiteSpace(RemoteHostInfo.BaseDirectoryPath))
+                throw new Exception("Remote BaseDirectoryPath parameter is empty; check the parameter file or manager parameters");
 
             // Load the RSA private key info
             LoadRSAPrivateKey();

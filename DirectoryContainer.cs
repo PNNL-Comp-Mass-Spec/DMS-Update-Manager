@@ -93,7 +93,7 @@ namespace DMSUpdateManager
 
             if (trackingRemoteHostDirectory)
             {
-                DirectoryPath = remoteHostInfo.DirectoryPath;
+                DirectoryPath = remoteHostInfo.BaseDirectoryPath;
                 ParentPath = GetRemoteDirectoryParent(DirectoryPath);
 
                 mSftpClient = mUpdateUtility.ConnectToRemoteHost();

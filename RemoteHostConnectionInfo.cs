@@ -13,7 +13,7 @@ namespace DMSUpdateManager
         /// <remarks>
         /// For example, /opt/DMS_Programs
         /// </remarks>
-        public string DirectoryPath { get; set; }
+        public string BaseDirectoryPath { get; set; }
 
         /// <summary>
         /// Remote host name
@@ -56,18 +56,18 @@ namespace DMSUpdateManager
         /// <param name="userName">Username</param>
         /// <param name="privateKeyFilePath">Private key file path</param>
         /// <param name="passphraseFilePath">Passpharse file path</param>
-        /// <param name="directoryPath">Base directory on the remote host</param>
+        /// <param name="baseDirectoryPath">Base directory on the remote host</param>
         public RemoteHostConnectionInfo(
             string hostName, string userName,
             string privateKeyFilePath, string passphraseFilePath,
-            string directoryPath)
+            string baseDirectoryPath)
         {
 
             HostName = hostName;
             Username = userName;
             PrivateKeyFile = privateKeyFilePath;
             PassphraseFile = passphraseFilePath;
-            DirectoryPath = directoryPath;
+            BaseDirectoryPath = baseDirectoryPath;
         }
 
         /// <summary>
@@ -101,9 +101,9 @@ namespace DMSUpdateManager
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(DirectoryPath))
+            if (string.IsNullOrWhiteSpace(BaseDirectoryPath))
             {
-                errorMessage = "Remote directory path not defined";
+                errorMessage = "Remote base directory path not defined";
                 return false;
             }
 
