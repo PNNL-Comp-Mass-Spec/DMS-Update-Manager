@@ -612,11 +612,7 @@ namespace DMSUpdateManager
             RemoteHostInfo = new RemoteHostConnectionInfo();
             mRemoteHostInfoDefined = false;
 
-            mFilesToIgnore.Clear();
-            mFilesToIgnore.Add(PUSH_DIR_FLAG);
-            mFilesToIgnore.Add(PUSH_AM_SUBDIR_FLAG);
-            mFilesToIgnore.Add(DELETE_SUBDIR_FLAG);
-            mFilesToIgnore.Add(DELETE_AM_SUBDIR_FLAG);
+            ResetFilesToIgnore();
 
             LocalErrorCode = eDMSUpdateManagerErrorCodes.NoError;
 
@@ -864,6 +860,7 @@ namespace DMSUpdateManager
                         {
                             var ignoreList = filesToIgnore.Split(',');
 
+                            ResetFilesToIgnore();
                             foreach (var strFile in ignoreList)
                             {
                                 AddFileToIgnore(strFile.Trim());
@@ -897,6 +894,15 @@ namespace DMSUpdateManager
         public override bool ProcessFolder(string inputFolderPath, string outputFolderAlternatePath, string parameterFilePath, bool resetErrorCode)
         {
             return UpdateFolder(inputFolderPath, parameterFilePath);
+        }
+
+        private void ResetFilesToIgnore()
+        {
+            mFilesToIgnore.Clear();
+            AddFileToIgnore(PUSH_DIR_FLAG);
+            AddFileToIgnore(PUSH_AM_SUBDIR_FLAG);
+            AddFileToIgnore(DELETE_SUBDIR_FLAG);
+            AddFileToIgnore(DELETE_AM_SUBDIR_FLAG);
         }
 
         private void ShowOldAndNewFileInfo(
@@ -1081,14 +1087,14 @@ namespace DMSUpdateManager
             {
                 remoteHostInfo.BaseDirectoryPath = targetDirectoryPath;
             }
-            else if(!string.IsNullOrWhiteSpace(remoteHostInfo.BaseDirectoryPath))
+            else if (!string.IsNullOrWhiteSpace(remoteHostInfo.BaseDirectoryPath))
             {
                 mTargetDirectoryPath = remoteHostInfo.BaseDirectoryPath;
             }
 
             OverwriteNewerFiles = overwriteNewerFiles;
 
-            mFilesToIgnore.Clear();
+            ResetFilesToIgnore();
             foreach (var item in ignoreList)
             {
                 AddFileToIgnore(item.Trim());
