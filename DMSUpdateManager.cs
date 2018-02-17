@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Management;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using PRISM;
 using PRISM.FileProcessor;
@@ -540,6 +541,55 @@ namespace DMSUpdateManager
             }
         }
 
+        /// <summary>
+        /// Examine the process path to determine the executable path
+        /// </summary>
+        /// <param name="processPath"></param>
+        /// <param name="exeName">Executable name</param>
+        /// <returns>Executable path, or an empty string if cannot be determined</returns>
+        private string ExtractExePathFromProcessPath(string processPath, out string exeName)
+        {
+            try
+            {
+                // First try using Path.GetFileName
+                exeName = Path.GetFileName(processPath);
+                return processPath;
+            }
+            catch (Exception)
+            {
+                // Error; likely the processPath has invalid characters
+                // For example, this path leads to an exception:
+                // "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\ServiceHub\Hosts\ServiceHub.Host.Node.x86\ServiceHub.Host.Node.x86.exe" "./ServiceHub/controller/hubController.all.js" "3394f971a1ed456c51c2f32d0c4071f0c7c1a655cecbcb4babba32efd0f844fd"
+
+                try
+                {
+
+                    // Look for a filename embedded in double quotes
+                    var exeMatcher = new Regex("\"(?<ExePath>[^\"]+)\"");
+                    var match = exeMatcher.Match(processPath);
+                    if (match.Success)
+                        return ExtractExePathFromProcessPath(match.Groups["ExePath"].Value, out exeName);
+
+                    var spaceIndex = processPath.IndexOf(' ');
+                    if (spaceIndex > 0)
+                    {
+                        var startOfPath = processPath.Substring(0, spaceIndex);
+                        if (startOfPath.Length > 1 && startOfPath.StartsWith("\""))
+                            return ExtractExePathFromProcessPath(startOfPath.Substring(1), out exeName);
+
+                        return ExtractExePathFromProcessPath(startOfPath, out exeName);
+                    }
+                }
+                catch (Exception)
+                {
+                    // Ignore errors here
+                }
+
+                exeName = string.Empty;
+                return string.Empty;
+            }
+        }
+
         private void InitializeLocalVariables()
         {
             ReThrowEvents = false;
@@ -602,12 +652,16 @@ namespace DMSUpdateManager
                 }
 
                 // Skip this process if it is unlikely to be locking the target file
-                if (processPath.Contains(runningExeName) || executablesToIgnore.Contains(Path.GetFileName(processPath)))
+                var exePath = ExtractExePathFromProcessPath(processPath, out var exeName);
+                if (string.IsNullOrWhiteSpace(exePath))
+                    continue;
+
+                if (processPath.Contains(runningExeName) || executablesToIgnore.Contains(exeName))
                 {
                     continue;
                 }
 
-                var newProcess = new ProcessInfo(processId, processPath, cmd);
+                var newProcess = new ProcessInfo(processId, exePath, cmd);
                 if (newProcess.DirectoryHierarchy.Count < 3)
                 {
                     // Process running in the root directory or one below the root directory; ignore it
