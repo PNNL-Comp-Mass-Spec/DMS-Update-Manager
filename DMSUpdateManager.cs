@@ -31,9 +31,9 @@ namespace DMSUpdateManager
         /// </summary>
         public DMSUpdateManager()
         {
-            mFileDate = "February 16, 2018";
+            mFileDate = "March 6, 2018";
 
-            mFilesToIgnore = new SortedSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            mFilesToIgnore = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             mProcessesDict = new Dictionary<uint, ProcessInfo>();
 
             mExecutingExePath = GetAppPath();
@@ -1581,9 +1581,9 @@ namespace DMSUpdateManager
             var filesInSource = sourceDirectory.GetFiles();
 
             // Populate a SortedSet with the names of any .delete files in fiFilesInSource
-            var deleteFiles = new SortedSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            var deleteFiles = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             var filesToDelete = (from sourceFile in filesInSource
-                                 where sourceFile.Name.EndsWith(DELETE_SUFFIX, StringComparison.InvariantCultureIgnoreCase)
+                                 where sourceFile.Name.EndsWith(DELETE_SUFFIX, StringComparison.OrdinalIgnoreCase)
                                  select TrimSuffix(sourceFile.Name, DELETE_SUFFIX).ToLower());
             foreach (var item in filesToDelete)
             {
@@ -1591,9 +1591,9 @@ namespace DMSUpdateManager
             }
 
             // Populate a SortedSet with the names of any .checkjava files in fiFilesInSource
-            var checkJavaFiles = new SortedSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            var checkJavaFiles = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             var javaFilesToCheck = (from sourceFile in filesInSource
-                                    where sourceFile.Name.EndsWith(CHECK_JAVA_SUFFIX, StringComparison.InvariantCultureIgnoreCase)
+                                    where sourceFile.Name.EndsWith(CHECK_JAVA_SUFFIX, StringComparison.OrdinalIgnoreCase)
                                     select TrimSuffix(sourceFile.Name, CHECK_JAVA_SUFFIX).ToLower());
             foreach (var item in javaFilesToCheck)
             {
@@ -1626,7 +1626,7 @@ namespace DMSUpdateManager
                         string fileUsageMessage;
 
                         // See if file ends with one of the special suffix flags
-                        if (sourceFile.Name.EndsWith(ROLLBACK_SUFFIX, StringComparison.InvariantCultureIgnoreCase))
+                        if (sourceFile.Name.EndsWith(ROLLBACK_SUFFIX, StringComparison.OrdinalIgnoreCase))
                         {
                             // This is a Rollback file
                             // Do not copy this file
@@ -1659,7 +1659,7 @@ namespace DMSUpdateManager
                             break; // Break out of the while, continue the for loop
                         }
 
-                        if (sourceFile.Name.EndsWith(DELETE_SUFFIX, StringComparison.InvariantCultureIgnoreCase))
+                        if (sourceFile.Name.EndsWith(DELETE_SUFFIX, StringComparison.OrdinalIgnoreCase))
                         {
                             // This is a Delete file
                             // Do not copy this file
@@ -1669,7 +1669,7 @@ namespace DMSUpdateManager
                             break; // Break out of the while, continue the for loop
                         }
 
-                        if (sourceFile.Name.EndsWith(CHECK_JAVA_SUFFIX, StringComparison.InvariantCultureIgnoreCase))
+                        if (sourceFile.Name.EndsWith(CHECK_JAVA_SUFFIX, StringComparison.OrdinalIgnoreCase))
                         {
                             // This is a .checkjava file
                             // Do not copy this file
@@ -1811,7 +1811,7 @@ namespace DMSUpdateManager
                         lastProcess = process.ProcessName;
                     }
 
-                    if (!process.ProcessName.StartsWith("java", StringComparison.InvariantCultureIgnoreCase))
+                    if (!process.ProcessName.StartsWith("java", StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }
@@ -1991,7 +1991,7 @@ namespace DMSUpdateManager
 
             var targetDirectoryPathHierarchy = ProcessInfo.GetDirectoryHierarchy(targetDirectoryPath);
 
-            if (string.Equals(targetDirectoryPath, mLastDirectoryProcessesChecked, StringComparison.InvariantCultureIgnoreCase))
+            if (string.Equals(targetDirectoryPath, mLastDirectoryProcessesChecked, StringComparison.OrdinalIgnoreCase))
             {
                 firstProcessPath = mLastDirectoryRunningProcessPath;
                 firstProcessId = mLastDirectoryRunningProcessId;
@@ -2043,7 +2043,7 @@ namespace DMSUpdateManager
             // This can help check for .jar files that don't have a .checkjava flag file
             foreach (var item in mProcessesDict)
             {
-                if (item.Value.CommandLineArgs.IndexOf(targetDirectoryPath, StringComparison.InvariantCultureIgnoreCase) < 0)
+                if (item.Value.CommandLineArgs.IndexOf(targetDirectoryPath, StringComparison.OrdinalIgnoreCase) < 0)
                 {
                     continue;
                 }
@@ -2189,7 +2189,7 @@ namespace DMSUpdateManager
         {
             public int Compare(Process x, Process y)
             {
-                return string.Compare(x?.ProcessName, y?.ProcessName, StringComparison.InvariantCultureIgnoreCase);
+                return string.Compare(x?.ProcessName, y?.ProcessName, StringComparison.OrdinalIgnoreCase);
             }
         }
     }
