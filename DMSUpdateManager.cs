@@ -446,11 +446,19 @@ namespace DMSUpdateManager
                         if (TimeIsNewer(targetFile.LastWriteTimeUtc, sourceFile.LastWriteTimeUtc))
                         {
                             // Target file is newer than the source; do not overwrite
+                            // Check for a .rollback file
+                            var rollbackFile = new FileInfo(sourceFile.FullName + ROLLBACK_SUFFIX);
 
-                            var strWarning = "Warning: Skipping file " + targetFile.FullName + " since a newer version exists in the target; " +
-                                             "source=" + sourceFile.LastWriteTimeUtc.ToLocalTime() + ", target=" + targetFile.LastWriteTimeUtc.ToLocalTime();
+                            if (!rollbackFile.Exists)
+                            {
+                                // No .rollback file; log a warning every 24 hours
+                                var strWarning = "Warning: Skipping file " + targetFile.FullName + " since a newer version exists in the target; " +
+                                                 "source=" + sourceFile.LastWriteTimeUtc.ToLocalTime() + ", target=" +
+                                                 targetFile.LastWriteTimeUtc.ToLocalTime();
 
-                            ShowWarning(strWarning, 24);
+                                ShowWarning(strWarning, 24);
+                            }
+
                             needToCopy = false;
                         }
                     }
