@@ -13,5 +13,8 @@ call DistributeDMSUpdateManager_Work.bat \\pnl\projects\OmicsSW\DMS_Programs\Ana
 
 call DistributeDMSUpdateManager_Work.bat \\protoapps\DMS_Programs\DMSUpdateManager
 
+xcopy /d /y DMSUpdateManager.dll ..\..\..\Analysis_Manager\AM_Common\
+xcopy /d /y DMSUpdateManager.pdb ..\..\..\Analysis_Manager\AM_Common\
+
 @echo off
 pause
