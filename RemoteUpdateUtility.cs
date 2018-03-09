@@ -787,8 +787,9 @@ namespace DMSUpdateManager
         /// <summary>
         /// Delete a remote directory, including all files and subdirectories
         /// </summary>
-        /// <param name="directoryPath"></param>
-        public void DeleteDirectoryAndContents(string directoryPath)
+        /// <param name="directoryPath">Starting directory for deleting files / subdirectories</param>
+        /// <param name="keepStartingDirectory">When true, delete all files/directories in the remote directory but don't remove the starting directory</param>
+        public void DeleteDirectoryAndContents(string directoryPath, bool keepStartingDirectory = false)
         {
 
             if (!ParametersValidated)
@@ -811,6 +812,7 @@ namespace DMSUpdateManager
                     var filesAndDirectories = new Dictionary<string, SftpFile>();
                     var directoriesToDelete = new SortedSet<string>();
 
+                    // Find all files and directories below directoryPath; recurse infinitely
                     GetRemoteFilesAndDirectories(sftp, directoryPath, true, MAX_DEPTH, filesAndDirectories);
 
                     foreach (var workDirFile in filesAndDirectories)
@@ -821,7 +823,9 @@ namespace DMSUpdateManager
                                 continue;
 
                             if (!directoriesToDelete.Contains(workDirFile.Key))
+                            {
                                 directoriesToDelete.Add(workDirFile.Key);
+                            }
 
                             continue;
                         }
@@ -833,9 +837,13 @@ namespace DMSUpdateManager
 
                             var parentPath = clsPathUtils.GetParentDirectoryPath(workDirFile.Value.FullName, out _);
 
-                            if (!directoriesToDelete.Contains(parentPath))
-                                directoriesToDelete.Add(parentPath);
+                            if (directoriesToDelete.Contains(parentPath))
+                                continue;
 
+                            if (keepStartingDirectory && string.Equals(directoryPath, parentPath))
+                                continue;
+
+                            directoriesToDelete.Add(parentPath);
                         }
                         catch (Exception ex)
                         {
@@ -843,6 +851,9 @@ namespace DMSUpdateManager
                         }
 
                     }
+
+                    if (!keepStartingDirectory && !directoriesToDelete.Contains(directoryPath))
+                        directoriesToDelete.Add(directoryPath);
 
                     foreach (var directoryToDelete in (from item in directoriesToDelete orderby item descending select item))
                     {
