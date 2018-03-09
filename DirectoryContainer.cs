@@ -403,7 +403,7 @@ namespace DMSUpdateManager
         public static string GetRemoteDirectoryParent(string fileOrDirectoryPath)
         {
             if (fileOrDirectoryPath.EndsWith("/") && fileOrDirectoryPath.Length > 1)
-                fileOrDirectoryPath = fileOrDirectoryPath.Substring(0, fileOrDirectoryPath.Length - 1);
+                fileOrDirectoryPath = fileOrDirectoryPath.TrimEnd('/');
 
             var lastSlash = fileOrDirectoryPath.LastIndexOf('/');
             var remoteDirectory = lastSlash < 1 ? "/" : fileOrDirectoryPath.Substring(0, lastSlash);
