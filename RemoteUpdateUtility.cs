@@ -524,7 +524,24 @@ namespace DMSUpdateManager
                         OnDebugEvent("  Copying " + sourceFile.FullName);
 
                         var targetFilePath = clsPathUtils.CombineLinuxPaths(remoteDirectoryPath, sourceFile.Name);
-                        scp.Upload(sourceFile, targetFilePath);
+
+                        try
+                        {
+                            scp.Upload(sourceFile, targetFilePath);
+                        }
+                        catch (Exception ex2)
+                        {
+                            if (ex2.Message.Contains("set times: Operation not permitted"))
+                            {
+                                // Treat this as a warning, not an error
+                                OnWarningEvent("File copied, but could not update the timestamp (Operation not permitted): " + targetFilePath);
+                            }
+                            else
+                            {
+                                throw;
+                            }
+
+                        }
 
                         success = true;
                     }
