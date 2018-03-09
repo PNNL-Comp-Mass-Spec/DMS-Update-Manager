@@ -7,7 +7,7 @@ namespace DMSUpdateManager
     /// <summary>
     /// Tracks information on a local or remote file or directory
     /// </summary>
-    internal class FileOrDirectoryInfo
+    public class FileOrDirectoryInfo
     {
         #region "Properties"
 

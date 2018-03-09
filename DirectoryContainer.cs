@@ -12,7 +12,7 @@ namespace DMSUpdateManager
     /// The directory can be on the local computer, on a remote Windows share,
     /// or could be one we'll access using SSH and SFTP
     /// </summary>
-    internal class DirectoryContainer : IDisposable
+    public class DirectoryContainer : IDisposable
     {
         private readonly RemoteUpdateUtility mUpdateUtility;
 
