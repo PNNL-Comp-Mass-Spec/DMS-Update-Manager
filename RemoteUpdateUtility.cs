@@ -800,7 +800,10 @@ namespace DMSUpdateManager
                 if (string.IsNullOrEmpty(directoryPath))
                     throw new Exception("directoryPath parameter is empty; nothing to delete");
 
-                OnDebugEvent("Delete directory on host " + RemoteHostInfo.HostName + ": " + directoryPath);
+                if (keepStartingDirectory)
+                    OnDebugEvent("Assure directory is empty on host " + RemoteHostInfo.HostName + ": " + directoryPath);
+                else
+                    OnDebugEvent("Delete directory on host " + RemoteHostInfo.HostName + ": " + directoryPath);
 
                 using (var sftp = new SftpClient(RemoteHostInfo.HostName, RemoteHostInfo.Username, mPrivateKeyFile))
                 {
