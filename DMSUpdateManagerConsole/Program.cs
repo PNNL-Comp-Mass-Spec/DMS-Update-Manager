@@ -22,7 +22,7 @@ namespace DMSUpdateManagerConsole
         /// <summary>
         /// Program date
         /// </summary>
-        public const string PROGRAM_DATE = "March 6, 2018";
+        public const string PROGRAM_DATE = "March 15, 2018";
 
         // Either mSourceFolderPath and mTargetFolderPath must be specified, or mParameterFilePath needs to be specified
 
@@ -247,22 +247,22 @@ namespace DMSUpdateManagerConsole
                     Console.WriteLine(" [/NM] [/WaitTimeout:minutes]");
                     Console.WriteLine();
 
-                    Console.WriteLine(WrapParagraph(
+                    Console.WriteLine(ConsoleMsgUtils.WrapParagraph(
                                           "All files present in the source folder will be copied to the target folder " +
                                           "if the file size or file modification time are different. " +
                                           "You can either define the source and target folder at the command line, " +
                                           "or using the parameter file. All settings in the parameter file override command line settings."));
                     Console.WriteLine();
-                    Console.WriteLine(WrapParagraph(
+                    Console.WriteLine(ConsoleMsgUtils.WrapParagraph(
                                           "Use /Force to force an update to run, even if the last update ran less than 30 seconds ago " +
                                           "(or MinimumRepeatTimeSeconds defined in the parameter file)"));
                     Console.WriteLine("Use /L to log details of the updated files");
                     Console.WriteLine("Use /V to preview the files that would be updated");
                     Console.WriteLine();
-                    Console.WriteLine(WrapParagraph(
+                    Console.WriteLine(ConsoleMsgUtils.WrapParagraph(
                                           "Use /NM to not use a mutex, allowing multiple instances of this program " +
                                           "to run simultaneously with the same parameter file"));
-                    Console.WriteLine(WrapParagraph(
+                    Console.WriteLine(ConsoleMsgUtils.WrapParagraph(
                                           "Use /WaitTimeout:minutes to specify how long the program " +
                                           "should wait for another instance to finish before exiting"));
                     Console.WriteLine();
@@ -282,14 +282,14 @@ namespace DMSUpdateManagerConsole
                                       " - Deletes the directory from below the target, but only if it is empty");
                     Console.WriteLine();
 
-                    Console.WriteLine(WrapParagraph(
+                    Console.WriteLine(ConsoleMsgUtils.WrapParagraph(
                                           "The DMS Update Manager also supports pushing new/updated files to a Linux server. " +
                                           "This requires an RSA private key file be on the computer running the DMS Update Manager " +
                                           "along with an RSA public key file on the target Linux server. For more info, see the Readme file."));
                 }
 
                 Console.WriteLine();
-                Console.WriteLine(WrapParagraph(
+                Console.WriteLine(ConsoleMsgUtils.WrapParagraph(
                                       "When pushing files to a remote server, the parameter file must specify the path to a text file " +
                                       "with an encoded passphrase for decoding the RSA private key. " +
                                       "The following commands can be used to convert passwords:"));
@@ -304,8 +304,8 @@ namespace DMSUpdateManagerConsole
                 Console.WriteLine("Website: https://omics.pnl.gov/ or https://panomics.pnnl.gov/");
                 Console.WriteLine();
 
-                // Delay for 750 msec in case the user double clicked this file from within Windows Explorer (or started the program via a shortcut)
-                clsProgRunner.SleepMilliseconds(750);
+                // Delay for 1 second in case the user double clicked this file from within Windows Explorer (or started the program via a shortcut)
+                ConsoleMsgUtils.SleepSeconds(1);
             }
             catch (Exception ex)
             {
@@ -316,11 +316,6 @@ namespace DMSUpdateManagerConsole
         static void ShowWarning(string message)
         {
             ConsoleMsgUtils.ShowWarning(message);
-        }
-
-        static string WrapParagraph(string message)
-        {
-            return CommandLineParser<clsParseCommandLine>.WrapParagraph(message);
         }
 
         static void RegisterEvents(clsEventNotifier processor)
