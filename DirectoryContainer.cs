@@ -411,16 +411,32 @@ namespace DMSUpdateManager
 
         }
 
+        /// <summary>
+        /// Public destructor
+        /// </summary>
         public void Dispose()
         {
-            try
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Protected destructor
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
             {
-                mSftpClient?.Disconnect();
-                mSftpClient?.Dispose();
-            }
-            catch
-            {
-                // Ignore errors
+                try
+                {
+                    mSftpClient?.Disconnect();
+                    mSftpClient?.Dispose();
+                }
+                catch (Exception)
+                {
+                    // Ignore errors
+                }
             }
         }
 
