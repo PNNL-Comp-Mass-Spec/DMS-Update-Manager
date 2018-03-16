@@ -21,8 +21,8 @@ namespace DMSUpdateManager
     /// Written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA)
     /// Program started January 16, 2009
     /// --
-    /// E-mail: matthew.monroe@pnnl.gov or matt@alchemistmatt.com
-    /// Website: http://omics.pnl.gov/ or http://panomics.pnnl.gov/")
+    /// E-mail: matthew.monroe@pnnl.gov or proteomics@pnnl.gov
+    /// Website: https://omics.pnl.gov/ or https://panomics.pnnl.gov/")
     /// </remarks>
     public class DMSUpdateManager : ProcessFoldersBase
     {
@@ -31,7 +31,7 @@ namespace DMSUpdateManager
         /// </summary>
         public DMSUpdateManager()
         {
-            mFileDate = "March 8, 2018";
+            mFileDate = "March 15, 2018";
 
             mFilesToIgnore = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             mProcessesDict = new Dictionary<uint, ProcessInfo>();
@@ -1731,7 +1731,7 @@ namespace DMSUpdateManager
                         }
 
                         retryCount -= 1;
-                        clsProgRunner.SleepMilliseconds(100);
+                        ConsoleMsgUtils.SleepSeconds(0.1);
                     }
                 }
             }

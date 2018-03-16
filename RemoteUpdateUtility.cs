@@ -155,7 +155,7 @@ namespace DMSUpdateManager
             while (waitingForLockFile)
             {
                 // Wait for a period of time, the check on the status of the lock file
-                SleepSeconds(waitTimeSeconds);
+                ConsoleMsgUtils.SleepSeconds(waitTimeSeconds);
 
                 fiLockFile = FindLockFile(sftp, remoteDirectoryPath, lockFileName);
 
@@ -712,7 +712,7 @@ namespace DMSUpdateManager
 
             // Wait 2 to 5 seconds, then re-open the file to make sure it was created by this manager
             var oRandom = new Random();
-            SleepSeconds(oRandom.Next(2, 5));
+            ConsoleMsgUtils.SleepSeconds(oRandom.Next(2, 5));
 
             var lockFileContentsNew = sftp.ReadAllLines(remoteLockFilePath, Encoding.ASCII);
 
@@ -1391,15 +1391,6 @@ namespace DMSUpdateManager
                 OnErrorEvent("Error moving files", ex);
                 return false;
             }
-        }
-
-        /// <summary>
-        /// Sleep for the given number of seconds
-        /// </summary>
-        /// <param name="waitTimeSeconds"></param>
-        private void SleepSeconds(int waitTimeSeconds)
-        {
-            clsProgRunner.SleepMilliseconds(waitTimeSeconds * 1000);
         }
 
         /// <summary>
