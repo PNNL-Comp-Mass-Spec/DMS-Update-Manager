@@ -31,7 +31,7 @@ namespace DMSUpdateManager
         /// </summary>
         public DMSUpdateManager()
         {
-            mFileDate = "March 15, 2018";
+            mFileDate = "March 28, 2018";
 
             mFilesToIgnore = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             mProcessesDict = new Dictionary<uint, ProcessInfo>();
@@ -168,8 +168,8 @@ namespace DMSUpdateManager
         #region "Properties"
 
         /// <summary>
-        /// When mCopySubdirectoriesToParentDirectory=True, will copy any subdirectories of the source directory
-        /// into a subdirectory off the parent directory the target directory
+        /// When true, copy any subdirectories of the source directory into the
+        /// subdirectories of the parent directory of the target directory
         /// </summary>
         /// <remarks>
         /// For example:
@@ -180,7 +180,7 @@ namespace DMSUpdateManager
         ///   Next, directory \\gigasax\DMS_Programs\AnalysisToolManagerDistribution\MASIC\ will get sync'd with ..\MASIC (but only if ..\MASIC exists)
         ///     Note that ..\MASIC is actually C:\DMS_Programs\MASIC\
         ///   When sync'ing the MASIC directories, will recursively sync additional directories that match
-        ///   If the source directory contains file _PushDir_.txt or _AMSubDir_.txt then the directory will be copied to the target even if it doesn't exist there
+        ///   If the source directory contains file _PushDir_.txt or _AMSubDir_.txt, the directory will be copied to the target even if it doesn't exist there
         /// </remarks>
         public bool CopySubdirectoriesToParentDirectory { get; set; }
 
@@ -206,12 +206,12 @@ namespace DMSUpdateManager
         public eDMSUpdateManagerErrorCodes LocalErrorCode { get; private set; }
 
         /// <summary>
-        /// If False, then will not overwrite files in the target directory that are newer than files in the source directory
+        /// If False, will not overwrite files in the target directory that are newer than files in the source directory
         /// </summary>
         public bool OverwriteNewerFiles { get; set; }
 
         /// <summary>
-        /// When true, then messages will be displayed and logged showing the files that would be copied
+        /// When true, messages will be displayed and logged showing the files that would be copied
         /// </summary>
         public bool PreviewMode { get; set; }
 
@@ -1068,7 +1068,7 @@ namespace DMSUpdateManager
         /// Target directory on the remote host, for example /opt/DMS_Programs
         /// Ignored if remoteHostInfo.DirectoryPath is defined
         /// </param>
-        /// <param name="overwriteNewerFiles">If False, then will not overwrite files in the target directory that are newer than files in the source directory</param>
+        /// <param name="overwriteNewerFiles">If False, will not overwrite files in the target directory that are newer than files in the source directory</param>
         /// <param name="ignoreList">List of files that will not be copied</param>
         /// <param name="copySubdirectoriesToParentDirectory">When True, copy any subdirectories of the source directory into a subdirectory off the parent directory the target directory</param>
         /// <param name="mutexNameSuffix">Suffix applied to the mutex name when checking for other running copies of the DMSUpdateManager</param>
