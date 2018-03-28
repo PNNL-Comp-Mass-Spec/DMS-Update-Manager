@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using UpdateMgr=DMSUpdateManager;
+using UpdateMgr = DMSUpdateManager;
 using PRISM;
 using PRISM.FileProcessor;
 
@@ -22,7 +22,7 @@ namespace DMSUpdateManagerConsole
         /// <summary>
         /// Program date
         /// </summary>
-        public const string PROGRAM_DATE = "March 15, 2018";
+        public const string PROGRAM_DATE = "March 28, 2018";
 
         // Either mSourceFolderPath and mTargetFolderPath must be specified, or mParameterFilePath needs to be specified
 
@@ -40,6 +40,8 @@ namespace DMSUpdateManagerConsole
         private static bool mLogMessagesToFile;
 
         private static bool mPreviewMode;
+
+        private static bool mCopySubdirectoriesToParentDirectory;
 
         private static bool mNoMutex;
         private static double mWaitTimeoutMinutes;
@@ -71,6 +73,9 @@ namespace DMSUpdateManagerConsole
             mForceUpdate = false;
             mLogMessagesToFile = false;
             mPreviewMode = false;
+
+            mCopySubdirectoriesToParentDirectory = true;
+
             mNoMutex = false;
             mWaitTimeoutMinutes = 5;
 
@@ -101,6 +106,7 @@ namespace DMSUpdateManagerConsole
 
                 var updateManager = new UpdateMgr.DMSUpdateManager
                 {
+                    CopySubdirectoriesToParentDirectory = mCopySubdirectoriesToParentDirectory,
                     ForceUpdate = mForceUpdate,
                     LogMessagesToFile = mLogMessagesToFile,
                     PreviewMode = mPreviewMode,
@@ -150,7 +156,8 @@ namespace DMSUpdateManagerConsole
 
             var validParameters = new List<string> {
                 "S", "T", "P", "Force", "L", "V",
-                "Preview", "NM", "WaitTimeout",
+                "Preview", "NoParent", "NoParents",
+                "NM", "WaitTimeout",
                 "E", "Encode", "D", "Decode"};
 
             try
@@ -178,6 +185,9 @@ namespace DMSUpdateManagerConsole
                 mPreviewMode = commandLineParser.IsParameterPresent("V");
 
                 mPreviewMode = mPreviewMode || commandLineParser.IsParameterPresent("Preview");
+
+                if (commandLineParser.IsParameterPresent("NoParent") || commandLineParser.IsParameterPresent("NoParents"))
+                    mCopySubdirectoriesToParentDirectory = false;
 
                 mNoMutex = commandLineParser.IsParameterPresent("NM");
 
@@ -244,7 +254,7 @@ namespace DMSUpdateManagerConsole
                     Console.WriteLine("Program syntax:" + "\n" + GetExeName());
                     Console.WriteLine(" [/S:SourceFolderPath [/T:TargetFolderPath]");
                     Console.WriteLine(" [/P:ParameterFilePath] [/Force] [/L] [/V]");
-                    Console.WriteLine(" [/NM] [/WaitTimeout:minutes]");
+                    Console.WriteLine(" [/NoParent] [/NM] [/WaitTimeout:minutes]");
                     Console.WriteLine();
 
                     Console.WriteLine(ConsoleMsgUtils.WrapParagraph(
@@ -258,6 +268,10 @@ namespace DMSUpdateManagerConsole
                                           "(or MinimumRepeatTimeSeconds defined in the parameter file)"));
                     Console.WriteLine("Use /L to log details of the updated files");
                     Console.WriteLine("Use /V to preview the files that would be updated");
+                    Console.WriteLine();
+                    Console.WriteLine(ConsoleMsgUtils.WrapParagraph(
+                                          "Use /NoParent to only update the target directory, and not copy subdirectories of the source directory " +
+                                          "into the subdirectories of the parent directory of the target directory"));
                     Console.WriteLine();
                     Console.WriteLine(ConsoleMsgUtils.WrapParagraph(
                                           "Use /NM to not use a mutex, allowing multiple instances of this program " +
