@@ -40,6 +40,13 @@ namespace DMSUpdateManager
         #region "Properties"
 
         /// <summary>
+        /// When true, copy any subdirectories of the source directory into the
+        /// subdirectories of the parent directory of the target directory
+        /// </summary>
+        /// <remarks>Defaults to True</remarks>
+        public bool CopySubdirectoriesToParentDirectory { get; set; }
+
+        /// <summary>
         /// Set to true once the remote host parameters have been validated
         /// </summary>
         public bool ParametersValidated { get; private set; }
@@ -68,6 +75,7 @@ namespace DMSUpdateManager
         /// </summary>
         public RemoteUpdateUtility(RemoteHostConnectionInfo remoteHostInfo)
         {
+            CopySubdirectoriesToParentDirectory = true;
             RemoteHostInfo = remoteHostInfo;
             ParametersValidated = false;
         }
@@ -1423,7 +1431,10 @@ namespace DMSUpdateManager
         /// <returns>True if successs, false if an error</returns>
         protected bool StartDMSUpdateManager(string sourceDirectoryPath, string targetDirectoryPath, List<string> ignoreList, out string errorMessage)
         {
-            var dmsUpdateManager = new DMSUpdateManager();
+            var dmsUpdateManager = new DMSUpdateManager {
+                CopySubdirectoriesToParentDirectory = CopySubdirectoriesToParentDirectory
+            };
+
             RegisterEvents(dmsUpdateManager);
 
             var success = dmsUpdateManager.UpdateRemoteHost(RemoteHostInfo, sourceDirectoryPath, targetDirectoryPath, ignoreList);
