@@ -1431,13 +1431,12 @@ namespace DMSUpdateManager
         /// <returns>True if successs, false if an error</returns>
         protected bool StartDMSUpdateManager(string sourceDirectoryPath, string targetDirectoryPath, List<string> ignoreList, out string errorMessage)
         {
-            var dmsUpdateManager = new DMSUpdateManager {
-                CopySubdirectoriesToParentDirectory = CopySubdirectoriesToParentDirectory
-            };
+            var dmsUpdateManager = new DMSUpdateManager();
 
             RegisterEvents(dmsUpdateManager);
 
-            var success = dmsUpdateManager.UpdateRemoteHost(RemoteHostInfo, sourceDirectoryPath, targetDirectoryPath, ignoreList);
+            var success = dmsUpdateManager.UpdateRemoteHost(RemoteHostInfo, sourceDirectoryPath, targetDirectoryPath,
+                                                            ignoreList, false, CopySubdirectoriesToParentDirectory);
 
             if (success)
             {

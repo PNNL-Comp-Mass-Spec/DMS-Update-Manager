@@ -1070,7 +1070,7 @@ namespace DMSUpdateManager
         /// </param>
         /// <param name="overwriteNewerFiles">If False, will not overwrite files in the target directory that are newer than files in the source directory</param>
         /// <param name="ignoreList">List of files that will not be copied</param>
-        /// <param name="copySubdirectoriesToParentDirectory">When True, copy any subdirectories of the source directory into a subdirectory off the parent directory the target directory</param>
+        /// <param name="copySubdirectoriesToParentDirectory">When True, copy any subdirectories of the source directory into the subdirectories of the parent directory of the target directory</param>
         /// <param name="mutexNameSuffix">Suffix applied to the mutex name when checking for other running copies of the DMSUpdateManager</param>
         /// <param name="minimumRepeatTimeSeconds">Minimum time between updates</param>
         /// <returns></returns>
