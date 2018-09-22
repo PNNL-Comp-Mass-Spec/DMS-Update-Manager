@@ -31,7 +31,7 @@ namespace DMSUpdateManager
         /// </summary>
         public DMSUpdateManager()
         {
-            mFileDate = "March 28, 2018";
+            mFileDate = "September 20, 2018";
 
             mFilesToIgnore = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             mProcessesDict = new Dictionary<uint, ProcessInfo>();
@@ -543,7 +543,7 @@ namespace DMSUpdateManager
             catch (Exception ex)
             {
                 ShowErrorMessage(string.Format("Error {0} directory {1}: {2}", currentTask, directoryPath, ex.Message));
-                ConsoleMsgUtils.ShowWarning(clsStackTraceFormatter.GetExceptionStackTraceMultiLine(ex));
+                ConsoleMsgUtils.ShowWarning(StackTraceFormatter.GetExceptionStackTraceMultiLine(ex));
 
                 return FileOrDirectoryInfo.InitializeMissingDirectoryInfo(directoryPath, isLinuxDir);
             }
@@ -1726,7 +1726,7 @@ namespace DMSUpdateManager
                         if (!errorLogged)
                         {
                             ShowErrorMessage("Error synchronizing " + sourceFile.Name + ": " + ex.Message);
-                            ConsoleMsgUtils.ShowWarning(clsStackTraceFormatter.GetExceptionStackTraceMultiLine(ex));
+                            ConsoleMsgUtils.ShowWarning(StackTraceFormatter.GetExceptionStackTraceMultiLine(ex));
                             errorLogged = true;
                         }
 

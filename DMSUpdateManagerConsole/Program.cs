@@ -22,7 +22,7 @@ namespace DMSUpdateManagerConsole
         /// <summary>
         /// Program date
         /// </summary>
-        public const string PROGRAM_DATE = "March 28, 2018";
+        public const string PROGRAM_DATE = "September 21, 2018";
 
         // Either mSourceFolderPath and mTargetFolderPath must be specified, or mParameterFilePath needs to be specified
 
@@ -332,7 +332,7 @@ namespace DMSUpdateManagerConsole
             ConsoleMsgUtils.ShowWarning(message);
         }
 
-        static void RegisterEvents(clsEventNotifier processor)
+        static void RegisterEvents(EventNotifier processor)
         {
             processor.DebugEvent += Processor_DebugEvent;
             processor.ErrorEvent += Processor_ErrorEvent;

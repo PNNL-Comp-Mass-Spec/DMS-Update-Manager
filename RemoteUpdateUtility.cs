@@ -15,7 +15,7 @@ namespace DMSUpdateManager
     /// Uses sftp for file listings
     /// Uses scp for file transfers
     /// </summary>
-    public class RemoteUpdateUtility : clsEventNotifier
+    public class RemoteUpdateUtility : EventNotifier
     {
         #region "Constants"
 
@@ -256,8 +256,8 @@ namespace DMSUpdateManager
 
                     foreach (var sourceFileName in sourceFileNames)
                     {
-                        var remoteFilePath = clsPathUtils.CombineLinuxPaths(sourceDirectoryPath, sourceFileName);
-                        var targetFile = new FileInfo(clsPathUtils.CombinePathsLocalSepChar(localDirectoryPath, sourceFileName));
+                        var remoteFilePath = PathUtils.CombineLinuxPaths(sourceDirectoryPath, sourceFileName);
+                        var targetFile = new FileInfo(PathUtils.CombinePathsLocalSepChar(localDirectoryPath, sourceFileName));
 
                         try
                         {
@@ -531,7 +531,7 @@ namespace DMSUpdateManager
 
                         OnDebugEvent("  Copying " + sourceFile.FullName);
 
-                        var targetFilePath = clsPathUtils.CombineLinuxPaths(remoteDirectoryPath, sourceFile.Name);
+                        var targetFilePath = PathUtils.CombineLinuxPaths(remoteDirectoryPath, sourceFile.Name);
 
                         try
                         {
@@ -620,7 +620,7 @@ namespace DMSUpdateManager
                 var parentDirectories = new Dictionary<string, SortedSet<string>>();
                 foreach (var remoteDirectory in remoteDirectories)
                 {
-                    var parentPath = clsPathUtils.GetParentDirectoryPath(remoteDirectory, out var directoryName);
+                    var parentPath = PathUtils.GetParentDirectoryPath(remoteDirectory, out var directoryName);
                     if (string.IsNullOrWhiteSpace(parentPath))
                         continue;
 
@@ -666,7 +666,7 @@ namespace DMSUpdateManager
                                 OnDebugEvent("    found " + directoryToVerify);
                                 continue;
                             }
-                            var directoryPathToCreate = clsPathUtils.CombineLinuxPaths(remoteDirectoryPath, directoryToVerify);
+                            var directoryPathToCreate = PathUtils.CombineLinuxPaths(remoteDirectoryPath, directoryToVerify);
 
                             OnDebugEvent("  creating " + directoryPathToCreate);
                             sftp.CreateDirectory(directoryPathToCreate);
@@ -708,7 +708,7 @@ namespace DMSUpdateManager
                 lockFileData.AppendLine(dataLine);
             }
 
-            var remoteLockFilePath = clsPathUtils.CombineLinuxPaths(remoteDirectoryPath, dataFileName + LOCK_FILE_EXTENSION);
+            var remoteLockFilePath = PathUtils.CombineLinuxPaths(remoteDirectoryPath, dataFileName + LOCK_FILE_EXTENSION);
 
             OnDebugEvent("  creating lock file at " + remoteLockFilePath);
 
@@ -846,7 +846,7 @@ namespace DMSUpdateManager
                             OnDebugEvent("  deleting " + workDirFile.Key);
                             workDirFile.Value.Delete();
 
-                            var parentPath = clsPathUtils.GetParentDirectoryPath(workDirFile.Value.FullName, out _);
+                            var parentPath = PathUtils.GetParentDirectoryPath(workDirFile.Value.FullName, out _);
 
                             if (directoriesToDelete.Contains(parentPath))
                                 continue;
@@ -1035,7 +1035,7 @@ namespace DMSUpdateManager
                         continue;
                     }
 
-                    if (fileMatchSpec == "*" || clsPathUtils.FitsMask(item.Name, fileMatchSpec))
+                    if (fileMatchSpec == "*" || PathUtils.FitsMask(item.Name, fileMatchSpec))
                     {
                         try
                         {
@@ -1378,7 +1378,7 @@ namespace DMSUpdateManager
                             continue;
                         }
 
-                        var newFilePath = clsPathUtils.CombineLinuxPaths(targetRemoteDirectory, fileName);
+                        var newFilePath = PathUtils.CombineLinuxPaths(targetRemoteDirectory, fileName);
 
                         try
                         {
