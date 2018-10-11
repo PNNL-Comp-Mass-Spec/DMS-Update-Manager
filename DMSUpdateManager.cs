@@ -24,7 +24,7 @@ namespace DMSUpdateManager
     /// E-mail: matthew.monroe@pnnl.gov or proteomics@pnnl.gov
     /// Website: https://omics.pnl.gov/ or https://panomics.pnnl.gov/")
     /// </remarks>
-    public class DMSUpdateManager : ProcessFoldersBase
+    public class DMSUpdateManager : ProcessDirectoriesBase
     {
         /// <summary>
         /// Constructor
@@ -481,7 +481,7 @@ namespace DMSUpdateManager
                     if (targetFile.Name == mExecutingExeName)
                     {
                         // Update DMSUpdateManager.exe if it is not in the same directory as the starting directory
-                        if (!string.Equals(targetFile.DirectoryName, mOutputFolderPath))
+                        if (!string.Equals(targetFile.DirectoryName, mOutputDirectoryPath))
                         {
                             itemInUse = ItemInUseConstants.NotInUse;
                         }
@@ -692,7 +692,7 @@ namespace DMSUpdateManager
 
             string strErrorMessage;
 
-            if (ErrorCode == eProcessFoldersErrorCodes.LocalizedError | ErrorCode == eProcessFoldersErrorCodes.NoError)
+            if (ErrorCode == ProcessDirectoriesErrorCodes.LocalizedError | ErrorCode == ProcessDirectoriesErrorCodes.NoError)
             {
                 switch (LocalErrorCode)
                 {
@@ -806,7 +806,7 @@ namespace DMSUpdateManager
                     if (!File.Exists(parameterFilePath))
                     {
                         OnErrorEvent("Parameter file not found: " + parameterFilePath);
-                        SetBaseClassErrorCode(eProcessFoldersErrorCodes.ParameterFileNotFound);
+                        SetBaseClassErrorCode(ProcessDirectoriesErrorCodes.ParameterFileNotFound);
                         return false;
                     }
                 }
@@ -846,7 +846,13 @@ namespace DMSUpdateManager
 
                     mMutexNameSuffix = settingsFile.GetParam(OPTIONS_SECTION, "MutexNameSuffix", string.Empty);
 
-                    var logFolderPath = settingsFile.GetParam(OPTIONS_SECTION, "LogFolderPath", "Logs");
+                    var logDirectoryPath = settingsFile.GetParam(OPTIONS_SECTION, "LogDirectoryPath", "Logs");
+                    if (string.Equals(logDirectoryPath, "Logs"))
+                    {
+                        var logFolderPath = settingsFile.GetParam(OPTIONS_SECTION, "LogFolderPath", "");
+                        if (!string.IsNullOrWhiteSpace(logFolderPath))
+                            logDirectoryPath = logFolderPath;
+                    }
 
                     mMinimumRepeatThresholdSeconds = settingsFile.GetParam(OPTIONS_SECTION, "MinimumRepeatTimeSeconds", 30);
                     var logLevel = settingsFile.GetParam(OPTIONS_SECTION, "LoggingLevel", string.Empty);
@@ -899,7 +905,7 @@ namespace DMSUpdateManager
         /// <param name="resetErrorCode">Ignored by this method</param>
         /// <returns>True if success, False if failure</returns>
         /// <remarks>If TargetFolder is defined in the parameter file, inputFolderPath will be ignored</remarks>
-        public override bool ProcessFolder(string inputFolderPath, string outputFolderAlternatePath, string parameterFilePath, bool resetErrorCode)
+        public override bool ProcessDirectory(string inputFolderPath, string outputFolderAlternatePath, string parameterFilePath, bool resetErrorCode)
         {
             return UpdateFolder(inputFolderPath, parameterFilePath);
         }
