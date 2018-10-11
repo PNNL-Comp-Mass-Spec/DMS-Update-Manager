@@ -47,7 +47,7 @@ namespace DMSUpdateManager
         /// <summary>
         /// Error codes specialized for this class
         /// </summary>
-        public enum eDMSUpdateManagerErrorCodes
+        public enum DMSUpdateManagerErrorCodes
         {
             /// <summary>
             /// No error
@@ -60,14 +60,14 @@ namespace DMSUpdateManager
             UnspecifiedError = -1
         }
 
-        private enum eDateComparisonModeConstants
+        private enum DateComparisonModeConstants
         {
             RetainNewerTargetIfDifferentSize = 0,
             OverwriteNewerTargetIfDifferentSize = 2,
             CopyIfSizeOrDateDiffers = 3
         }
 
-        private enum eItemInUseConstants
+        private enum ItemInUseConstants
         {
             NotInUse = 0,
             ItemInUse = 1,
@@ -190,7 +190,7 @@ namespace DMSUpdateManager
         public double MutexWaitTimeoutMinutes { get; set; }
 
         /// <summary>
-        /// When true, use a Mutex to assure that multiple copies of the update manager are not started simulatenously
+        /// When true, use a Mutex to assure that multiple copies of the update manager are not started simultaneously
         /// </summary>
         public bool DoNotUseMutex { get; set; }
 
@@ -203,7 +203,7 @@ namespace DMSUpdateManager
         /// <summary>
         /// Local error code
         /// </summary>
-        public eDMSUpdateManagerErrorCodes LocalErrorCode { get; private set; }
+        public DMSUpdateManagerErrorCodes LocalErrorCode { get; private set; }
 
         /// <summary>
         /// If False, will not overwrite files in the target directory that are newer than files in the source directory
@@ -395,8 +395,8 @@ namespace DMSUpdateManager
             DirectoryContainer targetDirectoryInfo,
             string targetDirectoryPath,
             ref int fileUpdateCount,
-            eDateComparisonModeConstants eDateComparisonMode,
-            eItemInUseConstants itemInUse = eItemInUseConstants.NotInUse,
+            DateComparisonModeConstants eDateComparisonMode,
+            ItemInUseConstants itemInUse = ItemInUseConstants.NotInUse,
             string fileUsageMessage = "")
         {
 
@@ -415,7 +415,7 @@ namespace DMSUpdateManager
             else
             {
                 // File is present, see if the file has a different size
-                if (eDateComparisonMode == eDateComparisonModeConstants.CopyIfSizeOrDateDiffers)
+                if (eDateComparisonMode == DateComparisonModeConstants.CopyIfSizeOrDateDiffers)
                 {
                     if (targetFile.Length != sourceFile.Length)
                     {
@@ -441,7 +441,7 @@ namespace DMSUpdateManager
                         copyReason = "source file is newer";
                     }
 
-                    if (needToCopy && eDateComparisonMode == eDateComparisonModeConstants.RetainNewerTargetIfDifferentSize)
+                    if (needToCopy && eDateComparisonMode == DateComparisonModeConstants.RetainNewerTargetIfDifferentSize)
                     {
                         if (TimeIsNewer(targetFile.LastWriteTimeUtc, sourceFile.LastWriteTimeUtc))
                         {
@@ -476,24 +476,24 @@ namespace DMSUpdateManager
                     return false;
                 }
 
-                if (itemInUse != eItemInUseConstants.NotInUse)
+                if (itemInUse != ItemInUseConstants.NotInUse)
                 {
                     if (targetFile.Name == mExecutingExeName)
                     {
                         // Update DMSUpdateManager.exe if it is not in the same directory as the starting directory
                         if (!string.Equals(targetFile.DirectoryName, mOutputFolderPath))
                         {
-                            itemInUse = eItemInUseConstants.NotInUse;
+                            itemInUse = ItemInUseConstants.NotInUse;
                         }
                     }
                 }
 
-                if (itemInUse != eItemInUseConstants.NotInUse)
+                if (itemInUse != ItemInUseConstants.NotInUse)
                 {
                     // Do not update this file; it is in use (or another file in this directory is in use)
                     if (string.IsNullOrWhiteSpace(fileUsageMessage))
                     {
-                        if (itemInUse == eItemInUseConstants.DirectoryInUse)
+                        if (itemInUse == ItemInUseConstants.DirectoryInUse)
                         {
                             ShowMessage("Skipping " + sourceFile.Name + " because directory " +
                                         AbbreviatePath(targetFile.DirectoryName) + " is in use (by an unknown process)", !PreviewMode, 4);
@@ -622,7 +622,7 @@ namespace DMSUpdateManager
 
             ResetFilesToIgnore();
 
-            LocalErrorCode = eDMSUpdateManagerErrorCodes.NoError;
+            LocalErrorCode = DMSUpdateManagerErrorCodes.NoError;
 
             // This list tracks processes that appear to be using a directory, but for which we likely can still update files in that directory
             var executablesToIgnore = new SortedSet<string>(StringComparer.OrdinalIgnoreCase) {
@@ -696,10 +696,10 @@ namespace DMSUpdateManager
             {
                 switch (LocalErrorCode)
                 {
-                    case eDMSUpdateManagerErrorCodes.NoError:
+                    case DMSUpdateManagerErrorCodes.NoError:
                         strErrorMessage = string.Empty;
                         break;
-                    case eDMSUpdateManagerErrorCodes.UnspecifiedError:
+                    case DMSUpdateManagerErrorCodes.UnspecifiedError:
                         strErrorMessage = "Unspecified localized error";
                         break;
                     default:
@@ -816,7 +816,7 @@ namespace DMSUpdateManager
                     if (!settingsFile.SectionPresent(OPTIONS_SECTION))
                     {
                         ShowErrorMessage("The node '<section name=\"" + OPTIONS_SECTION + "\"> was not found in the parameter file: " + parameterFilePath);
-                        SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidParameterFile);
+                        SetBaseClassErrorCode(ProcessDirectoriesErrorCodes.InvalidParameterFile);
                         return false;
                     }
 
@@ -858,7 +858,7 @@ namespace DMSUpdateManager
 
                     if (LogMessagesToFile)
                     {
-                        UpdateAutoDefinedLogFilePath(logFolderPath, "DMSUpdateManager");
+                        UpdateAutoDefinedLogFilePath(logDirectoryPath, "DMSUpdateManager");
                     }
 
                     var filesToIgnore = settingsFile.GetParam(OPTIONS_SECTION, "FilesToIgnore", string.Empty);
@@ -967,11 +967,11 @@ namespace DMSUpdateManager
         /// <remarks>If TargetFolder is defined in the parameter file, targetDirectoryPath will be ignored</remarks>
         public bool UpdateFolder(string targetDirectoryPath, string parameterFilePath)
         {
-            SetLocalErrorCode(eDMSUpdateManagerErrorCodes.NoError);
+            SetLocalErrorCode(DMSUpdateManagerErrorCodes.NoError);
 
             if (!string.IsNullOrEmpty(targetDirectoryPath))
             {
-                // Update mtargetDirectoryPath using targetDirectoryPath
+                // Update mTargetDirectoryPath using targetDirectoryPath
                 // Note: If TargetFolder is defined in the parameter file, this value will get overridden
                 mTargetDirectoryPath = string.Copy(targetDirectoryPath);
             }
@@ -980,9 +980,9 @@ namespace DMSUpdateManager
             {
                 ShowErrorMessage("Parameter file load error: " + parameterFilePath);
 
-                if (ErrorCode == eProcessFoldersErrorCodes.NoError)
+                if (ErrorCode == ProcessDirectoriesErrorCodes.NoError)
                 {
-                    SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidParameterFile);
+                    SetBaseClassErrorCode(ProcessDirectoriesErrorCodes.InvalidParameterFile);
                 }
                 return false;
             }
@@ -999,23 +999,23 @@ namespace DMSUpdateManager
                 if (string.IsNullOrEmpty(mSourceDirectoryPath))
                 {
                     ShowWarning("Source directory path is not defined; either specify it at the command line or include it in the parameter file");
-                    SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidInputFolderPath);
+                    SetBaseClassErrorCode(ProcessDirectoriesErrorCodes.InvalidInputDirectoryPath);
                     return false;
                 }
 
                 if (string.IsNullOrWhiteSpace(targetDirectoryPath))
                 {
                     ShowWarning("Target directory path is not defined; either specify it at the command line or include it in the parameter file");
-                    SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidInputFolderPath);
+                    SetBaseClassErrorCode(ProcessDirectoriesErrorCodes.InvalidInputDirectoryPath);
                     return false;
                 }
 
                 // Note that CleanupFilePaths() will update mOutputDirectoryPath, which is used by LogMessage()
                 // Since we're updating files on the local computer, use the target directory path for parameter inputFolderPath of CleanupFolderPaths
                 var tempStr = string.Empty;
-                if (!CleanupFolderPaths(ref targetDirectoryPath, ref tempStr))
+                if (!CleanupDirectoryPaths(ref targetDirectoryPath, ref tempStr))
                 {
-                    SetBaseClassErrorCode(eProcessFoldersErrorCodes.FilePathError);
+                    SetBaseClassErrorCode(ProcessDirectoriesErrorCodes.FilePathError);
                     return false;
                 }
 
@@ -1043,15 +1043,15 @@ namespace DMSUpdateManager
         /// <returns>True if success, false if an error</returns>
         public bool UpdateRemoteHost(RemoteHostConnectionInfo targetHostInfo, string parameterFilePath)
         {
-            SetLocalErrorCode(eDMSUpdateManagerErrorCodes.NoError);
+            SetLocalErrorCode(DMSUpdateManagerErrorCodes.NoError);
 
             if (!LoadParameterFileSettings(parameterFilePath))
             {
                 ShowErrorMessage("Parameter file load error: " + parameterFilePath);
 
-                if (ErrorCode == eProcessFoldersErrorCodes.NoError)
+                if (ErrorCode == ProcessDirectoriesErrorCodes.NoError)
                 {
-                    SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidParameterFile);
+                    SetBaseClassErrorCode(ProcessDirectoriesErrorCodes.InvalidParameterFile);
                 }
                 return false;
             }
@@ -1084,7 +1084,7 @@ namespace DMSUpdateManager
             string mutexNameSuffix = "UpdateRemoteHost",
             int minimumRepeatTimeSeconds = 30)
         {
-            SetLocalErrorCode(eDMSUpdateManagerErrorCodes.NoError);
+            SetLocalErrorCode(DMSUpdateManagerErrorCodes.NoError);
 
             RemoteHostInfo = remoteHostInfo;
 
@@ -1128,7 +1128,7 @@ namespace DMSUpdateManager
         /// <param name="parameterFilePath">Parameter file path</param>
         /// <returns>True if success, false if an error</returns>
         /// <remarks>
-        /// Parameter file path is used to determine the checkfile path, which is used to asssure
+        /// Parameter file path is used to determine the checkfile path, which is used to assure
         /// that a minimum amount of time elapses between sequential runs of the DMS Update Manager
         /// </remarks>
         private bool UpdateRemoteHostWork(RemoteHostConnectionInfo targetHostInfo, string parameterFilePath)
@@ -1139,7 +1139,7 @@ namespace DMSUpdateManager
                 if (string.IsNullOrEmpty(mSourceDirectoryPath))
                 {
                     ShowWarning("Source directory path is not defined; either specify it at the command line or include it in the parameter file");
-                    SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidInputFolderPath);
+                    SetBaseClassErrorCode(ProcessDirectoriesErrorCodes.InvalidInputDirectoryPath);
                     return false;
                 }
 
@@ -1147,7 +1147,7 @@ namespace DMSUpdateManager
                 if (!validOptions)
                 {
                     ShowWarning(errorMessage + " in targetHostInfo");
-                    SetBaseClassErrorCode(eProcessFoldersErrorCodes.InvalidInputFolderPath);
+                    SetBaseClassErrorCode(ProcessDirectoriesErrorCodes.InvalidInputDirectoryPath);
                     return false;
                 }
 
@@ -1156,11 +1156,11 @@ namespace DMSUpdateManager
 
                 // Note that CleanupFilePaths() will update mOutputDirectoryPath, which is used by LogMessage()
                 // Since we're updating a files on a remote host, use the entry assembly's path for parameter inputFolderPath of CleanupFolderPaths
-                var appFolderPath = GetAppFolderPath();
+                var appFolderPath = GetAppDirectoryPath();
                 var tempStr = string.Empty;
-                if (!CleanupFolderPaths(ref appFolderPath, ref tempStr))
+                if (!CleanupDirectoryPaths(ref appFolderPath, ref tempStr))
                 {
-                    SetBaseClassErrorCode(eProcessFoldersErrorCodes.FilePathError);
+                    SetBaseClassErrorCode(ProcessDirectoriesErrorCodes.FilePathError);
                     return false;
                 }
 
@@ -1270,7 +1270,7 @@ namespace DMSUpdateManager
         /// <param name="doNotUpdateParent"></param>
         /// <returns></returns>
         /// <remarks>
-        /// Parameter file path is used to determine the checkfile path, which is used to asssure
+        /// Parameter file path is used to determine the checkfile path, which is used to assure
         /// that a minimum amount of time elapses between sequential runs of the DMS Update Manager
         /// </remarks>
         private bool UpdateDirectoryRun(string sourceDirectoryPath, DirectoryContainer targetDirectoryInfo, string parameterFilePath, bool doNotUpdateParent = false)
@@ -1329,7 +1329,7 @@ namespace DMSUpdateManager
         /// <param name="parameterFilePath">Parameter file path</param>
         /// <returns></returns>
         /// <remarks>
-        /// Parameter file path is used to determine the checkfile path, which is used to asssure
+        /// Parameter file path is used to determine the checkfile path, which is used to assure
         /// that a minimum amount of time elapses between sequential runs of the DMS Update Manager
         /// </remarks>
         private bool UpdateDirectoryCopyToParentRun(DirectoryInfo sourceDirectory, DirectoryContainer targetDirectoryInfo, string parameterFilePath)
@@ -1392,7 +1392,7 @@ namespace DMSUpdateManager
 
                 success = UpdateDirectoryCopyToParent(sourceDirectory, targetDirectoryInfo);
 
-                // Update the check file's date one more itme
+                // Update the check file's date one more time
                 TouchCheckFile(checkFilePath);
             }
 
@@ -1622,7 +1622,7 @@ namespace DMSUpdateManager
                             break; // Break out of the while, continue the for loop
                         }
 
-                        var itemInUse = eItemInUseConstants.NotInUse;
+                        var itemInUse = ItemInUseConstants.NotInUse;
                         string fileUsageMessage;
 
                         // See if file ends with one of the special suffix flags
@@ -1637,7 +1637,7 @@ namespace DMSUpdateManager
                             {
                                 if (JarFileInUseByJava(sourceFile, out fileUsageMessage))
                                 {
-                                    itemInUse = eItemInUseConstants.ItemInUse;
+                                    itemInUse = ItemInUseConstants.ItemInUse;
                                 }
                             }
                             else
@@ -1647,7 +1647,7 @@ namespace DMSUpdateManager
                                 {
                                     // The directory is in use
                                     // Allow new files to be copied, but do not overwrite existing files
-                                    itemInUse = eItemInUseConstants.DirectoryInUse;
+                                    itemInUse = ItemInUseConstants.DirectoryInUse;
                                 }
                                 else
                                 {
@@ -1682,15 +1682,15 @@ namespace DMSUpdateManager
                             break; // Break out of the while, continue the for loop
                         }
 
-                        eDateComparisonModeConstants eDateComparisonMode;
+                        DateComparisonModeConstants eDateComparisonMode;
 
                         if (OverwriteNewerFiles)
                         {
-                            eDateComparisonMode = eDateComparisonModeConstants.OverwriteNewerTargetIfDifferentSize;
+                            eDateComparisonMode = DateComparisonModeConstants.OverwriteNewerTargetIfDifferentSize;
                         }
                         else
                         {
-                            eDateComparisonMode = eDateComparisonModeConstants.RetainNewerTargetIfDifferentSize;
+                            eDateComparisonMode = DateComparisonModeConstants.RetainNewerTargetIfDifferentSize;
                         }
 
                         if (!targetDirectoryInfo.TrackingRemoteHostDirectory &&
@@ -1698,7 +1698,7 @@ namespace DMSUpdateManager
                         {
                             if (JarFileInUseByJava(sourceFile, out fileUsageMessage))
                             {
-                                itemInUse = eItemInUseConstants.ItemInUse;
+                                itemInUse = ItemInUseConstants.ItemInUse;
                             }
                         }
                         else
@@ -1708,7 +1708,7 @@ namespace DMSUpdateManager
                             {
                                 // The directory is in use
                                 // Allow new files to be copied, but do not overwrite existing files
-                                itemInUse = eItemInUseConstants.DirectoryInUse;
+                                itemInUse = ItemInUseConstants.DirectoryInUse;
                             }
                             else
                             {
@@ -2123,7 +2123,7 @@ namespace DMSUpdateManager
             DirectoryContainer targetDirectoryInfo,
             string targetDirectoryPath,
             ref int fileUpdateCount,
-            eItemInUseConstants itemInUse = eItemInUseConstants.NotInUse,
+            ItemInUseConstants itemInUse = ItemInUseConstants.NotInUse,
             string fileUsageMessage = "")
         {
 
@@ -2133,7 +2133,7 @@ namespace DMSUpdateManager
 
             if (sourceFile.Exists)
             {
-                var copied = CopyFileIfNeeded(sourceFile, targetDirectoryInfo, targetDirectoryPath, ref fileUpdateCount, eDateComparisonModeConstants.CopyIfSizeOrDateDiffers, itemInUse, fileUsageMessage);
+                var copied = CopyFileIfNeeded(sourceFile, targetDirectoryInfo, targetDirectoryPath, ref fileUpdateCount, DateComparisonModeConstants.CopyIfSizeOrDateDiffers, itemInUse, fileUsageMessage);
                 if (copied)
                 {
                     var prefix = PreviewMode ? "Preview rollback of file " : "Rolled back file ";
@@ -2152,9 +2152,9 @@ namespace DMSUpdateManager
             }
         }
 
-        private void SetLocalErrorCode(eDMSUpdateManagerErrorCodes eNewErrorCode, bool leaveExistingErrorCodeUnchanged = false)
+        private void SetLocalErrorCode(DMSUpdateManagerErrorCodes eNewErrorCode, bool leaveExistingErrorCodeUnchanged = false)
         {
-            if (leaveExistingErrorCodeUnchanged && LocalErrorCode != eDMSUpdateManagerErrorCodes.NoError)
+            if (leaveExistingErrorCodeUnchanged && LocalErrorCode != DMSUpdateManagerErrorCodes.NoError)
             {
                 // An error code is already defined; do not change it
             }
@@ -2162,16 +2162,16 @@ namespace DMSUpdateManager
             {
                 LocalErrorCode = eNewErrorCode;
 
-                if (eNewErrorCode == eDMSUpdateManagerErrorCodes.NoError)
+                if (eNewErrorCode == DMSUpdateManagerErrorCodes.NoError)
                 {
-                    if (ErrorCode == eProcessFoldersErrorCodes.LocalizedError)
+                    if (ErrorCode == ProcessDirectoriesErrorCodes.LocalizedError)
                     {
-                        SetBaseClassErrorCode(eProcessFoldersErrorCodes.NoError);
+                        SetBaseClassErrorCode(ProcessDirectoriesErrorCodes.NoError);
                     }
                 }
                 else
                 {
-                    SetBaseClassErrorCode(eProcessFoldersErrorCodes.LocalizedError);
+                    SetBaseClassErrorCode(ProcessDirectoriesErrorCodes.LocalizedError);
                 }
             }
         }

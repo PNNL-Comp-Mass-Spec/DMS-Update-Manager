@@ -395,7 +395,7 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
-        /// Determine the parent directory of a given file or diretory
+        /// Determine the parent directory of a given file or directory
         /// </summary>
         /// <param name="fileOrDirectoryPath"></param>
         /// <returns>Parent directory path</returns>

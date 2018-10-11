@@ -1224,7 +1224,7 @@ namespace DMSUpdateManager
             var passPhraseFile = new FileInfo(RemoteHostInfo.PassphraseFile);
             if (!passPhraseFile.Exists)
             {
-                throw new FileNotFoundException("Passpharse file not found: " + passPhraseFile.FullName);
+                throw new FileNotFoundException("Passphrase file not found: " + passPhraseFile.FullName);
             }
 
             MemoryStream keyFileStream;
@@ -1253,7 +1253,7 @@ namespace DMSUpdateManager
             }
             catch (Exception ex)
             {
-                throw new Exception("Error reading the passpharse file: " + ex.Message, ex);
+                throw new Exception("Error reading the passphrase file: " + ex.Message, ex);
             }
 
             try
@@ -1411,7 +1411,7 @@ namespace DMSUpdateManager
         /// <param name="targetDirectoryPath">Target directory on the remote host, for example /opt/DMS_Programs</param>
         /// <param name="filesToIgnore">Comma separated list of files to ignore</param>
         /// <param name="errorMessage">Error message</param>
-        /// <returns>True if successs, false if an error</returns>
+        /// <returns>True if success, false if an error</returns>
         protected bool StartDMSUpdateManager(string sourceDirectoryPath, string targetDirectoryPath, string filesToIgnore, out string errorMessage)
         {
             var ignoreList = !string.IsNullOrWhiteSpace(filesToIgnore) ? filesToIgnore.Split(',').ToList() : new List<string>();
@@ -1428,7 +1428,7 @@ namespace DMSUpdateManager
         /// </param>
         /// <param name="ignoreList">Filenames to ignore</param>
         /// <param name="errorMessage">Error message</param>
-        /// <returns>True if successs, false if an error</returns>
+        /// <returns>True if success, false if an error</returns>
         protected bool StartDMSUpdateManager(string sourceDirectoryPath, string targetDirectoryPath, List<string> ignoreList, out string errorMessage)
         {
             var dmsUpdateManager = new DMSUpdateManager();

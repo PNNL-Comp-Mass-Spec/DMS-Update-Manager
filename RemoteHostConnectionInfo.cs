@@ -52,10 +52,10 @@ namespace DMSUpdateManager
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="hostName">Host nane</param>
+        /// <param name="hostName">Host name</param>
         /// <param name="userName">Username</param>
         /// <param name="privateKeyFilePath">Private key file path</param>
-        /// <param name="passphraseFilePath">Passpharse file path</param>
+        /// <param name="passphraseFilePath">Passphrase file path</param>
         /// <param name="baseDirectoryPath">Base directory on the remote host</param>
         public RemoteHostConnectionInfo(
             string hostName, string userName,
