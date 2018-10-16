@@ -31,7 +31,7 @@ namespace DMSUpdateManager
         /// </summary>
         public DMSUpdateManager()
         {
-            mFileDate = "September 20, 2018";
+            mFileDate = "October 16, 2018";
 
             mFilesToIgnore = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             mProcessesDict = new Dictionary<uint, ProcessInfo>();
@@ -177,7 +177,7 @@ namespace DMSUpdateManager
         ///   mSourceDirectoryPath = "\\gigasax\DMS_Programs\AnalysisToolManagerDistribution"
         ///   mTargetDirectoryPath = "."
         ///   Files are synced from "\\gigasax\DMS_Programs\AnalysisToolManagerDistribution" to "C:\DMS_Programs\AnalysisToolManager\"
-        ///   Next, directory \\gigasax\DMS_Programs\AnalysisToolManagerDistribution\MASIC\ will get sync'd with ..\MASIC (but only if ..\MASIC exists)
+        ///   Next, directory \\gigasax\DMS_Programs\AnalysisToolManagerDistribution\MASIC\ will get synced with ..\MASIC (but only if ..\MASIC exists)
         ///     Note that ..\MASIC is actually C:\DMS_Programs\MASIC\
         ///   When sync'ing the MASIC directories, will recursively sync additional directories that match
         ///   If the source directory contains file _PushDir_.txt or _AMSubDir_.txt, the directory will be copied to the target even if it doesn't exist there
@@ -565,9 +565,13 @@ namespace DMSUpdateManager
             }
             catch (Exception)
             {
+                // ReSharper disable CommentTypo
+
                 // Error; likely the processPath has invalid characters
                 // For example, this path leads to an exception:
                 // "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\ServiceHub\Hosts\ServiceHub.Host.Node.x86\ServiceHub.Host.Node.x86.exe" "./ServiceHub/controller/hubController.all.js" "3394f971a1ed456c51c2f32d0c4071f0c7c1a655cecbcb4babba32efd0f844fd"
+
+                // ReSharper restore CommentTypo
 
                 try
                 {
@@ -764,6 +768,7 @@ namespace DMSUpdateManager
             }
             catch (UnauthorizedAccessException ex)
             {
+                // ReSharper disable once CommentTypo
                 // Access to the path 'Global\dmsupdatemanager_c__dms_programs' is denied.
                 OnWarningEvent("Error accessing the mutex: " + ex.Message);
                 mutex = null;
@@ -828,9 +833,13 @@ namespace DMSUpdateManager
                     OverwriteNewerFiles = settingsFile.GetParam(OPTIONS_SECTION, "OverwriteNewerFiles", OverwriteNewerFiles);
 
                     CopySubdirectoriesToParentDirectory = settingsFile.GetParam(OPTIONS_SECTION, "CopySubdirectoriesToParentFolder", CopySubdirectoriesToParentDirectory);
+                    CopySubdirectoriesToParentDirectory = settingsFile.GetParam(OPTIONS_SECTION, "CopySubdirectoriesToParentDirectory", CopySubdirectoriesToParentDirectory);
 
                     mSourceDirectoryPath = settingsFile.GetParam(OPTIONS_SECTION, "SourceFolderPath", mSourceDirectoryPath);
+                    mSourceDirectoryPath = settingsFile.GetParam(OPTIONS_SECTION, "SourceDirectoryPath", mSourceDirectoryPath);
+
                     mTargetDirectoryPath = settingsFile.GetParam(OPTIONS_SECTION, "TargetFolderPath", mTargetDirectoryPath);
+                    mTargetDirectoryPath = settingsFile.GetParam(OPTIONS_SECTION, "TargetDirectoryPath", mTargetDirectoryPath);
 
                     RemoteHostInfo.HostName = settingsFile.GetParam(OPTIONS_SECTION, "RemoteHostName", RemoteHostInfo.HostName);
                     RemoteHostInfo.Username = settingsFile.GetParam(OPTIONS_SECTION, "RemoteHostUserName", RemoteHostInfo.Username);
@@ -846,13 +855,8 @@ namespace DMSUpdateManager
 
                     mMutexNameSuffix = settingsFile.GetParam(OPTIONS_SECTION, "MutexNameSuffix", string.Empty);
 
-                    var logDirectoryPath = settingsFile.GetParam(OPTIONS_SECTION, "LogDirectoryPath", "Logs");
-                    if (string.Equals(logDirectoryPath, "Logs"))
-                    {
-                        var logFolderPath = settingsFile.GetParam(OPTIONS_SECTION, "LogFolderPath", "");
-                        if (!string.IsNullOrWhiteSpace(logFolderPath))
-                            logDirectoryPath = logFolderPath;
-                    }
+                    var logDirectoryPath = settingsFile.GetParam(OPTIONS_SECTION, "LogFolderPath", "Logs");
+                    logDirectoryPath = settingsFile.GetParam(OPTIONS_SECTION, "LogDirectoryPath", logDirectoryPath);
 
                     mMinimumRepeatThresholdSeconds = settingsFile.GetParam(OPTIONS_SECTION, "MinimumRepeatTimeSeconds", 30);
                     var logLevel = settingsFile.GetParam(OPTIONS_SECTION, "LoggingLevel", string.Empty);
@@ -899,15 +903,15 @@ namespace DMSUpdateManager
         /// <summary>
         /// Update files in directory inputDirectoryPath
         /// </summary>
-        /// <param name="inputFolderPath">Target directory to update</param>
-        /// <param name="outputFolderAlternatePath">Ignored by this method</param>
+        /// <param name="inputDirectoryPath">Target directory to update</param>
+        /// <param name="outputDirectoryAlternatePath">Ignored by this method</param>
         /// <param name="parameterFilePath">Parameter file defining the source directory path and other options</param>
         /// <param name="resetErrorCode">Ignored by this method</param>
         /// <returns>True if success, False if failure</returns>
-        /// <remarks>If TargetFolder is defined in the parameter file, inputFolderPath will be ignored</remarks>
-        public override bool ProcessDirectory(string inputFolderPath, string outputFolderAlternatePath, string parameterFilePath, bool resetErrorCode)
+        /// <remarks>If TargetDirectory is defined in the parameter file, inputDirectoryPath will be ignored</remarks>
+        public override bool ProcessDirectory(string inputDirectoryPath, string outputDirectoryAlternatePath, string parameterFilePath, bool resetErrorCode)
         {
-            return UpdateFolder(inputFolderPath, parameterFilePath);
+            return UpdateDirectory(inputDirectoryPath, parameterFilePath);
         }
 
         private void ResetFilesToIgnore()
@@ -970,15 +974,15 @@ namespace DMSUpdateManager
         /// <param name="targetDirectoryPath">Target directory to update</param>
         /// <param name="parameterFilePath">Parameter file defining the source directory path and other options</param>
         /// <returns>True if success, false if an error</returns>
-        /// <remarks>If TargetFolder is defined in the parameter file, targetDirectoryPath will be ignored</remarks>
-        public bool UpdateFolder(string targetDirectoryPath, string parameterFilePath)
+        /// <remarks>If TargetDirectory is defined in the parameter file, targetDirectoryPath will be ignored</remarks>
+        public bool UpdateDirectory(string targetDirectoryPath, string parameterFilePath)
         {
             SetLocalErrorCode(DMSUpdateManagerErrorCodes.NoError);
 
             if (!string.IsNullOrEmpty(targetDirectoryPath))
             {
                 // Update mTargetDirectoryPath using targetDirectoryPath
-                // Note: If TargetFolder is defined in the parameter file, this value will get overridden
+                // Note: If TargetDirectory is defined in the parameter file, this value will get overridden
                 mTargetDirectoryPath = string.Copy(targetDirectoryPath);
             }
 
@@ -1017,7 +1021,7 @@ namespace DMSUpdateManager
                 }
 
                 // Note that CleanupFilePaths() will update mOutputDirectoryPath, which is used by LogMessage()
-                // Since we're updating files on the local computer, use the target directory path for parameter inputFolderPath of CleanupFolderPaths
+                // Since we're updating files on the local computer, use the target directory path for parameter inputDirectoryPath of CleanupDirectoryPaths
                 var tempStr = string.Empty;
                 if (!CleanupDirectoryPaths(ref targetDirectoryPath, ref tempStr))
                 {
@@ -1036,7 +1040,7 @@ namespace DMSUpdateManager
             }
             catch (Exception ex)
             {
-                HandleException("Error in UpdateFolder", ex);
+                HandleException("Error in UpdateDirectory", ex);
                 return false;
             }
         }
@@ -1047,6 +1051,7 @@ namespace DMSUpdateManager
         /// <param name="targetHostInfo">Target host info</param>
         /// <param name="parameterFilePath">Parameter file defining the source directory path and other options</param>
         /// <returns>True if success, false if an error</returns>
+        // ReSharper disable once UnusedMember.Global
         public bool UpdateRemoteHost(RemoteHostConnectionInfo targetHostInfo, string parameterFilePath)
         {
             SetLocalErrorCode(DMSUpdateManagerErrorCodes.NoError);
@@ -1161,10 +1166,10 @@ namespace DMSUpdateManager
                 ShowMessage(msg, false);
 
                 // Note that CleanupFilePaths() will update mOutputDirectoryPath, which is used by LogMessage()
-                // Since we're updating a files on a remote host, use the entry assembly's path for parameter inputFolderPath of CleanupFolderPaths
-                var appFolderPath = GetAppDirectoryPath();
+                // Since we're updating a files on a remote host, use the entry assembly's path for parameter inputDirectoryPath of CleanupDirectoryPaths
+                var appDirectoryPath = GetAppDirectoryPath();
                 var tempStr = string.Empty;
-                if (!CleanupDirectoryPaths(ref appFolderPath, ref tempStr))
+                if (!CleanupDirectoryPaths(ref appDirectoryPath, ref tempStr))
                 {
                     SetBaseClassErrorCode(ProcessDirectoriesErrorCodes.FilePathError);
                     return false;
@@ -1509,7 +1514,7 @@ namespace DMSUpdateManager
             if (fileCount > 0)
             {
                 ShowWarning(
-                    "Folder flagged for deletion, but it is not empty (File Count = " + fileCount + "): " +
+                    "Directory flagged for deletion, but it is not empty (File Count = " + fileCount + "): " +
                     AbbreviatePath(targetSubdirectory.FullName));
                 return false;
             }
@@ -1572,11 +1577,11 @@ namespace DMSUpdateManager
 
             if (!targetDirectory.Exists && !PreviewMode)
             {
-                ShowMessage("Skipping non-existent directory: " + AbbreviatePath(targetDirectory.FullName), false, eMessageType: eMessageTypeConstants.Debug);
+                ShowMessage("Skipping non-existent directory: " + AbbreviatePath(targetDirectory.FullName), false, messageType: MessageTypeConstants.Debug);
                 return false;
             }
 
-            ShowMessage("Updating " + AbbreviatePath(targetDirectory.FullName), false, eMessageType: eMessageTypeConstants.Debug);
+            ShowMessage("Updating " + AbbreviatePath(targetDirectory.FullName), false, messageType: MessageTypeConstants.Debug);
 
 
             // Obtain a list of files in the source directory
@@ -2013,17 +2018,17 @@ namespace DMSUpdateManager
             // Ignore cmd.exe
             foreach (var item in mProcessesDict)
             {
-                var exeFolderHierarchy = item.Value.DirectoryHierarchy;
+                var exeDirectoryHierarchy = item.Value.DirectoryHierarchy;
 
-                if (exeFolderHierarchy.Count > targetDirectoryPathHierarchy.Count)
+                if (exeDirectoryHierarchy.Count > targetDirectoryPathHierarchy.Count)
                 {
                     continue;
                 }
 
                 var treesMatch = true;
-                for (var index = 0; index <= exeFolderHierarchy.Count - 1; index++)
+                for (var index = 0; index <= exeDirectoryHierarchy.Count - 1; index++)
                 {
-                    if (targetDirectoryPathHierarchy[index] != exeFolderHierarchy[index])
+                    if (targetDirectoryPathHierarchy[index] != exeDirectoryHierarchy[index])
                     {
                         treesMatch = false;
                         break;

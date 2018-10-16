@@ -645,10 +645,10 @@ namespace DMSUpdateManager
                         var remoteDirectoryPath = parentDirectory.Key;
                         OnDebugEvent("  checking " + remoteDirectoryPath);
 
-                        var filesAndFolders = sftp.ListDirectory(remoteDirectoryPath);
+                        var filesAndDirectories = sftp.ListDirectory(remoteDirectoryPath);
                         var remoteSubdirectories = new SortedSet<string>();
 
-                        foreach (var item in filesAndFolders)
+                        foreach (var item in filesAndDirectories)
                         {
                             if (!item.IsDirectory || item.Name == "." || item.Name == "..")
                             {
@@ -1021,10 +1021,10 @@ namespace DMSUpdateManager
                     continue;
                 }
 
-                var filesAndFolders = sftp.ListDirectory(remoteDirectory);
+                var filesAndDirectories = sftp.ListDirectory(remoteDirectory);
                 var subdirectoryPaths = new List<string>();
 
-                foreach (var item in filesAndFolders)
+                foreach (var item in filesAndDirectories)
                 {
                     if (item.IsDirectory)
                     {
