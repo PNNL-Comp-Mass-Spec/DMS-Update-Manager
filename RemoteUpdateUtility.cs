@@ -8,6 +8,7 @@ using Renci.SshNet;
 using Renci.SshNet.Common;
 using Renci.SshNet.Sftp;
 
+// ReSharper disable UnusedMember.Global
 namespace DMSUpdateManager
 {
     /// <summary>

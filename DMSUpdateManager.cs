@@ -223,6 +223,7 @@ namespace DMSUpdateManager
         /// <summary>
         /// Source directory path
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public string SourceDirectoryPath
         {
             get

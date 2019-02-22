@@ -29,6 +29,7 @@ namespace DMSUpdateManager
         /// <summary>
         /// Full path to the file or directory, using Linux style paths
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public string FullPathLinux
         {
             get
@@ -150,6 +151,7 @@ namespace DMSUpdateManager
         /// <param name="lastWrite"></param>
         /// <param name="lastWriteUtc"></param>
         /// <param name="linuxFile"></param>
+        // ReSharper disable once UnusedMember.Global
         public FileOrDirectoryInfo(
             string filePath, bool exists, long length,
             DateTime lastWrite, DateTime lastWriteUtc, bool linuxFile) :
