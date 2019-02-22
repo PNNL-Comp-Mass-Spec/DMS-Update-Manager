@@ -230,6 +230,28 @@ namespace DMSUpdateManager
             string localDirectoryPath,
             bool warnIfMissing = true)
         {
+            var sourceFiles = sourceFileNames.ToDictionary(sourceFile => sourceFile, sourceFile => true);
+
+            return CopyFilesFromRemote(sourceDirectoryPath, sourceFiles, localDirectoryPath, warnIfMissing);
+        }
+
+        /// <summary>
+        /// Copy files from the remote host to a local directory
+        /// </summary>
+        /// <param name="sourceDirectoryPath">Source directory</param>
+        /// <param name="sourceFiles">Dictionary where keys are source file names (no wildcards), and values are true if the file is required, false if optional</param>
+        /// <param name="localDirectoryPath">Local target directory</param>
+        /// <param name="warnIfMissing">Log warnings if any files are missing.  When false, logs debug messages instead</param>
+        /// <returns>
+        /// True on success, false if an error
+        /// Returns False if if any files were missing, even if warnIfMissing is false
+        /// </returns>
+        public bool CopyFilesFromRemote(
+            string sourceDirectoryPath,
+            IReadOnlyDictionary<string, bool> sourceFiles,
+            string localDirectoryPath,
+            bool warnIfMissing = true)
+        {
             // Use scp to retrieve the files
             // scp is faster than sftp, but it has the downside that we can't check for the existence of a file before retrieving it
 
@@ -245,17 +267,20 @@ namespace DMSUpdateManager
 
             try
             {
-                if (sourceFileNames.Count == 1)
-                    OnDebugEvent(string.Format("Retrieving file {0} from {1} on host {2}", sourceFileNames.First(), sourceDirectoryPath, RemoteHostInfo.HostName));
+                if (sourceFiles.Count == 1)
+                    OnDebugEvent(string.Format("Retrieving file {0} from {1} on host {2}", sourceFiles.First().Key, sourceDirectoryPath, RemoteHostInfo.HostName));
                 else
-                    OnDebugEvent(string.Format("Retrieving {0} files from {1} on host {2}", sourceFileNames.Count, sourceDirectoryPath, RemoteHostInfo.HostName));
+                    OnDebugEvent(string.Format("Retrieving {0} files from {1} on host {2}", sourceFiles.Count, sourceDirectoryPath, RemoteHostInfo.HostName));
 
                 using (var scp = new ScpClient(RemoteHostInfo.HostName, RemoteHostInfo.Username, mPrivateKeyFile))
                 {
                     scp.Connect();
 
-                    foreach (var sourceFileName in sourceFileNames)
+                    foreach (var sourceFile in sourceFiles)
                     {
+                        var sourceFileName = sourceFile.Key;
+                        var requiredFile = sourceFile.Value;
+
                         var remoteFilePath = PathUtils.CombineLinuxPaths(sourceDirectoryPath, sourceFileName);
                         var targetFile = new FileInfo(PathUtils.CombinePathsLocalSepChar(localDirectoryPath, sourceFileName));
 
@@ -266,15 +291,16 @@ namespace DMSUpdateManager
                             targetFile.Refresh();
                             if (targetFile.Exists)
                                 successCount++;
-                            else
+                            else if (requiredFile)
                                 failCount++;
                         }
                         catch (Exception ex)
                         {
-                            failCount++;
-
                             if (ex.Message.ToLower().Contains("no such file"))
                             {
+                                if (!requiredFile)
+                                    continue;
+
                                 if (warnIfMissing)
                                     OnWarningEvent(string.Format("Remote file not found: {0}", remoteFilePath));
                                 else
@@ -284,6 +310,8 @@ namespace DMSUpdateManager
                             {
                                 OnWarningEvent(string.Format("Error copying {0}: {1}", remoteFilePath, ex.Message));
                             }
+
+                            failCount++;
                         }
 
                     }
@@ -296,7 +324,7 @@ namespace DMSUpdateManager
                     return true;
 
                 if (warnIfMissing)
-                    OnWarningEvent(string.Format("Error retrieving {0} of {1} files from {2}", failCount, sourceFileNames.Count, sourceDirectoryPath));
+                    OnWarningEvent(string.Format("Error retrieving {0} of {1} files from {2}", failCount, sourceFiles.Count, sourceDirectoryPath));
 
                 return false;
             }
