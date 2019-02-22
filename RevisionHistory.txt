@@ -1,5 +1,24 @@
 DMS Update Manager Change Log
 
+Version 1.2.6992; February 22, 2019
+	- CopyFilesFromRemote now accepts a dictionary of source files
+		- Keys are filenames, values are true if the file is required, false if optional
+
+Version 1.2.6857; October 10, 2018
+	- Rename classes and variables
+
+Version 1.2.6661; March 28, 2018
+	- Add /NoParent command line argument
+
+Version 1.2.6622; February 17, 2018
+	- Add support for pushing files to a remote Linux host
+
+Version 1.2.6914; February 9, 2018
+	- Refactor the bulk of the code into DMSUpdateManager.dll
+		- DMSUpdateManagerConsole.exe calls this DLL to perform the update
+	- Skip thumbs.db files
+	- Add command line argument /Force to force an update
+
 Version 1.2.6526; November 13, 2017
 	- Update messages
 
