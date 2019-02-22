@@ -2,16 +2,16 @@
 <sections>
   <section name="DMSUpdateManager">
     <item key="OverwriteNewerFiles" value="False" />
-    <item key="SourceFolderPath" value="AnalysisToolManagerDistribution" />
-    <item key="TargetFolderPath" value="/opt/DMS_Programs/AnalysisManager" />
+    <item key="SourceDirectoryPath" value="AnalysisToolManagerDistribution" />
+    <item key="TargetDirectoryPath" value="/opt/DMS_Programs/AnalysisManager" />
     <item key="RemoteHostName" value="prismweb2" />
     <item key="RemoteHostUserName" value="svc-dms" />
     <item key="PrivateKeyFilePath" value="C:\DMS_RemoteInfo\Svc-Dms.key" />
     <item key="PassphraseFilePath" value="C:\DMS_RemoteInfo\Svc-Dms.pass" />
-    <item key="CopySubdirectoriesToParentFolder" value="True" />
+    <item key="CopySubdirectoriesToParentDirectory" value="True" />
     <item key="FilesToIgnore" value="AnalysisManagerProg.exe.config, Utils.pyc, Global.pyc, thumbs.db" />
     <item key="LogMessages" value="True" />
     <item key="MinimumRepeatTimeSeconds" value="60" />
-    <item key="LogFolderPath" value="DMS_Programs\DMSUpdateManager\Logs" />
+    <item key="LogDirectoryPath" value="DMS_Programs\DMSUpdateManager\Logs" />
   </section>
 </sections>
