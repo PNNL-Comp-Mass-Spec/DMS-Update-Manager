@@ -13,7 +13,7 @@ namespace DMSUpdateManagerConsole
     /// <remarks>
     /// Written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA)
     /// Program started January 16, 2009
-    /// --
+    ///
     /// E-mail: matthew.monroe@pnnl.gov or proteomics@pnnl.gov
     /// Website: https://omics.pnl.gov/ or https://panomics.pnnl.gov/
     /// </remarks>
@@ -22,7 +22,7 @@ namespace DMSUpdateManagerConsole
         /// <summary>
         /// Program date
         /// </summary>
-        public const string PROGRAM_DATE = "March 14, 2019";
+        public const string PROGRAM_DATE = "March 15, 2019";
 
         // Either mSourceDirectoryPath and mTargetDirectoryPath must be specified, or mParameterFilePath needs to be specified
 
