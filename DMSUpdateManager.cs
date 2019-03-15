@@ -631,8 +631,8 @@ namespace DMSUpdateManager
 
             // This list tracks processes that appear to be using a directory, but for which we likely can still update files in that directory
             var executablesToIgnore = new SortedSet<string>(StringComparer.OrdinalIgnoreCase) {
-                "cmd.exe", "BC2.exe", "BCompare.exe", "BComp.com", "BComp.exe",
-                "EditPadLite7.exe", "EditPadPro7.exe", "notepad.exe", "notepad++.exe"
+                "cmd.exe", "BC2.exe", "BCompare.exe", "BComp.com", "BComp.exe", "EditPadPro.exe",
+                "EditPadLite7.exe", "EditPadPro7.exe", "notepad.exe", "notepad++.exe", "TextPad.exe"
             };
 
             var runningExeName = mExecutingExeName ?? "UnknownApp.exe";
@@ -2016,7 +2016,7 @@ namespace DMSUpdateManager
             mLastDirectoryRunningProcessId = 0;
 
             // Look for running processes with a .exe in the target directory (or in a parent of the target directory)
-            // Ignore cmd.exe
+            // Ignore cmd.exe, NotePad, EditPad, and TextPad, as defined in executablesToIgnore
             foreach (var item in mProcessesDict)
             {
                 var exeDirectoryHierarchy = item.Value.DirectoryHierarchy;

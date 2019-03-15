@@ -1,5 +1,8 @@
 DMS Update Manager Change Log
 
+Version 1.2.7012; March 14, 2019
+	- Ignore EditPadPro 6 (EditPadPro.exe) when checking for directories in use
+
 Version 1.2.6992; February 22, 2019
 	- CopyFilesFromRemote now accepts a dictionary of source files
 		- Keys are filenames, values are true if the file is required, false if optional
