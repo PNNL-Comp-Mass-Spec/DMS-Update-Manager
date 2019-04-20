@@ -227,7 +227,7 @@ namespace DMSUpdateManager
         /// </returns>
         public bool CopyFilesFromRemote(
             string sourceDirectoryPath,
-            IReadOnlyCollection<string> sourceFileNames,
+            ICollection<string> sourceFileNames,
             string localDirectoryPath,
             bool warnIfMissing = true)
         {
@@ -249,7 +249,7 @@ namespace DMSUpdateManager
         /// </returns>
         public bool CopyFilesFromRemote(
             string sourceDirectoryPath,
-            IReadOnlyDictionary<string, bool> sourceFiles,
+            IDictionary<string, bool> sourceFiles,
             string localDirectoryPath,
             bool warnIfMissing = true)
         {
@@ -634,7 +634,7 @@ namespace DMSUpdateManager
         /// <param name="remoteDirectories"></param>
         /// <returns>True on success, otherwise false</returns>
         /// <remarks>The parent directory of each item in remoteDirectories must already exist</remarks>
-        public bool CreateRemoteDirectories(IReadOnlyCollection<string> remoteDirectories)
+        public bool CreateRemoteDirectories(ICollection<string> remoteDirectories)
         {
 
             if (!ParametersValidated)
@@ -1308,8 +1308,8 @@ namespace DMSUpdateManager
         /// <returns>True if the contents match, otherwise false</returns>
         public static bool LockFilesMatch(
             string lockFilePath,
-            IReadOnlyList<string> lockFileContents,
-            IReadOnlyList<string> lockFileContentsNew,
+            IList<string> lockFileContents,
+            IList<string> lockFileContentsNew,
             out string errorMessage)
         {
 
@@ -1348,7 +1348,7 @@ namespace DMSUpdateManager
         /// <param name="filesToDelete">File names or paths in sourceFilePaths to delete instead of moving</param>
         /// <returns></returns>
         public bool MoveFiles(
-            IReadOnlyCollection<string> sourceFilePaths,
+            ICollection<string> sourceFilePaths,
             string targetRemoteDirectory,
             List<string> filesToDelete)
         {
