@@ -966,7 +966,7 @@ namespace DMSUpdateManager
                 pwdCharsAdj.Add((char)pwdBytes[index]);
             }
 
-            return string.Join("", pwdCharsAdj);
+            return string.Join(string.Empty, pwdCharsAdj);
         }
 
         /// <summary>

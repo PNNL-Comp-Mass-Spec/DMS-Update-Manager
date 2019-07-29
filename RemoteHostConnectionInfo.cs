@@ -44,7 +44,7 @@ namespace DMSUpdateManager
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <remarks>All connection info will have empty strings</remarks>
+        /// <remarks>All connection info properties will have empty strings</remarks>
         public RemoteHostConnectionInfo() : this(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty)
         {
         }

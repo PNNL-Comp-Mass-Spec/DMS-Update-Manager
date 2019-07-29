@@ -31,7 +31,7 @@ namespace DMSUpdateManager
         /// </summary>
         public DMSUpdateManager()
         {
-            mFileDate = "March 15, 2019";
+            mFileDate = "May 9, 2019";
 
             mFilesToIgnore = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             mProcessesDict = new Dictionary<uint, ProcessInfo>();
@@ -1879,7 +1879,7 @@ namespace DMSUpdateManager
         {
             var commandLine = new StringBuilder();
 
-            if (includeProgramPath)
+            if (includeProgramPath && process.MainModule != null)
             {
                 commandLine.Append(process.MainModule.FileName);
                 commandLine.Append(" ");
