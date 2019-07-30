@@ -256,7 +256,7 @@ namespace DMSUpdateManager
 #if NET_40
             IReadOnlyDictionary<string, bool> sourceFiles,
 #else
-            IReadOnlyDictionary<string> sourceFiles,
+            IReadOnlyDictionary<string, bool> sourceFiles,
 #endif
             string localDirectoryPath,
             bool warnIfMissing = true)
@@ -1529,7 +1529,7 @@ namespace DMSUpdateManager
             ParametersValidated = true;
         }
 
-#endregion
+    #endregion
 
     }
 }
