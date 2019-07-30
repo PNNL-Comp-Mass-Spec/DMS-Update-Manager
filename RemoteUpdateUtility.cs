@@ -227,7 +227,11 @@ namespace DMSUpdateManager
         /// </returns>
         public bool CopyFilesFromRemote(
             string sourceDirectoryPath,
+#if NET_40
             IReadOnlyCollection<string> sourceFileNames,
+#else
+            IReadOnlyCollection<string> sourceFileNames,
+#endif
             string localDirectoryPath,
             bool warnIfMissing = true)
         {
@@ -249,7 +253,11 @@ namespace DMSUpdateManager
         /// </returns>
         public bool CopyFilesFromRemote(
             string sourceDirectoryPath,
+#if NET_40
             IReadOnlyDictionary<string, bool> sourceFiles,
+#else
+            IReadOnlyDictionary<string> sourceFiles,
+#endif
             string localDirectoryPath,
             bool warnIfMissing = true)
         {
@@ -1521,7 +1529,7 @@ namespace DMSUpdateManager
             ParametersValidated = true;
         }
 
-        #endregion
+#endregion
 
     }
 }
