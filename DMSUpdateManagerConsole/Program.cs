@@ -4,6 +4,7 @@ using System.IO;
 using UpdateMgr = DMSUpdateManager;
 using PRISM;
 using PRISM.FileProcessor;
+using PRISM.Logging;
 
 namespace DMSUpdateManagerConsole
 {
@@ -22,7 +23,7 @@ namespace DMSUpdateManagerConsole
         /// <summary>
         /// Program date
         /// </summary>
-        public const string PROGRAM_DATE = "July 29, 2019";
+        public const string PROGRAM_DATE = "February 25, 2020";
 
         // Either mSourceDirectoryPath and mTargetDirectoryPath must be specified, or mParameterFilePath needs to be specified
 
@@ -332,7 +333,7 @@ namespace DMSUpdateManagerConsole
             ConsoleMsgUtils.ShowWarning(message);
         }
 
-        static void RegisterEvents(EventNotifier processor)
+        static void RegisterEvents(IEventNotifier processor)
         {
             processor.DebugEvent += Processor_DebugEvent;
             processor.ErrorEvent += Processor_ErrorEvent;
