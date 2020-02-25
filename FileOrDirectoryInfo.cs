@@ -202,6 +202,12 @@ namespace DMSUpdateManager
             }
             else
             {
+                if (string.IsNullOrWhiteSpace(fileOrDirectoryPath))
+                {
+                    DirectoryName = string.Empty;
+                    return;
+                }
+
                 if (isDirectory)
                 {
                     var directoryInfo = new DirectoryInfo(fileOrDirectoryPath);

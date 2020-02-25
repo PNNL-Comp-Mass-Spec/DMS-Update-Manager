@@ -402,6 +402,9 @@ namespace DMSUpdateManager
         /// <remarks>Assumes the path separator character is a forward slash</remarks>
         public static string GetRemoteDirectoryParent(string fileOrDirectoryPath)
         {
+            if (string.IsNullOrWhiteSpace(fileOrDirectoryPath))
+                return "/";
+
             if (fileOrDirectoryPath.EndsWith("/") && fileOrDirectoryPath.Length > 1)
                 fileOrDirectoryPath = fileOrDirectoryPath.TrimEnd('/');
 

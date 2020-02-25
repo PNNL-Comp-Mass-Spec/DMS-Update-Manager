@@ -558,6 +558,12 @@ namespace DMSUpdateManager
         /// <returns>Executable path, or an empty string if cannot be determined</returns>
         private string ExtractExePathFromProcessPath(string processPath, out string exeName)
         {
+            if (string.IsNullOrWhiteSpace(processPath))
+            {
+                exeName = string.Empty;
+                return string.Empty;
+            }
+
             try
             {
                 // First try using Path.GetFileName
