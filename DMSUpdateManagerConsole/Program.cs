@@ -23,7 +23,7 @@ namespace DMSUpdateManagerConsole
         /// <summary>
         /// Program date
         /// </summary>
-        public const string PROGRAM_DATE = "February 25, 2020";
+        public const string PROGRAM_DATE = "January 6, 2021";
 
         // Either mSourceDirectoryPath and mTargetDirectoryPath must be specified, or mParameterFilePath needs to be specified
 
@@ -63,7 +63,6 @@ namespace DMSUpdateManagerConsole
         /// <returns>0 if no error, error code if an error</returns>
         public static int Main(string[] args)
         {
-
             var commandLineParser = new clsParseCommandLine();
             var proceed = false;
 
@@ -139,7 +138,6 @@ namespace DMSUpdateManagerConsole
                 ShowErrorMessage("Error occurred in modMain->Main: " + Environment.NewLine + ex.Message, ex);
                 return -1;
             }
-
         }
 
         private static string GetExeName()
@@ -154,7 +152,6 @@ namespace DMSUpdateManagerConsole
         /// <returns>True if success, false if an error</returns>
         private static bool SetOptionsUsingCommandLineParameters(clsParseCommandLine commandLineParser)
         {
-
             var validParameters = new List<string> {
                 "S", "T", "P", "Force", "L", "V",
                 "Preview", "NoParent", "NoParents",

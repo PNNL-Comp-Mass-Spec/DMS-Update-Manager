@@ -110,7 +110,6 @@ namespace DMSUpdateManager
                 var parentDirectory = new DirectoryInfo(directoryPath).Parent;
                 ParentPath = parentDirectory?.FullName ?? string.Empty;
             }
-
         }
 
         /// <summary>
@@ -166,7 +165,6 @@ namespace DMSUpdateManager
                 RemoteHostFiles[remoteDirectory] = files;
             else
                 RemoteHostFiles.Add(remoteDirectory, files);
-
         }
 
         /// <summary>
@@ -203,10 +201,8 @@ namespace DMSUpdateManager
         /// <returns>Instance of FileOrDirectoryInfo for the directory</returns>
         public FileOrDirectoryInfo CreateDirectoryIfMissing(string directoryPath)
         {
-
             if (!TrackingRemoteHostDirectory)
             {
-
                 var dirInfo = new DirectoryInfo(directoryPath);
                 if (!dirInfo.Exists)
                 {
@@ -253,7 +249,6 @@ namespace DMSUpdateManager
                 var item = GetDirectoryInfo(fileOrDirectory.FullName);
                 if (item.Exists)
                     mUpdateUtility.DeleteDirectory(mSftpClient, item.FullName);
-
             }
             else
             {
@@ -261,7 +256,6 @@ namespace DMSUpdateManager
                 if (item.Exists)
                     mUpdateUtility.DeleteFile(mSftpClient, item.FullName);
             }
-
         }
 
         /// <summary>
@@ -288,7 +282,6 @@ namespace DMSUpdateManager
                 {
                     return new FileOrDirectoryInfo(remoteDirectoryInfo);
                 }
-
             }
 
             var missingDirectory = new FileOrDirectoryInfo(
@@ -391,7 +384,6 @@ namespace DMSUpdateManager
             }
 
             return files;
-
         }
 
         /// <summary>
@@ -411,7 +403,6 @@ namespace DMSUpdateManager
             var lastSlash = fileOrDirectoryPath.LastIndexOf('/');
             var remoteDirectory = lastSlash < 1 ? "/" : fileOrDirectoryPath.Substring(0, lastSlash);
             return remoteDirectory;
-
         }
 
         /// <summary>
@@ -451,6 +442,5 @@ namespace DMSUpdateManager
         {
             return DirectoryPath;
         }
-
     }
 }

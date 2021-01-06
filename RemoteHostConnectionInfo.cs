@@ -6,7 +6,6 @@ namespace DMSUpdateManager
     /// </summary>
     public class RemoteHostConnectionInfo
     {
-
         /// <summary>
         /// Base directory on the remote host
         /// </summary>
@@ -62,7 +61,6 @@ namespace DMSUpdateManager
             string privateKeyFilePath, string passphraseFilePath,
             string baseDirectoryPath)
         {
-
             HostName = hostName;
             Username = userName;
             PrivateKeyFile = privateKeyFilePath;

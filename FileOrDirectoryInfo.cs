@@ -60,7 +60,6 @@ namespace DMSUpdateManager
         /// </summary>
         public bool IsDirectory { get; }
 
-
         /// <summary>
         /// Last write time of the file
         /// DateTime.Now if a directory
@@ -235,7 +234,6 @@ namespace DMSUpdateManager
                                            lastWrite: DateTime.MinValue,
                                            lastWriteUtc: DateTime.MinValue,
                                            linuxDirectory: linuxDirectory);
-
         }
 
         /// <summary>

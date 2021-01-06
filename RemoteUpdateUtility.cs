@@ -115,7 +115,6 @@ namespace DMSUpdateManager
             int maxWaitTimeMinutes = 120,
             int logIntervalMinutes = 5)
         {
-
             if (dataFileName.EndsWith(LOCK_FILE_EXTENSION, StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("dataFileName may not end in .lock", nameof(dataFileName));
 
@@ -322,11 +321,9 @@ namespace DMSUpdateManager
 
                             failCount++;
                         }
-
                     }
 
                     scp.Disconnect();
-
                 }
 
                 if (successCount > 0 && failCount == 0)
@@ -342,7 +339,6 @@ namespace DMSUpdateManager
                 OnErrorEvent(string.Format("Error copying files from {0}: {1}", sourceDirectoryPath, ex.Message), ex);
                 return false;
             }
-
         }
 
         /// <summary>
@@ -446,7 +442,6 @@ namespace DMSUpdateManager
                 }
 
                 return CopyFilesToRemote(filesToCopy, remoteDirectoryPath, useLockFile, managerName);
-
             }
             catch (Exception ex)
             {
@@ -470,7 +465,6 @@ namespace DMSUpdateManager
             bool useLockFile = false,
             string managerName = "Unknown")
         {
-
             if (!ParametersValidated)
             {
                 // Validate that the required parameters are present and load the private key and passphrase from disk
@@ -480,7 +474,6 @@ namespace DMSUpdateManager
 
             try
             {
-
                 var uniqueFiles = GetUniqueFileList(sourceFiles).ToList();
                 if (uniqueFiles.Count == 0)
                 {
@@ -550,7 +543,6 @@ namespace DMSUpdateManager
                                         continue;
                                     }
                                 }
-
                             }
 
                             var remoteLockFilePath = CreateRemoteLockFile(sftp, remoteDirectoryPath, sourceFile.Name, managerName);
@@ -585,7 +577,6 @@ namespace DMSUpdateManager
                             {
                                 throw;
                             }
-
                         }
 
                         success = true;
@@ -597,7 +588,6 @@ namespace DMSUpdateManager
                     }
 
                     scp.Disconnect();
-
                 }
 
                 if (useLockFile)
@@ -612,14 +602,12 @@ namespace DMSUpdateManager
 
                 OnErrorEvent(string.Format("Cannot copy files to {0}; all of the files in sourceFiles are missing", RemoteHostInfo.HostName));
                 return false;
-
             }
             catch (Exception ex)
             {
                 OnErrorEvent(string.Format("Error copying files to {0} on {1}: {2}", remoteDirectoryPath, RemoteHostInfo.HostName, ex.Message), ex);
                 return false;
             }
-
         }
 
         /// <summary>
@@ -644,7 +632,6 @@ namespace DMSUpdateManager
         /// <remarks>The parent directory of each item in remoteDirectories must already exist</remarks>
         public bool CreateRemoteDirectories(IReadOnlyCollection<string> remoteDirectories)
         {
-
             if (!ParametersValidated)
                 throw new Exception("Call UpdateParameters before calling CreateRemoteDirectories");
 
@@ -669,7 +656,6 @@ namespace DMSUpdateManager
 
                     if (!subDirectories.Contains(directoryName))
                         subDirectories.Add(directoryName);
-
                 }
 
                 OnDebugEvent("Verifying directories on host " + RemoteHostInfo.HostName);
@@ -708,7 +694,6 @@ namespace DMSUpdateManager
                             OnDebugEvent("  creating " + directoryPathToCreate);
                             sftp.CreateDirectory(directoryPathToCreate);
                         }
-
                     }
                     sftp.Disconnect();
                 }
@@ -732,7 +717,6 @@ namespace DMSUpdateManager
         /// <returns>Full path to the lock file; empty string if a problem</returns>
         private string CreateRemoteLockFile(SftpClient sftp, string remoteDirectoryPath, string dataFileName, string managerName)
         {
-
             var lockFileContents = new[]
             {
                 "Date: " + DateTime.Now.ToString(DATE_TIME_FORMAT),
@@ -769,7 +753,6 @@ namespace DMSUpdateManager
             }
 
             return remoteLockFilePath;
-
         }
 
         /// <summary>
@@ -836,7 +819,6 @@ namespace DMSUpdateManager
         /// <param name="keepStartingDirectory">When true, delete all files/directories in the remote directory but don't remove the starting directory</param>
         public void DeleteDirectoryAndContents(string directoryPath, bool keepStartingDirectory = false)
         {
-
             if (!ParametersValidated)
                 throw new Exception("Call UpdateParameters before calling DeleteDirectoryAndContents");
 
@@ -897,7 +879,6 @@ namespace DMSUpdateManager
                         {
                             OnErrorEvent(string.Format("Error deleting file {0}: {1}", workDirFile.Value.Name, ex.Message));
                         }
-
                     }
 
                     if (!keepStartingDirectory && !directoriesToDelete.Contains(directoryPath))
@@ -918,13 +899,11 @@ namespace DMSUpdateManager
 
                     sftp.Disconnect();
                 }
-
             }
             catch (Exception ex)
             {
                 OnErrorEvent("Error deleting remote files", ex);
             }
-
         }
 
         /// <summary>
@@ -1082,7 +1061,6 @@ namespace DMSUpdateManager
                         {
                             OnWarningEvent("Skipping duplicate filename: " + item.FullName);
                         }
-
                     }
                 }
 
@@ -1092,7 +1070,6 @@ namespace DMSUpdateManager
                     GetRemoteFileListing(sftp, subdirectoryPaths, fileMatchSpec, true, matchingFiles);
                 }
             }
-
         }
 
         /// <summary>
@@ -1104,7 +1081,6 @@ namespace DMSUpdateManager
         /// <returns>Dictionary of matching files and directories, where keys are full paths and values are instances of SFtpFile</returns>
         public IDictionary<string, SftpFile> GetRemoteFilesAndDirectories(string remoteDirectoryPath, bool recurse = false, int maxDepth = -1)
         {
-
             var filesAndDirectories = new Dictionary<string, SftpFile>();
 
             if (!ParametersValidated)
@@ -1131,7 +1107,6 @@ namespace DMSUpdateManager
                 OnErrorEvent("Error retrieving remote file/directory listing", ex);
                 return filesAndDirectories;
             }
-
         }
 
         /// <summary>
@@ -1149,7 +1124,6 @@ namespace DMSUpdateManager
             int maxDepth,
             IDictionary<string, SftpFile> filesAndDirectories)
         {
-
             if (string.IsNullOrWhiteSpace(remoteDirectoryPath))
             {
                 throw new ArgumentException("Remote directory path cannot be empty", nameof(remoteDirectoryPath));
@@ -1205,7 +1179,6 @@ namespace DMSUpdateManager
                 foreach (var subDirectoryPath in subdirectoryPaths)
                     GetRemoteFilesAndDirectories(sftp, subDirectoryPath, true, newDepth, filesAndDirectories);
             }
-
         }
 
         /// <summary>
@@ -1223,7 +1196,6 @@ namespace DMSUpdateManager
                 OnErrorEvent("Error retrieving remote file/directory listing", ex);
                 return new Dictionary<string, SftpFile>();
             }
-
         }
 
         /// <summary>
@@ -1320,7 +1292,6 @@ namespace DMSUpdateManager
             IReadOnlyList<string> lockFileContentsNew,
             out string errorMessage)
         {
-
             if (lockFileContentsNew.Count < lockFileContents.Count)
             {
                 // Remote lock file is shorter than we expected
@@ -1395,7 +1366,6 @@ namespace DMSUpdateManager
                     sftp.Connect();
                     foreach (var remoteFilePath in sourceFilePaths)
                     {
-
                         var fileName = Path.GetFileName(remoteFilePath);
 
                         if (fileName != null && fileNamesToDelete.Contains(fileName) ||
@@ -1504,7 +1474,6 @@ namespace DMSUpdateManager
         /// </remarks>
         public void UpdateParameters()
         {
-
             // Use settings defined for this manager
             OnDebugEvent("Updating remote transfer settings using manager defaults");
 

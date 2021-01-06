@@ -400,7 +400,6 @@ namespace DMSUpdateManager
             ItemInUseConstants itemInUse = ItemInUseConstants.NotInUse,
             string fileUsageMessage = "")
         {
-
             var targetFilePath = CombinePaths(targetDirectoryInfo, targetDirectoryPath, sourceFile.Name);
             var targetFile = targetDirectoryInfo.GetFileInfo(targetFilePath);
 
@@ -520,7 +519,6 @@ namespace DMSUpdateManager
 
         private FileOrDirectoryInfo CreateDirectoryIfMissing(DirectoryContainer targetDirectoryInfo, string directoryPath)
         {
-
             var currentTask = "validating";
             var isLinuxDir = targetDirectoryInfo.TrackingRemoteHostDirectory;
 
@@ -582,7 +580,6 @@ namespace DMSUpdateManager
 
                 try
                 {
-
                     // Look for a filename embedded in double quotes
                     var exeMatcher = new Regex("\"(?<ExePath>[^\"]+)\"");
                     var match = exeMatcher.Match(processPath);
@@ -789,7 +786,6 @@ namespace DMSUpdateManager
                 mutex = null;
                 return false;
             }
-
         }
 
         private bool LoadParameterFileSettings(string parameterFilePath)
@@ -1151,7 +1147,6 @@ namespace DMSUpdateManager
         /// </remarks>
         private bool UpdateRemoteHostWork(RemoteHostConnectionInfo targetHostInfo, string parameterFilePath)
         {
-
             try
             {
                 if (string.IsNullOrEmpty(mSourceDirectoryPath))
@@ -1308,7 +1303,6 @@ namespace DMSUpdateManager
             }
             else
             {
-
                 var directoryToCheck = new DirectoryInfo(targetDirectoryInfo.DirectoryPath);
                 if (directoryToCheck.Parent == null)
                 {
@@ -1389,7 +1383,6 @@ namespace DMSUpdateManager
                         }
                         else
                         {
-
                             // Reduce hits on the source: not enough time has passed since the last update
                             // Delay the output so that important log messages about bad parameters will be output regardless of this
                             OnWarningEvent(
@@ -1446,7 +1439,6 @@ namespace DMSUpdateManager
 
             foreach (var sourceSubdirectory in sourceDirectory.GetDirectories())
             {
-
                 // The target directory is treated as a subdirectory of the parent directory
                 var targetSubdirectoryPath = CombinePaths(targetDirectoryInfo, parentDirectory, sourceSubdirectory.Name);
 
@@ -1572,7 +1564,6 @@ namespace DMSUpdateManager
                 HandleException("Error removing empty " + directoryDescription + " flagged with " + deleteFlag + " at " + targetSubdirectory.FullName, ex);
                 return false;
             }
-
         }
 
         private bool UpdateDirectoryWork(
@@ -1581,7 +1572,6 @@ namespace DMSUpdateManager
             FileOrDirectoryInfo targetDirectory,
             bool pushNewSubdirectories)
         {
-
             if (!targetDirectory.Exists && !PreviewMode)
             {
                 ShowMessage("Skipping non-existent directory: " + AbbreviatePath(targetDirectory.FullName), false, messageType: MessageTypeConstants.Debug);
@@ -1589,7 +1579,6 @@ namespace DMSUpdateManager
             }
 
             ShowMessage("Updating " + AbbreviatePath(targetDirectory.FullName), false, messageType: MessageTypeConstants.Debug);
-
 
             // Obtain a list of files in the source directory
             var sourceDirectory = new DirectoryInfo(sourceDirectoryPath);
@@ -1990,7 +1979,6 @@ namespace DMSUpdateManager
                 ShowErrorMessage("Error looking for processes using files in " + targetDirectoryPath + ": " + ex.Message);
                 return false;
             }
-
         }
 
         /// <summary>
@@ -2144,7 +2132,6 @@ namespace DMSUpdateManager
             ItemInUseConstants itemInUse = ItemInUseConstants.NotInUse,
             string fileUsageMessage = "")
         {
-
             var sourceFilePath = TrimSuffix(rollbackFile.FullName, ROLLBACK_SUFFIX);
 
             var sourceFile = new FileInfo(sourceFilePath);
