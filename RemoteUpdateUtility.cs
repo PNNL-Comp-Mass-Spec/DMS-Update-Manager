@@ -18,6 +18,8 @@ namespace DMSUpdateManager
     /// </summary>
     public class RemoteUpdateUtility : EventNotifier
     {
+        // Ignore Spelling: Sftp, SFtpFile, scp, yyyy-MM-dd, hh:mm:ss tt, passphrase
+
         #region "Constants"
 
         /// <summary>
@@ -85,7 +87,7 @@ namespace DMSUpdateManager
         /// Look for a lock file named dataFileName + ".lock" in directory remoteDirectoryPath
         /// If found, and if less than maxWaitTimeMinutes old, waits for it to be deleted by another process or to age
         /// </summary>
-        /// <param name="sftp">Sftp client (to avoid connecting / disconnecting repeatedly)</param>
+        /// <param name="sftp">Secure FTP client (to avoid connecting / disconnecting repeatedly)</param>
         /// <param name="remoteDirectoryPath">Target directory on the remote server (use Linux-style forward slashes)</param>
         /// <param name="dataFileName">Data file name (without .lock)</param>
         /// <param name="lockFileWasFound">
@@ -203,7 +205,7 @@ namespace DMSUpdateManager
         /// <summary>
         /// Connect to the remote host specified by RemoteHostInfo
         /// </summary>
-        /// <returns>sFtp client</returns>
+        /// <returns>Sftp client</returns>
         public SftpClient ConnectToRemoteHost()
         {
             UpdateParameters();
@@ -222,7 +224,7 @@ namespace DMSUpdateManager
         /// <param name="warnIfMissing">Log warnings if any files are missing.  When false, logs debug messages instead</param>
         /// <returns>
         /// True on success, false if an error
-        /// Returns False if if any files were missing, even if warnIfMissing is false
+        /// Returns False if any files were missing, even if warnIfMissing is false
         /// </returns>
         public bool CopyFilesFromRemote(
             string sourceDirectoryPath,
@@ -248,7 +250,7 @@ namespace DMSUpdateManager
         /// <param name="warnIfMissing">Log warnings if any files are missing.  When false, logs debug messages instead</param>
         /// <returns>
         /// True on success, false if an error
-        /// Returns False if if any files were missing, even if warnIfMissing is false
+        /// Returns False if any files were missing, even if warnIfMissing is false
         /// </returns>
         public bool CopyFilesFromRemote(
             string sourceDirectoryPath,
@@ -1203,7 +1205,6 @@ namespace DMSUpdateManager
         /// </summary>
         /// <param name="files">File list to check</param>
         /// <param name="ignoreCase">True to ignore file case</param>
-        /// <returns></returns>
         private static IEnumerable<FileInfo> GetUniqueFileList(IEnumerable<FileInfo> files, bool ignoreCase = true)
         {
             var comparer = ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
@@ -1303,7 +1304,7 @@ namespace DMSUpdateManager
             {
                 if (i >= lockFileContents.Count)
                 {
-                    // Lock file now has more rows than we expected; that's ok
+                    // Lock file now has more rows than we expected; that's OK
                     break;
                 }
 
@@ -1325,7 +1326,6 @@ namespace DMSUpdateManager
         /// <param name="sourceFilePaths"></param>
         /// <param name="targetRemoteDirectory"></param>
         /// <param name="filesToDelete">File names or paths in sourceFilePaths to delete instead of moving</param>
-        /// <returns></returns>
         public bool MoveFiles(
             IReadOnlyCollection<string> sourceFilePaths,
             string targetRemoteDirectory,

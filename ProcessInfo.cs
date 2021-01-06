@@ -13,38 +13,32 @@ namespace DMSUpdateManager
         /// <summary>
         /// Process ID
         /// </summary>
-        /// <returns></returns>
         public long ProcessID { get; }
 
         /// <summary>
         /// Full path to the .exe
         /// </summary>
-        /// <returns></returns>
         public string ExePath { get; }
 
         /// <summary>
         /// Parent directory of the .exe
         /// </summary>
-        /// <returns></returns>
         public string DirectoryPath { get; }
 
         /// <summary>
         /// Command line, including the .exe and any command line arguments
         /// </summary>
-        /// <returns></returns>
         /// <remarks>May have absolute path or relative path to the Exe, depending on how the process was started</remarks>
         public string CommandLine { get; }
 
         /// <summary>
         /// Arguments portion of the command line
         /// </summary>
-        /// <returns></returns>
         public string CommandLineArgs { get; }
 
         /// <summary>
         /// DirectoryPath, split on path separators
         /// </summary>
-        /// <returns></returns>
         public List<string> DirectoryHierarchy { get; }
 
         /// <summary>
@@ -96,7 +90,6 @@ namespace DMSUpdateManager
         /// <summary>
         /// Show the command line or the executable path
         /// </summary>
-        /// <returns></returns>
         public override string ToString()
         {
             if (CommandLine.Contains(ExePath))

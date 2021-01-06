@@ -9,6 +9,8 @@ namespace DMSUpdateManager
     /// </summary>
     public class FileOrDirectoryInfo
     {
+        // Ignore Spelling: SftpFile
+
         #region "Properties"
 
         /// <summary>
@@ -239,7 +241,6 @@ namespace DMSUpdateManager
         /// <summary>
         /// File or directory path
         /// </summary>
-        /// <returns></returns>
         public override string ToString()
         {
             return FullName;

@@ -14,6 +14,8 @@ namespace DMSUpdateManager
     /// </summary>
     public class DirectoryContainer : IDisposable
     {
+        // Ignore Spelling: SFtpFile
+
         private readonly RemoteUpdateUtility mUpdateUtility;
 
         private readonly SftpClient mSftpClient;
@@ -172,7 +174,6 @@ namespace DMSUpdateManager
         /// </summary>
         /// <param name="sourceFile"></param>
         /// <param name="targetFilePath"></param>
-        /// <returns></returns>
         public FileOrDirectoryInfo CopyFile(FileInfo sourceFile, string targetFilePath)
         {
             if (!TrackingRemoteHostDirectory)
@@ -437,7 +438,6 @@ namespace DMSUpdateManager
         /// <summary>
         /// Target directory path
         /// </summary>
-        /// <returns></returns>
         public override string ToString()
         {
             return DirectoryPath;

@@ -14,18 +14,22 @@ using Renci.SshNet.Common;
 namespace DMSUpdateManager
 {
     /// <summary>
-    /// This program copies new and updated files from a source directory
-    /// to a target directory
+    /// This program copies new and updated files from a source directory to a target directory
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA)
     /// Program started January 16, 2009
-    ///
+    /// </para>
+    /// <para>
     /// E-mail: matthew.monroe@pnnl.gov or proteomics@pnnl.gov
     /// Website: https://omics.pnl.gov/ or https://panomics.pnnl.gov/")
+    /// </para>
     /// </remarks>
     public class DMSUpdateManager : ProcessDirectoriesBase
     {
+        // Ignore Spelling: mutex, yyyy-MM-dd, hh:mm:ss tt, Passphrase, checkfile, pnl
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -111,7 +115,7 @@ namespace DMSUpdateManager
 
         #endregion
 
-        #region "Classwide Variables"
+        #region "Class wide Variables"
 
         private bool mProcessesShown;
 
@@ -179,7 +183,7 @@ namespace DMSUpdateManager
         ///   Files are synced from "\\gigasax\DMS_Programs\AnalysisToolManagerDistribution" to "C:\DMS_Programs\AnalysisToolManager\"
         ///   Next, directory \\gigasax\DMS_Programs\AnalysisToolManagerDistribution\MASIC\ will get synced with ..\MASIC (but only if ..\MASIC exists)
         ///     Note that ..\MASIC is actually C:\DMS_Programs\MASIC\
-        ///   When sync'ing the MASIC directories, will recursively sync additional directories that match
+        ///   When synchronizing the MASIC directories, will recursively sync additional directories that match
         ///   If the source directory contains file _PushDir_.txt or _AMSubDir_.txt, the directory will be copied to the target even if it doesn't exist there
         /// </remarks>
         public bool CopySubdirectoriesToParentDirectory { get; set; }
@@ -216,7 +220,7 @@ namespace DMSUpdateManager
         public bool PreviewMode { get; set; }
 
         /// <summary>
-        /// Connection info for uploading files to a remote linux host
+        /// Connection info for uploading files to a remote Linux host
         /// </summary>
         public RemoteHostConnectionInfo RemoteHostInfo { get; set; }
 
@@ -250,7 +254,6 @@ namespace DMSUpdateManager
         /// Shorten the file or directory path if it starts with mTargetDirectoryPathBase
         /// </summary>
         /// <param name="fileOrDirectoryPath"></param>
-        /// <returns></returns>
         private string AbbreviatePath(string fileOrDirectoryPath)
         {
             return AbbreviatePath(fileOrDirectoryPath, mTargetDirectoryPathBase);
@@ -261,7 +264,6 @@ namespace DMSUpdateManager
         /// </summary>
         /// <param name="fileOrDirectoryPath"></param>
         /// <param name="directoryPathBase"></param>
-        /// <returns></returns>
         private string AbbreviatePath(string fileOrDirectoryPath, string directoryPathBase)
         {
             if (fileOrDirectoryPath.StartsWith(directoryPathBase))
@@ -693,7 +695,6 @@ namespace DMSUpdateManager
         /// <summary>
         /// Get the current error message
         /// </summary>
-        /// <returns></returns>
         public override string GetErrorMessage()
         {
             // Returns an empty string if no error
@@ -1082,12 +1083,11 @@ namespace DMSUpdateManager
         /// Target directory on the remote host, for example /opt/DMS_Programs
         /// Ignored if remoteHostInfo.DirectoryPath is defined
         /// </param>
-        /// <param name="overwriteNewerFiles">If False, will not overwrite files in the target directory that are newer than files in the source directory</param>
         /// <param name="ignoreList">List of files that will not be copied</param>
+        /// <param name="overwriteNewerFiles">If False, will not overwrite files in the target directory that are newer than files in the source directory</param>
         /// <param name="copySubdirectoriesToParentDirectory">When True, copy any subdirectories of the source directory into the subdirectories of the parent directory of the target directory</param>
         /// <param name="mutexNameSuffix">Suffix applied to the mutex name when checking for other running copies of the DMSUpdateManager</param>
         /// <param name="minimumRepeatTimeSeconds">Minimum time between updates</param>
-        /// <returns></returns>
         public bool UpdateRemoteHost(
             RemoteHostConnectionInfo remoteHostInfo,
             string sourceDirectoryPath,
@@ -1199,7 +1199,6 @@ namespace DMSUpdateManager
         /// <param name="sourceDirectoryPath">Source directory path</param>
         /// <param name="targetDirectoryInfo">Target directory info</param>
         /// <param name="parameterFilePath">Parameter file defining the source directory path and other options</param>
-        /// <returns></returns>
         private bool UpdateDirectoryMutexWrapped(string sourceDirectoryPath, DirectoryContainer targetDirectoryInfo, string parameterFilePath)
         {
             Mutex mutex = null;
@@ -1238,7 +1237,6 @@ namespace DMSUpdateManager
         /// <param name="sourceDirectory">Source directory info</param>
         /// <param name="targetDirectoryInfo">Target directory info</param>
         /// <param name="parameterFilePath">Parameter file defining the source directory path and other options</param>
-        /// <returns></returns>
         private bool UpdateDirectoryCopyToParentMutexWrapped(
             DirectoryInfo sourceDirectory,
             DirectoryContainer targetDirectoryInfo,
@@ -1281,7 +1279,6 @@ namespace DMSUpdateManager
         /// <param name="targetDirectoryInfo">Target directory info</param>
         /// <param name="parameterFilePath">Parameter file path</param>
         /// <param name="doNotUpdateParent"></param>
-        /// <returns></returns>
         /// <remarks>
         /// Parameter file path is used to determine the checkfile path, which is used to assure
         /// that a minimum amount of time elapses between sequential runs of the DMS Update Manager
@@ -1339,7 +1336,6 @@ namespace DMSUpdateManager
         /// <param name="sourceDirectory">Source directory info</param>
         /// <param name="targetDirectoryInfo">Target directory info</param>
         /// <param name="parameterFilePath">Parameter file path</param>
-        /// <returns></returns>
         /// <remarks>
         /// Parameter file path is used to determine the checkfile path, which is used to assure
         /// that a minimum amount of time elapses between sequential runs of the DMS Update Manager
@@ -1587,7 +1583,7 @@ namespace DMSUpdateManager
 
             var filesInSource = sourceDirectory.GetFiles();
 
-            // Populate a SortedSet with the names of any .delete files in fiFilesInSource
+            // Populate a SortedSet with the names of any .delete files in filesInSource
             var deleteFiles = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             var filesToDelete = (from sourceFile in filesInSource
                                  where sourceFile.Name.EndsWith(DELETE_SUFFIX, StringComparison.OrdinalIgnoreCase)
@@ -1597,7 +1593,7 @@ namespace DMSUpdateManager
                 deleteFiles.Add(item);
             }
 
-            // Populate a SortedSet with the names of any .checkjava files in fiFilesInSource
+            // Populate a SortedSet with the names of any .checkjava files in filesInSource
             var checkJavaFiles = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             var javaFilesToCheck = (from sourceFile in filesInSource
                                     where sourceFile.Name.EndsWith(CHECK_JAVA_SUFFIX, StringComparison.OrdinalIgnoreCase)

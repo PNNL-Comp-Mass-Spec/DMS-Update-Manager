@@ -12,14 +12,19 @@ namespace DMSUpdateManagerConsole
     /// This program copies new and updated files from a source directory to a target directory
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA)
     /// Program started January 16, 2009
-    ///
+    /// </para>
+    /// <para>
     /// E-mail: matthew.monroe@pnnl.gov or proteomics@pnnl.gov
     /// Website: https://omics.pnl.gov/ or https://panomics.pnnl.gov/
+    /// </para>
     /// </remarks>
     public static class Program
     {
+        // Ignore Spelling: mutex, passphrase, Readme
+
         /// <summary>
         /// Program date
         /// </summary>
