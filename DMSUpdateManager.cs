@@ -1073,7 +1073,7 @@ namespace DMSUpdateManager
                 return false;
             }
 
-            return UpdateRemoteHostWork(RemoteHostInfo, parameterFilePath);
+            return UpdateRemoteHostWork(targetHostInfo, parameterFilePath);
         }
 
         /// <summary>
