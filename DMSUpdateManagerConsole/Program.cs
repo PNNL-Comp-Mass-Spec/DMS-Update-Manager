@@ -64,9 +64,8 @@ namespace DMSUpdateManagerConsole
         /// <summary>
         /// Main entry point
         /// </summary>
-        /// <param name="args"></param>
         /// <returns>0 if no error, error code if an error</returns>
-        public static int Main(string[] args)
+        public static int Main()
         {
             var commandLineParser = new clsParseCommandLine();
             var proceed = false;
@@ -102,8 +101,12 @@ namespace DMSUpdateManagerConsole
                     return success ? 0 : -1;
                 }
 
-                if (!proceed || commandLineParser.NeedToShowHelp || commandLineParser.ParameterCount == 0 ||
-                    !(mSourceDirectoryPath.Length > 0 & mTargetDirectoryPath.Length > 0 | mParameterFilePath.Length > 0))
+                var requiredParametersDefined = mSourceDirectoryPath.Length > 0 && mTargetDirectoryPath.Length > 0 || mParameterFilePath.Length > 0;
+
+                if (!proceed ||
+                    commandLineParser.NeedToShowHelp ||
+                    commandLineParser.ParameterCount == 0 ||
+                    !requiredParametersDefined)
                 {
                     ShowProgramHelp();
                     return -1;
@@ -254,7 +257,8 @@ namespace DMSUpdateManagerConsole
                 if (!limitToPasswordOptions)
                 {
                     Console.WriteLine();
-                    Console.WriteLine("Program syntax:" + "\n" + GetExeName());
+                    Console.WriteLine("Program syntax:");
+                    Console.WriteLine(GetExeName());
                     Console.WriteLine(" [/S:SourceDirectoryPath [/T:TargetDirectoryPath]");
                     Console.WriteLine(" [/P:ParameterFilePath] [/Force] [/L] [/V]");
                     Console.WriteLine(" [/NoParent] [/NM] [/WaitTimeout:minutes]");
@@ -330,12 +334,12 @@ namespace DMSUpdateManagerConsole
             }
         }
 
-        static void ShowWarning(string message)
+        private static void ShowWarning(string message)
         {
             ConsoleMsgUtils.ShowWarning(message);
         }
 
-        static void RegisterEvents(IEventNotifier processor)
+        private static void RegisterEvents(IEventNotifier processor)
         {
             processor.DebugEvent += Processor_DebugEvent;
             processor.ErrorEvent += Processor_ErrorEvent;
@@ -343,22 +347,22 @@ namespace DMSUpdateManagerConsole
             processor.WarningEvent += Processor_WarningEvent;
         }
 
-        static void Processor_DebugEvent(string message)
+        private static void Processor_DebugEvent(string message)
         {
             ConsoleMsgUtils.ShowDebug(message);
         }
 
-        static void Processor_ErrorEvent(string message, Exception ex)
+        private static void Processor_ErrorEvent(string message, Exception ex)
         {
             ShowErrorMessage(message, ex);
         }
 
-        static void Processor_StatusEvent(string message)
+        private static void Processor_StatusEvent(string message)
         {
             Console.WriteLine(message);
         }
 
-        static void Processor_WarningEvent(string message)
+        private static void Processor_WarningEvent(string message)
         {
             ShowWarning(message);
         }

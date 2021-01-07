@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="DMSUpdateManager.cs" />
     <Compile Include="FileOrDirectoryInfo.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="RemoteHostConnectionInfo.cs" />
     <Compile Include="ProcessInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

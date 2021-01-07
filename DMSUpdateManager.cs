@@ -35,7 +35,7 @@ namespace DMSUpdateManager
         /// </summary>
         public DMSUpdateManager()
         {
-            mFileDate = "May 9, 2019";
+            mFileDate = "January 6, 2021";
 
             mFilesToIgnore = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             mProcessesDict = new Dictionary<uint, ProcessInfo>();
@@ -232,12 +232,7 @@ namespace DMSUpdateManager
         {
             get
             {
-                if (mSourceDirectoryPath == null)
-                {
-                    return string.Empty;
-                }
-
-                return mSourceDirectoryPath;
+                return mSourceDirectoryPath ?? string.Empty;
             }
             set
             {
@@ -358,23 +353,30 @@ namespace DMSUpdateManager
                     }
                     else
                     {
-                        fileUpdateCount += 1;
+                        fileUpdateCount++;
                     }
                 }
                 catch (SftpPermissionDeniedException ex)
                 {
-                    ShowErrorMessage(string.Format("Error copying {0} to {1}: {2} for user {3}",
-                                                   sourceFile.Name, targetFile.FullName, ex.Message, RemoteHostInfo.Username));
+                    ShowErrorMessage(string.Format(
+                        "Error copying {0} to {1}: {2} for user {3}",
+                        sourceFile.Name, targetFile.FullName, ex.Message, RemoteHostInfo.Username));
                 }
                 catch (Exception ex)
                 {
                     string msg;
                     if (targetDirectoryInfo.TrackingRemoteHostDirectory)
-                        msg = string.Format("Error copying {0} to {1}: {2} for user {3}",
-                                            sourceFile.Name, targetFile.FullName, ex.Message, RemoteHostInfo.Username);
+                    {
+                        msg = string.Format(
+                            "Error copying {0} to {1}: {2} for user {3}",
+                            sourceFile.Name, targetFile.FullName, ex.Message, RemoteHostInfo.Username);
+                    }
                     else
-                        msg = string.Format("Error copying {0} to {1}: {2}",
-                                            sourceFile.Name, targetFile.FullName, ex.Message);
+                    {
+                        msg = string.Format(
+                            "Error copying {0} to {1}: {2}",
+                            sourceFile.Name, targetFile.FullName, ex.Message);
+                    }
 
                     ShowErrorMessage(msg);
                 }
@@ -701,7 +703,7 @@ namespace DMSUpdateManager
 
             string strErrorMessage;
 
-            if (ErrorCode == ProcessDirectoriesErrorCodes.LocalizedError | ErrorCode == ProcessDirectoriesErrorCodes.NoError)
+            if (ErrorCode == ProcessDirectoriesErrorCodes.LocalizedError || ErrorCode == ProcessDirectoriesErrorCodes.NoError)
             {
                 switch (LocalErrorCode)
                 {
@@ -1733,7 +1735,7 @@ namespace DMSUpdateManager
                             errorLogged = true;
                         }
 
-                        retryCount -= 1;
+                        retryCount--;
                         ConsoleMsgUtils.SleepSeconds(0.1);
                     }
                 }
@@ -1795,7 +1797,7 @@ namespace DMSUpdateManager
                 var processes = Process.GetProcesses().ToList();
                 processes.Sort(new ProcessNameComparer());
 
-                if (PreviewMode & !mProcessesShown)
+                if (PreviewMode && !mProcessesShown)
                 {
                     Console.WriteLine();
                     ShowMessage("Examining running processes for Java", false);
@@ -1805,7 +1807,7 @@ namespace DMSUpdateManager
 
                 foreach (var process in processes)
                 {
-                    if (PreviewMode & !mProcessesShown)
+                    if (PreviewMode && !mProcessesShown)
                     {
                         if (process.ProcessName != lastProcess)
                         {
@@ -1823,12 +1825,12 @@ namespace DMSUpdateManager
                     {
                         var commandLine = GetCommandLine(process, INCLUDE_PROGRAM_PATH);
 
-                        if (PreviewMode & !mProcessesShown)
+                        if (PreviewMode && !mProcessesShown)
                         {
                             ConsoleMsgUtils.ShowDebug("  " + commandLine);
                         }
 
-                        if (commandLine.ToLower().Contains(sourceFile.Name.ToLower()))
+                        if (commandLine.IndexOf(sourceFile.Name, StringComparison.OrdinalIgnoreCase) >= 0)
                         {
                             jarFileUsageMessage = "Skipping " + sourceFile.Name + " because currently in use by Java";
                             return true;
@@ -1852,7 +1854,7 @@ namespace DMSUpdateManager
                     }
                 }
 
-                if (PreviewMode & !mProcessesShown)
+                if (PreviewMode && !mProcessesShown)
                 {
                     Console.WriteLine();
                     mProcessesShown = true;

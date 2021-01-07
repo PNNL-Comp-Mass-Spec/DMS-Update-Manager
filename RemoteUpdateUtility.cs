@@ -236,7 +236,14 @@ namespace DMSUpdateManager
             string localDirectoryPath,
             bool warnIfMissing = true)
         {
-            var sourceFiles = sourceFileNames.ToDictionary(sourceFile => sourceFile, sourceFile => true);
+            // Keys in this dictionary are source file names, values are true if the file is required,
+            var sourceFiles = new Dictionary<string, bool>();
+
+            // ReSharper disable once LoopCanBeConvertedToQuery
+            foreach (var sourceFile in sourceFileNames)
+            {
+                sourceFiles.Add(sourceFile, true);
+            }
 
             return CopyFilesFromRemote(sourceDirectoryPath, sourceFiles, localDirectoryPath, warnIfMissing);
         }
@@ -306,7 +313,7 @@ namespace DMSUpdateManager
                         }
                         catch (Exception ex)
                         {
-                            if (ex.Message.ToLower().Contains("no such file"))
+                            if (ex.Message.IndexOf("no such file", StringComparison.OrdinalIgnoreCase) >= 0)
                             {
                                 if (!requiredFile)
                                     continue;
@@ -568,17 +575,10 @@ namespace DMSUpdateManager
                         {
                             scp.Upload(sourceFile, targetFilePath);
                         }
-                        catch (Exception ex2)
+                        catch (Exception ex2) when (ex2.Message.IndexOf("set times: Operation not permitted", StringComparison.OrdinalIgnoreCase) >= 0)
                         {
-                            if (ex2.Message.Contains("set times: Operation not permitted"))
-                            {
-                                // Treat this as a warning, not an error
-                                OnWarningEvent("File copied, but could not update the timestamp (Operation not permitted): " + targetFilePath);
-                            }
-                            else
-                            {
-                                throw;
-                            }
+                            // Treat this as a warning, not an error
+                            OnWarningEvent("File copied, but could not update the timestamp (Operation not permitted): " + targetFilePath);
                         }
 
                         success = true;
@@ -948,9 +948,9 @@ namespace DMSUpdateManager
             for (var index = 0; index < pwdBytes.Count; index++)
             {
                 if (index % 2 == modTest)
-                    pwdBytes[index] += 1;
+                    pwdBytes[index]++;
                 else
-                    pwdBytes[index] -= 1;
+                    pwdBytes[index]--;
 
                 pwdCharsAdj.Add((char)pwdBytes[index]);
             }
@@ -973,7 +973,7 @@ namespace DMSUpdateManager
 
             GetRemoteFileListing(sftp, new List<string> { remoteDirectoryPath }, lockFileName, recurse, matchingFiles);
 
-            return matchingFiles.Any() ? matchingFiles.First().Value : null;
+            return matchingFiles.Count > 0 ? matchingFiles.First().Value : null;
         }
 
         /// <summary>
@@ -1174,12 +1174,14 @@ namespace DMSUpdateManager
                 }
                 else
                 {
-                    newDepth = maxDepth > 0 ? maxDepth - 1 : 0;
+                    newDepth = maxDepth - 1;
                 }
 
                 // Recursively call this function
                 foreach (var subDirectoryPath in subdirectoryPaths)
+                {
                     GetRemoteFilesAndDirectories(sftp, subDirectoryPath, true, newDepth, filesAndDirectories);
+                }
             }
         }
 
