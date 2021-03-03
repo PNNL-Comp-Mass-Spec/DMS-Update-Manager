@@ -99,6 +99,11 @@ namespace DMSUpdateManager
         public const string PUSH_DIR_FLAG = "_PushDir_.txt";
 
         /// <summary>
+        /// Pushes the directory to the parent of the target directory
+        /// </summary>
+        public const string PUSH_DIR_RECURSE_FLAG = "_PushDirRecurse_.txt";
+
+        /// <summary>
         /// Pushes the directory to the target directory as a subdirectory
         /// </summary>
         public const string PUSH_AM_SUBDIR_FLAG = "_AMSubDir_.txt";
@@ -924,6 +929,7 @@ namespace DMSUpdateManager
         {
             mFilesToIgnore.Clear();
             AddFileToIgnore(PUSH_DIR_FLAG);
+            AddFileToIgnore(PUSH_DIR_RECURSE_FLAG);
             AddFileToIgnore(PUSH_AM_SUBDIR_FLAG);
             AddFileToIgnore(DELETE_SUBDIR_FLAG);
             AddFileToIgnore(DELETE_AM_SUBDIR_FLAG);
@@ -1464,6 +1470,8 @@ namespace DMSUpdateManager
                         processSubdirectory = false;
                 }
 
+                var pushRecursively = false;
+
                 if (sourceSubdirectory.GetFiles(PUSH_AM_SUBDIR_FLAG).Length > 0)
                 {
                     // Push this directory as a subdirectory of the target directory, not as a subdirectory of the parent directory
@@ -1476,12 +1484,19 @@ namespace DMSUpdateManager
                     {
                         processSubdirectory = true;
                     }
+                    else if (sourceSubdirectory.GetFiles(PUSH_DIR_RECURSE_FLAG).Length > 0)
+                    {
+                        pushRecursively = true;
+                        processSubdirectory = true;
+                    }
                 }
 
                 if (processSubdirectory)
                 {
                     var verifiedSubdirectory = CreateDirectoryIfMissing(targetDirectoryInfo, targetSubdirectoryPath);
-                    var success = UpdateDirectoryWork(sourceSubdirectory.FullName, targetDirectoryInfo, verifiedSubdirectory, pushNewSubdirectories: true);
+                    var success = UpdateDirectoryWork(sourceSubdirectory.FullName, targetDirectoryInfo, verifiedSubdirectory,
+                        pushNewSubdirectories: true, pushRecursively);
+
                     if (!success)
                         successOverall = false;
                 }
@@ -1568,7 +1583,8 @@ namespace DMSUpdateManager
             string sourceDirectoryPath,
             DirectoryContainer targetDirectoryInfo,
             FileOrDirectoryInfo targetDirectory,
-            bool pushNewSubdirectories)
+            bool pushNewSubdirectories,
+            bool pushRecursively = false)
         {
             if (!targetDirectory.Exists && !PreviewMode)
             {
@@ -1618,7 +1634,7 @@ namespace DMSUpdateManager
 
                         // Make sure this file is not in mFilesToIgnore
                         // Note that mFilesToIgnore contains several flag files:
-                        //   PUSH_DIR_FLAG, PUSH_AM_SUBDIR_FLAG,
+                        //   PUSH_DIR_FLAG, PUSH_DIR_RECURSE_FLAG, PUSH_AM_SUBDIR_FLAG,
                         //   DELETE_SUBDIR_FLAG, DELETE_AM_SUBDIR_FLAG
                         var skipFile = mFilesToIgnore.Contains(fileNameLCase);
 
@@ -1772,7 +1788,7 @@ namespace DMSUpdateManager
                         processSubdirectory = false;
                 }
 
-                if (pushNewSubdirectories && sourceSubdirectory.GetFiles(PUSH_DIR_FLAG).Length > 0)
+                if (pushNewSubdirectories && (sourceSubdirectory.GetFiles(PUSH_DIR_FLAG).Length > 0 || pushRecursively))
                 {
                     processSubdirectory = true;
                 }
@@ -1780,7 +1796,7 @@ namespace DMSUpdateManager
                 if (processSubdirectory)
                 {
                     var verifiedSubdirectory = CreateDirectoryIfMissing(targetDirectoryInfo, targetSubdirectory.FullName);
-                    UpdateDirectoryWork(sourceSubdirectory.FullName, targetDirectoryInfo, verifiedSubdirectory, pushNewSubdirectories);
+                    UpdateDirectoryWork(sourceSubdirectory.FullName, targetDirectoryInfo, verifiedSubdirectory, pushNewSubdirectories, pushRecursively);
                 }
             }
 
