@@ -1,3 +1,3 @@
-call DMSUpdateManager.exe /P:DMSUpdateManagerOptions.xml /L
+call DMSUpdateManagerConsole.exe /P:DMSUpdateManagerOptions.xml /L
 
 
