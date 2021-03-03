@@ -1734,15 +1734,15 @@ namespace DMSUpdateManager
                             break; // Break out of the while, continue the for loop
                         }
 
-                        DateComparisonModeConstants eDateComparisonMode;
+                        DateComparisonModeConstants dateComparisonMode;
 
                         if (OverwriteNewerFiles)
                         {
-                            eDateComparisonMode = DateComparisonModeConstants.OverwriteNewerTargetIfDifferentSize;
+                            dateComparisonMode = DateComparisonModeConstants.OverwriteNewerTargetIfDifferentSize;
                         }
                         else
                         {
-                            eDateComparisonMode = DateComparisonModeConstants.RetainNewerTargetIfDifferentSize;
+                            dateComparisonMode = DateComparisonModeConstants.RetainNewerTargetIfDifferentSize;
                         }
 
                         if (!targetDirectoryInfo.TrackingRemoteHostDirectory &&
