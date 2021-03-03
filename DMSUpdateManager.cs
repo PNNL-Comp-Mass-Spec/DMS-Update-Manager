@@ -28,7 +28,8 @@ namespace DMSUpdateManager
     /// </remarks>
     public class DMSUpdateManager : ProcessDirectoriesBase
     {
-        // Ignore Spelling: mutex, yyyy-MM-dd, hh:mm:ss tt, Passphrase, checkfile, pnl, enums, wildcards, java, gigasax
+        // ReSharper disable once CommentTypo
+        // Ignore Spelling: mutex, yyyy-MM-dd, hh:mm:ss tt, Passphrase, checkfile, pnl, enums, wildcards, java, gigasax, dmsupdatemanager
 
         /// <summary>
         /// Constructor
