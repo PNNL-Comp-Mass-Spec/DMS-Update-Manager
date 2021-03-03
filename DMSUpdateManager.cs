@@ -235,10 +235,7 @@ namespace DMSUpdateManager
         // ReSharper disable once UnusedMember.Global
         public string SourceDirectoryPath
         {
-            get
-            {
-                return mSourceDirectoryPath ?? string.Empty;
-            }
+            get => mSourceDirectoryPath ?? string.Empty;
             set
             {
                 if (value != null)
@@ -705,30 +702,17 @@ namespace DMSUpdateManager
         /// <returns>The error message, or an empty string if no error</returns>
         public override string GetErrorMessage()
         {
-            string strErrorMessage;
-
             if (ErrorCode == ProcessDirectoriesErrorCodes.LocalizedError || ErrorCode == ProcessDirectoriesErrorCodes.NoError)
             {
-                switch (LocalErrorCode)
+                return LocalErrorCode switch
                 {
-                    case DMSUpdateManagerErrorCodes.NoError:
-                        strErrorMessage = string.Empty;
-                        break;
-                    case DMSUpdateManagerErrorCodes.UnspecifiedError:
-                        strErrorMessage = "Unspecified localized error";
-                        break;
-                    default:
-                        // This shouldn't happen
-                        strErrorMessage = "Unknown error state";
-                        break;
-                }
-            }
-            else
-            {
-                strErrorMessage = GetBaseClassErrorMessage();
+                    DMSUpdateManagerErrorCodes.NoError => string.Empty,
+                    DMSUpdateManagerErrorCodes.UnspecifiedError => "Unspecified localized error",
+                    _ => "Unknown error state"
+                };
             }
 
-            return strErrorMessage;
+            return GetBaseClassErrorMessage();
         }
 
         private static string GetFileDateAndSize(FileOrDirectoryInfo fileInfo)

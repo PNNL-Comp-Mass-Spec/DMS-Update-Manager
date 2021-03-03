@@ -826,73 +826,71 @@ namespace DMSUpdateManager
                 else
                     OnDebugEvent("Delete directory on host " + RemoteHostInfo.HostName + ": " + directoryPath);
 
-                using (var sftp = new SftpClient(RemoteHostInfo.HostName, RemoteHostInfo.Username, mPrivateKeyFile))
+                using var sftp = new SftpClient(RemoteHostInfo.HostName, RemoteHostInfo.Username, mPrivateKeyFile);
+                sftp.Connect();
+
+                const int MAX_DEPTH = -1;
+
+                // Keys are filenames, values are SftpFile objects
+                var filesAndDirectories = new Dictionary<string, SftpFile>();
+                var directoriesToDelete = new SortedSet<string>();
+
+                // Find all files and directories below directoryPath; recurse infinitely
+                GetRemoteFilesAndDirectories(sftp, directoryPath, true, MAX_DEPTH, filesAndDirectories);
+
+                foreach (var workDirFile in filesAndDirectories)
                 {
-                    sftp.Connect();
-
-                    const int MAX_DEPTH = -1;
-
-                    // Keys are filenames, values are SftpFile objects
-                    var filesAndDirectories = new Dictionary<string, SftpFile>();
-                    var directoriesToDelete = new SortedSet<string>();
-
-                    // Find all files and directories below directoryPath; recurse infinitely
-                    GetRemoteFilesAndDirectories(sftp, directoryPath, true, MAX_DEPTH, filesAndDirectories);
-
-                    foreach (var workDirFile in filesAndDirectories)
+                    if (workDirFile.Value.IsDirectory)
                     {
-                        if (workDirFile.Value.IsDirectory)
-                        {
-                            if (workDirFile.Value.Name == "." || workDirFile.Value.Name == "..")
-                                continue;
-
-                            if (!directoriesToDelete.Contains(workDirFile.Key))
-                            {
-                                directoriesToDelete.Add(workDirFile.Key);
-                            }
-
+                        if (workDirFile.Value.Name == "." || workDirFile.Value.Name == "..")
                             continue;
-                        }
 
-                        try
+                        if (!directoriesToDelete.Contains(workDirFile.Key))
                         {
-                            OnDebugEvent("  deleting " + workDirFile.Key);
-                            workDirFile.Value.Delete();
-
-                            var parentPath = PathUtils.GetParentDirectoryPath(workDirFile.Value.FullName, out _);
-
-                            if (directoriesToDelete.Contains(parentPath))
-                                continue;
-
-                            if (keepStartingDirectory && string.Equals(directoryPath, parentPath))
-                                continue;
-
-                            directoriesToDelete.Add(parentPath);
+                            directoriesToDelete.Add(workDirFile.Key);
                         }
-                        catch (Exception ex)
-                        {
-                            OnErrorEvent(string.Format("Error deleting file {0}: {1}", workDirFile.Value.Name, ex.Message));
-                        }
+
+                        continue;
                     }
 
-                    if (!keepStartingDirectory && !directoriesToDelete.Contains(directoryPath))
-                        directoriesToDelete.Add(directoryPath);
-
-                    foreach (var directoryToDelete in (from item in directoriesToDelete orderby item descending select item))
+                    try
                     {
-                        try
-                        {
-                            OnDebugEvent("  deleting directory " + directoryToDelete);
-                            sftp.DeleteDirectory(directoryToDelete);
-                        }
-                        catch (Exception ex)
-                        {
-                            OnErrorEvent(string.Format("Error deleting directory {0}: {1}", directoryToDelete, ex.Message));
-                        }
-                    }
+                        OnDebugEvent("  deleting " + workDirFile.Key);
+                        workDirFile.Value.Delete();
 
-                    sftp.Disconnect();
+                        var parentPath = PathUtils.GetParentDirectoryPath(workDirFile.Value.FullName, out _);
+
+                        if (directoriesToDelete.Contains(parentPath))
+                            continue;
+
+                        if (keepStartingDirectory && string.Equals(directoryPath, parentPath))
+                            continue;
+
+                        directoriesToDelete.Add(parentPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnErrorEvent(string.Format("Error deleting file {0}: {1}", workDirFile.Value.Name, ex.Message));
+                    }
                 }
+
+                if (!keepStartingDirectory && !directoriesToDelete.Contains(directoryPath))
+                    directoriesToDelete.Add(directoryPath);
+
+                foreach (var directoryToDelete in (from item in directoriesToDelete orderby item descending select item))
+                {
+                    try
+                    {
+                        OnDebugEvent("  deleting directory " + directoryToDelete);
+                        sftp.DeleteDirectory(directoryToDelete);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnErrorEvent(string.Format("Error deleting directory {0}: {1}", directoryToDelete, ex.Message));
+                    }
+                }
+
+                sftp.Disconnect();
             }
             catch (Exception ex)
             {
@@ -1237,10 +1235,9 @@ namespace DMSUpdateManager
             try
             {
                 OnDebugEvent("  reading " + keyFile.FullName);
-                using (var reader = new StreamReader(new FileStream(keyFile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
-                {
-                    keyFileStream = new MemoryStream(Encoding.ASCII.GetBytes(reader.ReadToEnd()));
-                }
+
+                using var reader = new StreamReader(new FileStream(keyFile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+                keyFileStream = new MemoryStream(Encoding.ASCII.GetBytes(reader.ReadToEnd()));
             }
             catch (Exception ex)
             {
@@ -1250,10 +1247,9 @@ namespace DMSUpdateManager
             try
             {
                 OnDebugEvent("  reading " + passPhraseFile.FullName);
-                using (var reader = new StreamReader(new FileStream(passPhraseFile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
-                {
-                    passphraseEncoded = reader.ReadLine();
-                }
+
+                using var reader = new StreamReader(new FileStream(passPhraseFile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+                passphraseEncoded = reader.ReadLine();
             }
             catch (Exception ex)
             {
