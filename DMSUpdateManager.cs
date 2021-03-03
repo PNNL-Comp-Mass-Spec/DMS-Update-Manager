@@ -1591,12 +1591,23 @@ namespace DMSUpdateManager
             }
         }
 
+        /// <summary>
+        /// Process a directory, typically copying over missing files, but sometimes deleting the directory
+        /// </summary>
+        /// <param name="sourceDirectoryPath">Source directory path</param>
+        /// <param name="targetDirectoryInfo">Target directory container</param>
+        /// <param name="targetDirectory">Target directory</param>
+        /// <param name="pushNewSubdirectories">True to push new subdirectories</param>
+        /// <param name="pushRecursively">True if recursively pushing new subdirectories</param>
+        /// <param name="directoryFlaggedForDeletion">True if this directory (or a parent directory) has file _DeleteSubDir_.txt</param>
+        /// <returns>True if processed, false if not found (and not previewing)</returns>
         private bool UpdateDirectoryWork(
             string sourceDirectoryPath,
             DirectoryContainer targetDirectoryInfo,
             FileOrDirectoryInfo targetDirectory,
             bool pushNewSubdirectories,
-            bool pushRecursively = false)
+            bool pushRecursively = false,
+            bool directoryFlaggedForDeletion = false)
         {
             if (!targetDirectory.Exists && !PreviewMode)
             {
@@ -1618,6 +1629,7 @@ namespace DMSUpdateManager
             var filesToDelete = (from sourceFile in filesInSource
                                  where sourceFile.Name.EndsWith(DELETE_SUFFIX, StringComparison.OrdinalIgnoreCase)
                                  select TrimSuffix(sourceFile.Name, DELETE_SUFFIX).ToLower());
+
             foreach (var item in filesToDelete)
             {
                 deleteFiles.Add(item);
@@ -1659,7 +1671,7 @@ namespace DMSUpdateManager
                         string fileUsageMessage;
 
                         // See if file ends with one of the special suffix flags
-                        if (sourceFile.Name.EndsWith(ROLLBACK_SUFFIX, StringComparison.OrdinalIgnoreCase))
+                        if (sourceFile.Name.EndsWith(ROLLBACK_SUFFIX, StringComparison.OrdinalIgnoreCase) && !directoryFlaggedForDeletion)
                         {
                             // This is a Rollback file
                             // Do not copy this file
@@ -1710,7 +1722,8 @@ namespace DMSUpdateManager
                         }
 
                         // Make sure this file does not match a corresponding .delete file
-                        if (deleteFiles.Contains(fileNameLCase))
+                        // Alternatively, do not copy the file if this directory (or a parent) is flagged for deletion
+                        if (deleteFiles.Contains(fileNameLCase) || directoryFlaggedForDeletion)
                         {
                             break; // Break out of the while, continue the for loop
                         }
@@ -1792,12 +1805,18 @@ namespace DMSUpdateManager
 
                 // Initially assume we'll process this directory if it exists at the target
                 var processSubdirectory = targetSubdirectory.Exists;
+                var subdirectoryFlaggedForDeletion = false;
+
                 if (processSubdirectory && sourceSubdirectory.GetFiles(DELETE_SUBDIR_FLAG).Length > 0)
                 {
                     // Remove this subdirectory (but only if it's empty)
                     var directoryDeleted = DeleteSubdirectory(sourceSubdirectory, targetDirectoryInfo, targetSubdirectory, "subdirectory", DELETE_SUBDIR_FLAG);
                     if (directoryDeleted)
+                    {
                         processSubdirectory = false;
+                    }
+
+                    subdirectoryFlaggedForDeletion = true;
                 }
 
                 if (pushNewSubdirectories)
@@ -1816,7 +1835,9 @@ namespace DMSUpdateManager
                 if (processSubdirectory || pushRecursively)
                 {
                     var verifiedSubdirectory = CreateDirectoryIfMissing(targetDirectoryInfo, targetSubdirectory.FullName);
-                    UpdateDirectoryWork(sourceSubdirectory.FullName, targetDirectoryInfo, verifiedSubdirectory, pushNewSubdirectories, pushRecursively);
+                    UpdateDirectoryWork(
+                        sourceSubdirectory.FullName, targetDirectoryInfo, verifiedSubdirectory,
+                        pushNewSubdirectories, pushRecursively, directoryFlaggedForDeletion || subdirectoryFlaggedForDeletion);
                 }
             }
 
