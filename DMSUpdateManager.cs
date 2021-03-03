@@ -1800,12 +1800,20 @@ namespace DMSUpdateManager
                         processSubdirectory = false;
                 }
 
-                if (pushNewSubdirectories && (sourceSubdirectory.GetFiles(PUSH_DIR_FLAG).Length > 0 || pushRecursively))
+                if (pushNewSubdirectories)
                 {
-                    processSubdirectory = true;
+                    if (sourceSubdirectory.GetFiles(PUSH_DIR_FLAG).Length > 0)
+                    {
+                        processSubdirectory = true;
+                    }
+                    else if (sourceSubdirectory.GetFiles(PUSH_DIR_RECURSE_FLAG).Length > 0)
+                    {
+                        processSubdirectory = true;
+                        pushRecursively = true;
+                    }
                 }
 
-                if (processSubdirectory)
+                if (processSubdirectory || pushRecursively)
                 {
                     var verifiedSubdirectory = CreateDirectoryIfMissing(targetDirectoryInfo, targetSubdirectory.FullName);
                     UpdateDirectoryWork(sourceSubdirectory.FullName, targetDirectoryInfo, verifiedSubdirectory, pushNewSubdirectories, pushRecursively);
