@@ -28,14 +28,14 @@ namespace DMSUpdateManager
     /// </remarks>
     public class DMSUpdateManager : ProcessDirectoriesBase
     {
-        // Ignore Spelling: mutex, yyyy-MM-dd, hh:mm:ss tt, Passphrase, checkfile, pnl
+        // Ignore Spelling: mutex, yyyy-MM-dd, hh:mm:ss tt, Passphrase, checkfile, pnl, enums, wildcards, java, gigasax
 
         /// <summary>
         /// Constructor
         /// </summary>
         public DMSUpdateManager()
         {
-            mFileDate = "January 6, 2021";
+            mFileDate = "March 3, 2021";
 
             mFilesToIgnore = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             mProcessesDict = new Dictionary<uint, ProcessInfo>();
@@ -1029,6 +1029,18 @@ namespace DMSUpdateManager
                 {
                     ShowWarning("Target directory path is not defined; either specify it at the command line or include it in the parameter file");
                     SetBaseClassErrorCode(ProcessDirectoriesErrorCodes.InvalidInputDirectoryPath);
+                    return false;
+                }
+
+                if (!ValidateDirectory(mSourceDirectoryPath, "Input directory"))
+                {
+                    SetBaseClassErrorCode(ProcessDirectoriesErrorCodes.FilePathError);
+                    return false;
+                }
+
+                if (!ValidateDirectory(targetDirectoryPath, "Target directory"))
+                {
+                    SetBaseClassErrorCode(ProcessDirectoriesErrorCodes.FilePathError);
                     return false;
                 }
 
@@ -2202,6 +2214,39 @@ namespace DMSUpdateManager
                 return text.Substring(0, text.Length - suffix.Length);
             }
             return text;
+        }
+
+        private bool ValidateDirectory(string directoryPath, string directoryDescription)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(directoryDescription))
+                {
+                    directoryDescription = "Directory";
+                }
+
+                if (string.IsNullOrWhiteSpace(directoryPath))
+                {
+                    ShowWarning(string.Format("{0} is empty and is thus invalid", directoryDescription));
+                    return false;
+                }
+
+                var directory = new DirectoryInfo(directoryPath);
+                if (!directory.Exists)
+                {
+                    ShowWarning(string.Format("{0} not found: {1}", directoryDescription, directoryPath));
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ShowErrorMessage(string.Format("Error validating directory {0}: {1}",
+                    directoryPath ?? string.Empty, ex.Message));
+                ConsoleMsgUtils.ShowWarning(StackTraceFormatter.GetExceptionStackTraceMultiLine(ex));
+                return false;
+            }
         }
 
         private class ProcessNameComparer : IComparer<Process>

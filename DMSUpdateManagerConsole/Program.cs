@@ -28,7 +28,7 @@ namespace DMSUpdateManagerConsole
         /// <summary>
         /// Program date
         /// </summary>
-        public const string PROGRAM_DATE = "January 6, 2021";
+        public const string PROGRAM_DATE = "March 3, 2021";
 
         // Either mSourceDirectoryPath and mTargetDirectoryPath must be specified, or mParameterFilePath needs to be specified
 
