@@ -1333,6 +1333,12 @@ namespace DMSUpdateManager
             ResetProgress();
 
             var targetDirectory = targetDirectoryInfo.GetDirectoryInfo(targetDirectoryInfo.DirectoryPath);
+
+            var sourceMsg = string.Format("{0,-18} {1}", "Source Directory: ", PathUtils.CompactPathString(sourceDirectory.FullName, 110));
+            var targetMsg = string.Format("{0,-18} {1}", "Target Directory: ", PathUtils.CompactPathString(targetDirectory.FullName, 110));
+            ShowMessage(sourceMsg, false);
+            ShowMessage(targetMsg, false);
+
             var success = UpdateDirectoryWork(sourceDirectory.FullName, targetDirectoryInfo, targetDirectory, pushNewSubdirectories: false);
 
             if (!CopySubdirectoriesToParentDirectory || doNotUpdateParent)
