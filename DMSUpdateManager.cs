@@ -702,10 +702,9 @@ namespace DMSUpdateManager
         /// <summary>
         /// Get the current error message
         /// </summary>
+        /// <returns>The error message, or an empty string if no error</returns>
         public override string GetErrorMessage()
         {
-            // Returns an empty string if no error
-
             string strErrorMessage;
 
             if (ErrorCode == ProcessDirectoriesErrorCodes.LocalizedError || ErrorCode == ProcessDirectoriesErrorCodes.NoError)
@@ -1280,6 +1279,7 @@ namespace DMSUpdateManager
                 {
                     return UpdateDirectoryCopyToParentRun(sourceDirectory, targetDirectoryInfo, parameterFilePath);
                 }
+
                 return true;
             }
             finally
@@ -1762,9 +1762,11 @@ namespace DMSUpdateManager
                             }
                         }
 
-                        CopyFileIfNeeded(sourceFile, targetDirectoryInfo, targetDirectory.FullName, ref fileUpdateCount, eDateComparisonMode, itemInUse, fileUsageMessage);
+                        CopyFileIfNeeded(
+                            sourceFile, targetDirectoryInfo, targetDirectory.FullName,
+                            ref fileUpdateCount, dateComparisonMode, itemInUse, fileUsageMessage);
 
-                        // File processed; move on to the next file
+                        // File processed; break out of the while, continue the for loop
                         break;
                     }
                     catch (Exception ex)
@@ -1796,7 +1798,7 @@ namespace DMSUpdateManager
             }
 
             // Process each subdirectory in the source directory
-            // If the directory exists at the target, copy it
+            // If the directory exists at the target, process it
             // Additionally, if the source directory contains file _PushDir_.txt, it gets copied even if it doesn't exist at the target
             foreach (var sourceSubdirectory in sourceDirectory.GetDirectories())
             {
