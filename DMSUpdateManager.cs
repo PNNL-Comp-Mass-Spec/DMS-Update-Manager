@@ -36,7 +36,7 @@ namespace DMSUpdateManager
         /// </summary>
         public DMSUpdateManager()
         {
-            mFileDate = "August 14, 2021";
+            mFileDate = "September 13, 2021";
 
             mFilesToIgnore = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             mProcessesDict = new Dictionary<uint, ProcessInfo>();
@@ -1453,13 +1453,20 @@ namespace DMSUpdateManager
                 var targetSubdirectory = targetDirectoryInfo.GetDirectoryInfo(targetSubdirectoryPath);
 
                 var processSubdirectory = targetSubdirectory.Exists;
+                var subdirectoryFlaggedForDeletion = false;
 
-                if (processSubdirectory && sourceSubdirectory.GetFiles(DELETE_SUBDIR_FLAG).Length > 0)
+                if (sourceSubdirectory.GetFiles(DELETE_SUBDIR_FLAG).Length > 0)
                 {
-                    // Remove this subDirectory (but only if it's empty)
-                    var directoryDeleted = DeleteSubdirectory(sourceSubdirectory, targetDirectoryInfo, targetSubdirectory, "parent subdirectory", DELETE_SUBDIR_FLAG);
-                    if (directoryDeleted)
-                        processSubdirectory = false;
+                    if (targetSubdirectory.Exists)
+                    {
+                        // Remove this subDirectory (but only if it's empty)
+                        var directoryDeleted = DeleteSubdirectory(sourceSubdirectory, targetDirectoryInfo, targetSubdirectory, "parent subdirectory", DELETE_SUBDIR_FLAG);
+
+                        if (directoryDeleted)
+                            processSubdirectory = false;
+                    }
+
+                    subdirectoryFlaggedForDeletion = true;
                 }
 
                 if (sourceSubdirectory.GetFiles(DELETE_AM_SUBDIR_FLAG).Length > 0)
@@ -1471,6 +1478,8 @@ namespace DMSUpdateManager
                     var directoryDeleted = DeleteSubdirectory(sourceSubdirectory, targetDirectoryInfo, analysisMgrSubDir, "subdirectory", DELETE_AM_SUBDIR_FLAG);
                     if (directoryDeleted)
                         processSubdirectory = false;
+
+                    subdirectoryFlaggedForDeletion = true;
                 }
 
                 var pushRecursively = false;
@@ -1490,11 +1499,11 @@ namespace DMSUpdateManager
                     else if (sourceSubdirectory.GetFiles(PUSH_DIR_RECURSE_FLAG).Length > 0)
                     {
                         pushRecursively = true;
-                        processSubdirectory = true;
+                        processSubdirectory = !subdirectoryFlaggedForDeletion;
                     }
                 }
 
-                if (processSubdirectory)
+                if (processSubdirectory && !subdirectoryFlaggedForDeletion)
                 {
                     var verifiedSubdirectory = CreateDirectoryIfMissing(targetDirectoryInfo, targetSubdirectoryPath);
                     var success = UpdateDirectoryWork(sourceSubdirectory.FullName, targetDirectoryInfo, verifiedSubdirectory,
@@ -1800,13 +1809,18 @@ namespace DMSUpdateManager
                 var processSubdirectory = targetSubdirectory.Exists;
                 var subdirectoryFlaggedForDeletion = false;
 
-                if (processSubdirectory && sourceSubdirectory.GetFiles(DELETE_SUBDIR_FLAG).Length > 0)
+                if (sourceSubdirectory.GetFiles(DELETE_SUBDIR_FLAG).Length > 0)
                 {
-                    // Remove this subdirectory (but only if it's empty)
-                    var directoryDeleted = DeleteSubdirectory(sourceSubdirectory, targetDirectoryInfo, targetSubdirectory, "subdirectory", DELETE_SUBDIR_FLAG);
-                    if (directoryDeleted)
+                    if (targetSubdirectory.Exists)
                     {
-                        processSubdirectory = false;
+                        // Remove this subdirectory (but only if it's empty)
+                        var directoryDeleted = DeleteSubdirectory(sourceSubdirectory, targetDirectoryInfo, targetSubdirectory, "subdirectory",
+                            DELETE_SUBDIR_FLAG);
+
+                        if (directoryDeleted)
+                        {
+                            processSubdirectory = false;
+                        }
                     }
 
                     subdirectoryFlaggedForDeletion = true;
@@ -1825,7 +1839,7 @@ namespace DMSUpdateManager
                     }
                 }
 
-                if (processSubdirectory || pushRecursively)
+                if (processSubdirectory || pushRecursively && !subdirectoryFlaggedForDeletion)
                 {
                     var verifiedSubdirectory = CreateDirectoryIfMissing(targetDirectoryInfo, targetSubdirectory.FullName);
                     UpdateDirectoryWork(
