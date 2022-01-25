@@ -18,7 +18,7 @@ namespace DMSUpdateManagerConsole
     /// </para>
     /// <para>
     /// E-mail: matthew.monroe@pnnl.gov or proteomics@pnnl.gov
-    /// Website: https://omics.pnl.gov/ or https://panomics.pnnl.gov/
+    /// Website: https://github.com/PNNL-Comp-Mass-Spec/ or https://panomics.pnnl.gov/ or https://www.pnnl.gov/integrative-omics
     /// </para>
     /// </remarks>
     public static class Program
@@ -28,7 +28,7 @@ namespace DMSUpdateManagerConsole
         /// <summary>
         /// Program date
         /// </summary>
-        public const string PROGRAM_DATE = "September 13, 2021";
+        public const string PROGRAM_DATE = "January 25, 2022";
 
         // Either mSourceDirectoryPath and mTargetDirectoryPath must be specified, or mParameterFilePath needs to be specified
 
@@ -317,12 +317,12 @@ namespace DMSUpdateManagerConsole
                 Console.WriteLine(GetExeName() + " PasswordToParse /Encode");
                 Console.WriteLine(GetExeName() + " EncodedPassword /Decode");
                 Console.WriteLine();
-                Console.WriteLine("Program written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA) in 2009");
+                Console.WriteLine("Program written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA)");
                 Console.WriteLine("Version: " + ProcessFilesOrDirectoriesBase.GetAppVersion(PROGRAM_DATE));
                 Console.WriteLine();
 
                 Console.WriteLine("E-mail: matthew.monroe@pnnl.gov or proteomics@pnnl.gov");
-                Console.WriteLine("Website: https://omics.pnl.gov/ or https://panomics.pnnl.gov/");
+                Console.WriteLine("Website: https://github.com/PNNL-Comp-Mass-Spec/ or https://panomics.pnnl.gov/ or https://www.pnnl.gov/integrative-omics");
                 Console.WriteLine();
 
                 // Delay for 1 second in case the user double clicked this file from within Windows Explorer (or started the program via a shortcut)
