@@ -3,7 +3,7 @@
 echo About to schedule DMSUpdateManager for distribution
 echo by copying to \\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution
 echo Are you sure you want to continue?
-pause
+if not "%1"=="NoPause" pause
 
 @echo On
 
@@ -17,4 +17,4 @@ xcopy /d /y DMSUpdateManager.dll ..\..\..\Analysis_Manager\AM_Common\
 xcopy /d /y DMSUpdateManager.pdb ..\..\..\Analysis_Manager\AM_Common\
 
 @echo off
-pause
+if not "%1"=="NoPause" pause
