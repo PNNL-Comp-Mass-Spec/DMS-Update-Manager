@@ -20,8 +20,6 @@ namespace DMSUpdateManager
 
         private readonly SftpClient mSftpClient;
 
-        #region "Properties"
-
         /// <summary>
         /// Directory path if updating a local directory
         /// RemoteHostInfo.DirectoryPath if updating a remote host
@@ -61,8 +59,6 @@ namespace DMSUpdateManager
         /// Full path to the parent directory of either DirectoryPath or RemoteHostInfo.DirectoryPath
         /// </summary>
         public string ParentPath { get; }
-
-        #endregion
 
         /// <summary>
         /// Constructor for a local directory (or Windows share)

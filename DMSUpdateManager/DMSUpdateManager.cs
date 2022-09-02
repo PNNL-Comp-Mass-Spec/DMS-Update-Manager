@@ -46,8 +46,6 @@ namespace DMSUpdateManager
             InitializeLocalVariables();
         }
 
-        #region "Constants and Enums"
-
         /// <summary>
         /// Error codes specialized for this class
         /// </summary>
@@ -118,10 +116,6 @@ namespace DMSUpdateManager
         /// </summary>
         public const string DELETE_AM_SUBDIR_FLAG = "_DeleteAMSubDir_.txt";
 
-        #endregion
-
-        #region "Class wide Variables"
-
         private bool mProcessesShown;
 
         private bool mRemoteHostInfoDefined;
@@ -171,10 +165,6 @@ namespace DMSUpdateManager
         /// Suffix applied to the mutex name when checking for other running copies of the DMSUpdateManager
         /// </summary>
         private string mMutexNameSuffix;
-
-        #endregion
-
-        #region "Properties"
 
         /// <summary>
         /// When true, copy any subdirectories of the source directory into the
@@ -244,8 +234,6 @@ namespace DMSUpdateManager
                 }
             }
         }
-
-        #endregion
 
         /// <summary>
         /// Shorten the file or directory path if it starts with mTargetDirectoryPathBase

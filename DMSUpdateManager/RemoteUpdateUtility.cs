@@ -20,8 +20,6 @@ namespace DMSUpdateManager
     {
         // Ignore Spelling: Sftp, SFtpFile, scp, yyyy-MM-dd, hh:mm:ss tt, passphrase
 
-        #region "Constants"
-
         /// <summary>
         /// Default date/time format
         /// </summary>
@@ -32,15 +30,7 @@ namespace DMSUpdateManager
         /// </summary>
         public const string LOCK_FILE_EXTENSION = ".lock";
 
-        #endregion
-
-        #region "Module variables"
-
         private PrivateKeyFile mPrivateKeyFile;
-
-        #endregion
-
-        #region "Properties"
 
         /// <summary>
         /// When true, copy any subdirectories of the source directory into the
@@ -68,10 +58,6 @@ namespace DMSUpdateManager
         /// Remote host username
         /// </summary>
         public string RemoteHostUsername => RemoteHostInfo.Username;
-
-        #endregion
-
-        #region "Methods"
 
         /// <summary>
         /// Constructor
@@ -1487,8 +1473,5 @@ namespace DMSUpdateManager
 
             ParametersValidated = true;
         }
-
-    #endregion
-
     }
 }

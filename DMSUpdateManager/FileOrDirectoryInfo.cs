@@ -11,8 +11,6 @@ namespace DMSUpdateManager
     {
         // Ignore Spelling: SftpFile
 
-        #region "Properties"
-
         /// <summary>
         /// Full path of the parent directory
         /// </summary>
@@ -89,8 +87,6 @@ namespace DMSUpdateManager
         /// Name of the file or directory
         /// </summary>
         public string Name { get; }
-
-        #endregion
 
         /// <summary>
         /// Constructor for a DirectoryInfo instance (assumed to be a Windows directory)
