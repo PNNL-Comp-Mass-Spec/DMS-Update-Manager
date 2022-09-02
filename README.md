@@ -54,6 +54,7 @@ The following special flag files affect how folders are processed. To use them, 
 | _AMSubDir_.txt | Pushes the directory to the target folder as a subfolder |
 | _DeleteSubDir_.txt | Deletes the directory from the parent of the target, but only if the directory is empty |
 | _DeleteAMSubDir_.txt | Deletes the directory from below the target, but only if it is empty |
+| _IgnoreParentDirProc_.txt | Ignores running processes in the parent directories when updating files |
 
 
 ## Example Distribution Folder Layout

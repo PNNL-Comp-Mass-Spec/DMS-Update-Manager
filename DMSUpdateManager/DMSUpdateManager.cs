@@ -35,7 +35,7 @@ namespace DMSUpdateManager
         /// </summary>
         public DMSUpdateManager()
         {
-            mFileDate = "June 3, 2022";
+            mFileDate = "September 2, 2022";
 
             mFilesToIgnore = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             mProcessesDict = new Dictionary<uint, ProcessInfo>();
@@ -115,6 +115,11 @@ namespace DMSUpdateManager
         /// Deletes the directory from below the target, but only if it is empty
         /// </summary>
         public const string DELETE_AM_SUBDIR_FLAG = "_DeleteAMSubDir_.txt";
+
+        /// <summary>
+        /// Ignore processes running in a parent directory when updating this directory
+        /// </summary>
+        public const string IGNORE_PARENT_DIRECTORY_PROCESSES_FLAG = "_IgnoreParentDirProc_.txt";
 
         private bool mProcessesShown;
 
@@ -904,6 +909,7 @@ namespace DMSUpdateManager
             AddFileToIgnore(PUSH_AM_SUBDIR_FLAG);
             AddFileToIgnore(DELETE_SUBDIR_FLAG);
             AddFileToIgnore(DELETE_AM_SUBDIR_FLAG);
+            AddFileToIgnore(IGNORE_PARENT_DIRECTORY_PROCESSES_FLAG);
         }
 
         private void ShowOldAndNewFileInfo(
@@ -1632,6 +1638,8 @@ namespace DMSUpdateManager
                 checkJavaFiles.Add(item);
             }
 
+            var ignoreParentDirectoryProcesses = sourceDirectory.GetFiles(IGNORE_PARENT_DIRECTORY_PROCESSES_FLAG).Length > 0;
+
             foreach (var sourceFile in filesInSource)
             {
                 var retryCount = 2;
@@ -1675,7 +1683,7 @@ namespace DMSUpdateManager
                             else
                             {
                                 if (!targetDirectoryInfo.TrackingRemoteHostDirectory &&
-                                    TargetDirectoryInUseByProcess(targetDirectory.FullName, targetFileName, out fileUsageMessage))
+                                    TargetDirectoryInUseByProcess(targetDirectory.FullName, targetFileName, out fileUsageMessage, ignoreParentDirectoryProcesses))
                                 {
                                     // The directory is in use
                                     // Allow new files to be copied, but do not overwrite existing files
@@ -1737,7 +1745,7 @@ namespace DMSUpdateManager
                         else
                         {
                             if (!targetDirectoryInfo.TrackingRemoteHostDirectory &&
-                                TargetDirectoryInUseByProcess(targetDirectory.FullName, sourceFile.Name, out fileUsageMessage))
+                                TargetDirectoryInUseByProcess(targetDirectory.FullName, sourceFile.Name, out fileUsageMessage, ignoreParentDirectoryProcesses))
                             {
                                 // The directory is in use
                                 // Allow new files to be copied, but do not overwrite existing files
@@ -1939,7 +1947,7 @@ namespace DMSUpdateManager
             return commandLine.ToString();
         }
 
-        private bool TargetDirectoryInUseByProcess(string targetDirectoryPath, string targetFileName, out string directoryUsageMessage)
+        private bool TargetDirectoryInUseByProcess(string targetDirectoryPath, string targetFileName, out string directoryUsageMessage, bool ignoreParentDirectoryProcesses)
         {
             directoryUsageMessage = string.Empty;
 
@@ -1951,7 +1959,7 @@ namespace DMSUpdateManager
 
             try
             {
-                var processCount = GetNumTargetDirectoryProcesses(targetDirectoryPath, out var firstProcessPath, out var firstProcessId);
+                var processCount = GetNumTargetDirectoryProcesses(targetDirectoryPath, out var firstProcessPath, out var firstProcessId, ignoreParentDirectoryProcesses);
 
                 if (processCount <= 0)
                 {
@@ -2036,8 +2044,9 @@ namespace DMSUpdateManager
         /// <param name="targetDirectoryPath">Directory to examine</param>
         /// <param name="firstProcessPath">Output parameter: first process using files in this directory; empty string if no processes</param>
         /// <param name="firstProcessId">Output parameter: Process ID of first process using files in this directory</param>
+        /// <param name="ignoreParentDirectoryProcesses">When true, does not include any running executables from parent directories of <paramref name="targetDirectoryPath"/></param>
         /// <returns>Count of processes using this directory</returns>
-        private int GetNumTargetDirectoryProcesses(string targetDirectoryPath, out string firstProcessPath, out uint firstProcessId)
+        private int GetNumTargetDirectoryProcesses(string targetDirectoryPath, out string firstProcessPath, out uint firstProcessId, bool ignoreParentDirectoryProcesses)
         {
             firstProcessPath = string.Empty;
             firstProcessId = 0;
@@ -2069,8 +2078,14 @@ namespace DMSUpdateManager
                     continue;
                 }
 
+                if (ignoreParentDirectoryProcesses && exeDirectoryHierarchy.Count < targetDirectoryPathHierarchy.Count)
+                {
+                    // Ignoring parent directory processes, and the running process exe cannot possibly be in the same directory.
+                    continue;
+                }
+
                 var treesMatch = true;
-                for (var index = 0; index <= exeDirectoryHierarchy.Count - 1; index++)
+                for (var index = 0; index < exeDirectoryHierarchy.Count; index++)
                 {
                     if (targetDirectoryPathHierarchy[index] != exeDirectoryHierarchy[index])
                     {
