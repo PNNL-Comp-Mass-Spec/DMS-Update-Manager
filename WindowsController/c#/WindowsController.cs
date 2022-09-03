@@ -1,4 +1,4 @@
-/*
+﻿/*
     WindowsController class for C#
         Version: 1.1
 
@@ -227,9 +227,9 @@ namespace Org.Mentalis.Utilities {
         /// <summary>
         /// Exits windows (and tries to enable any required access rights, if necesarry).
         /// </summary>
+        /// <remarks>This method cannot hibernate or suspend the system.</remarks>
         /// <param name="how">One of the RestartOptions values that specifies how to exit windows.</param>
         /// <param name="force">True if the exit has to be forced, false otherwise.</param>
-        /// <remarks>This method cannot hibernate or suspend the system.</remarks>
         /// <exception cref="PrivilegeException">There was an error while requesting a required privilege.</exception>
         protected static void ExitWindows(int how , bool force) {
             EnableToken("SeShutdownPrivilege");
@@ -241,9 +241,9 @@ namespace Org.Mentalis.Utilities {
         /// <summary>
         /// Tries to enable the specified privilege.
         /// </summary>
+        /// <remarks>Thanks to Michael S. Muegel for notifying us about a bug in this code.</remarks>
         /// <param name="privilege">The privilege to enable.</param>
         /// <exception cref="PrivilegeException">There was an error while requesting a required privilege.</exception>
-        /// <remarks>Thanks to Michael S. Muegel for notifying us about a bug in this code.</remarks>
         protected static void EnableToken(string privilege ) {
             if (Environment.OSVersion.Platform != PlatformID.Win32NT || !CheckEntryPoint("advapi32.dll", "AdjustTokenPrivileges"))
                 return;

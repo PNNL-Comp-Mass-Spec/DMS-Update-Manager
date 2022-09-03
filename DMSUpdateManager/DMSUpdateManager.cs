@@ -389,7 +389,6 @@ namespace DMSUpdateManager
         /// <param name="itemInUse">Used to track when a file or directory is in use by another process (log a message if the source and target files differ)</param>
         /// <param name="fileUsageMessage">Message to log when the file (or directory) is in use and the source and targets differ</param>
         /// <returns>True if the file was updated, otherwise false</returns>
-        /// <remarks></remarks>
         private bool CopyFileIfNeeded(
             FileInfo sourceFile,
             DirectoryContainer targetDirectoryInfo,
@@ -890,12 +889,12 @@ namespace DMSUpdateManager
         /// <summary>
         /// Update files in directory inputDirectoryPath
         /// </summary>
+        /// <remarks>If TargetDirectory is defined in the parameter file, inputDirectoryPath will be ignored</remarks>
         /// <param name="inputDirectoryPath">Target directory to update</param>
         /// <param name="outputDirectoryAlternatePath">Ignored by this method</param>
         /// <param name="parameterFilePath">Parameter file defining the source directory path and other options</param>
         /// <param name="resetErrorCode">Ignored by this method</param>
         /// <returns>True if success, False if failure</returns>
-        /// <remarks>If TargetDirectory is defined in the parameter file, inputDirectoryPath will be ignored</remarks>
         public override bool ProcessDirectory(string inputDirectoryPath, string outputDirectoryAlternatePath, string parameterFilePath, bool resetErrorCode)
         {
             return UpdateDirectory(inputDirectoryPath, parameterFilePath);
@@ -960,10 +959,10 @@ namespace DMSUpdateManager
         /// <summary>
         /// Update files in directory targetDirectoryPath
         /// </summary>
+        /// <remarks>If TargetDirectory is defined in the parameter file, targetDirectoryPath will be ignored</remarks>
         /// <param name="targetDirectoryPath">Target directory to update</param>
         /// <param name="parameterFilePath">Parameter file defining the source directory path and other options</param>
         /// <returns>True if success, false if an error</returns>
-        /// <remarks>If TargetDirectory is defined in the parameter file, targetDirectoryPath will be ignored</remarks>
         public bool UpdateDirectory(string targetDirectoryPath, string parameterFilePath)
         {
             SetLocalErrorCode(DMSUpdateManagerErrorCodes.NoError);
@@ -1135,13 +1134,13 @@ namespace DMSUpdateManager
         /// <summary>
         /// Update files on a remote Linux host
         /// </summary>
-        /// <param name="targetHostInfo">Target host info</param>
-        /// <param name="parameterFilePath">Parameter file path</param>
-        /// <returns>True if success, false if an error</returns>
         /// <remarks>
         /// Parameter file path is used to determine the checkfile path, which is used to assure
         /// that a minimum amount of time elapses between sequential runs of the DMS Update Manager
         /// </remarks>
+        /// <param name="targetHostInfo">Target host info</param>
+        /// <param name="parameterFilePath">Parameter file path</param>
+        /// <returns>True if success, false if an error</returns>
         private bool UpdateRemoteHostWork(RemoteHostConnectionInfo targetHostInfo, string parameterFilePath)
         {
             try
@@ -1273,14 +1272,14 @@ namespace DMSUpdateManager
         /// <summary>
         /// Entry method for updating the target Directory
         /// </summary>
-        /// <param name="sourceDirectoryPath">Source directory path</param>
-        /// <param name="targetDirectoryInfo">Target directory info</param>
-        /// <param name="parameterFilePath">Parameter file path</param>
-        /// <param name="doNotUpdateParent"></param>
         /// <remarks>
         /// Parameter file path is used to determine the checkfile path, which is used to assure
         /// that a minimum amount of time elapses between sequential runs of the DMS Update Manager
         /// </remarks>
+        /// <param name="sourceDirectoryPath">Source directory path</param>
+        /// <param name="targetDirectoryInfo">Target directory info</param>
+        /// <param name="parameterFilePath">Parameter file path</param>
+        /// <param name="doNotUpdateParent"></param>
         private bool UpdateDirectoryRun(string sourceDirectoryPath, DirectoryContainer targetDirectoryInfo, string parameterFilePath, bool doNotUpdateParent = false)
         {
             var sourceDirectory = new DirectoryInfo(sourceDirectoryPath);
@@ -1337,13 +1336,13 @@ namespace DMSUpdateManager
         /// <summary>
         /// Update directory and copy subdirectories to the parent directory
         /// </summary>
-        /// <param name="sourceDirectory">Source directory info</param>
-        /// <param name="targetDirectoryInfo">Target directory info</param>
-        /// <param name="parameterFilePath">Parameter file path</param>
         /// <remarks>
         /// Parameter file path is used to determine the checkfile path, which is used to assure
         /// that a minimum amount of time elapses between sequential runs of the DMS Update Manager
         /// </remarks>
+        /// <param name="sourceDirectory">Source directory info</param>
+        /// <param name="targetDirectoryInfo">Target directory info</param>
+        /// <param name="parameterFilePath">Parameter file path</param>
         private bool UpdateDirectoryCopyToParentRun(DirectoryInfo sourceDirectory, DirectoryContainer targetDirectoryInfo, string parameterFilePath)
         {
             var success = true;

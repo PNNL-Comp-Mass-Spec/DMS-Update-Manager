@@ -73,6 +73,15 @@ namespace DMSUpdateManager
         /// Look for a lock file named dataFileName + ".lock" in directory remoteDirectoryPath
         /// If found, and if less than maxWaitTimeMinutes old, waits for it to be deleted by another process or to age
         /// </summary>
+        /// <remarks>
+        /// Typical steps for using lock files to assure that only one manager is creating a specific file
+        /// 1. Call CheckForRemoteLockFile() to check for a lock file; wait for it to age
+        /// 2. Once CheckForRemoteLockFile() exits, check for the required data file; exit the function if the desired file is found
+        /// 3. If the file was not found, create a new lock file by calling CreateRemoteLockFile()
+        /// 4. Copy the file to the remote server
+        /// 5. Delete the lock file by calling DeleteLockFile()
+        /// </remarks>
+        /// <remarks>This method is similar to CheckForLockFile in clsAnalysisResources but it uses sftp or file lookups and scp for file creation</remarks>
         /// <param name="sftp">Secure FTP client (to avoid connecting / disconnecting repeatedly)</param>
         /// <param name="remoteDirectoryPath">Target directory on the remote server (use Linux-style forward slashes)</param>
         /// <param name="dataFileName">Data file name (without .lock)</param>
@@ -85,15 +94,6 @@ namespace DMSUpdateManager
         /// </param>
         /// <param name="maxWaitTimeMinutes">Maximum age of the lock file</param>
         /// <param name="logIntervalMinutes"></param>
-        /// <remarks>
-        /// Typical steps for using lock files to assure that only one manager is creating a specific file
-        /// 1. Call CheckForRemoteLockFile() to check for a lock file; wait for it to age
-        /// 2. Once CheckForRemoteLockFile() exits, check for the required data file; exit the function if the desired file is found
-        /// 3. If the file was not found, create a new lock file by calling CreateRemoteLockFile()
-        /// 4. Copy the file to the remote server
-        /// 5. Delete the lock file by calling DeleteLockFile()
-        /// </remarks>
-        /// <remarks>This method is similar to CheckForLockFile in clsAnalysisResources but it uses sftp or file lookups and scp for file creation</remarks>
         private void CheckForRemoteLockFile(
             SftpClient sftp,
             string remoteDirectoryPath,
@@ -331,10 +331,10 @@ namespace DMSUpdateManager
         /// <summary>
         /// Copy a single file from a local directory to the remote host
         /// </summary>
+        /// <remarks>Calls UpdateParameters if necessary; that method will throw an exception if there are missing parameters or configuration issues</remarks>
         /// <param name="sourceFilePath">Source file path</param>
         /// <param name="remoteDirectoryPath">Remote target directory</param>
         /// <returns>True on success, false if an error</returns>
-        /// <remarks>Calls UpdateParameters if necessary; that method will throw an exception if there are missing parameters or configuration issues</remarks>
         public bool CopyFileToRemote(string sourceFilePath, string remoteDirectoryPath)
         {
             try
@@ -593,9 +593,9 @@ namespace DMSUpdateManager
         /// <summary>
         /// Validates that the remote directory exists, creating it if missing
         /// </summary>
+        /// <remarks>The parent directory of remoteDirectoryPath must already exist</remarks>
         /// <param name="remoteDirectoryPath"></param>
         /// <returns>True on success, otherwise false</returns>
-        /// <remarks>The parent directory of remoteDirectoryPath must already exist</remarks>
         public bool CreateRemoteDirectory(string remoteDirectoryPath)
         {
             if (!ParametersValidated)
@@ -607,9 +607,9 @@ namespace DMSUpdateManager
         /// <summary>
         /// Validates that the remote directories exists, creating any that are missing
         /// </summary>
+        /// <remarks>The parent directory of each item in remoteDirectories must already exist</remarks>
         /// <param name="remoteDirectories"></param>
         /// <returns>True on success, otherwise false</returns>
-        /// <remarks>The parent directory of each item in remoteDirectories must already exist</remarks>
         public bool CreateRemoteDirectories(IReadOnlyCollection<string> remoteDirectories)
         {
             if (!ParametersValidated)
@@ -748,8 +748,8 @@ namespace DMSUpdateManager
         /// <summary>
         /// Delete the lock file from the remote host
         /// </summary>
-        /// <param name="lockFile"></param>
         /// <remarks>Requires an active sftp session</remarks>
+        /// <param name="lockFile"></param>
         private void DeleteLockFile(SftpFile lockFile)
         {
             try

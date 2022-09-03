@@ -258,10 +258,10 @@ namespace DMSUpdateManager
         /// <summary>
         /// Get information about a directory
         /// </summary>
+        /// <remarks>Use Windows slashes for local directories and Linux slashes for remote directories</remarks>
         /// <param name="directoryPath">Directory path to find</param>
         /// <param name="refreshRemoteData">When true, refresh the files and subdirectories of directoryPath (only valid if TrackingRemoteHostDirectory is true)</param>
         /// <returns>Directory info</returns>
-        /// <remarks>Use Windows slashes for local directories and Linux slashes for remote directories</remarks>
         public FileOrDirectoryInfo GetDirectoryInfo(string directoryPath, bool refreshRemoteData = false)
         {
             if (!TrackingRemoteHostDirectory)
@@ -324,10 +324,10 @@ namespace DMSUpdateManager
         /// <summary>
         /// Get information about a file
         /// </summary>
+        /// <remarks>Use Windows slashes for local files and Linux slashes for remote files</remarks>
         /// <param name="filePath">File path to find</param>
         /// <param name="refreshRemoteData">When true, refresh the files and subdirectories of the file's parent directory (only valid if TrackingRemoteHostDirectory is true)</param>
         /// <returns>File info</returns>
-        /// <remarks>Use Windows slashes for local files and Linux slashes for remote files</remarks>
         public FileOrDirectoryInfo GetFileInfo(string filePath, bool refreshRemoteData = false)
         {
             if (!TrackingRemoteHostDirectory)
@@ -386,9 +386,9 @@ namespace DMSUpdateManager
         /// <summary>
         /// Determine the parent directory of a given file or directory
         /// </summary>
+        /// <remarks>Assumes the path separator character is a forward slash</remarks>
         /// <param name="fileOrDirectoryPath"></param>
         /// <returns>Parent directory path</returns>
-        /// <remarks>Assumes the path separator character is a forward slash</remarks>
         public static string GetRemoteDirectoryParent(string fileOrDirectoryPath)
         {
             if (string.IsNullOrWhiteSpace(fileOrDirectoryPath))
