@@ -1455,7 +1455,11 @@ namespace DMSUpdateManager
                         var directoryDeleted = DeleteSubdirectory(sourceSubdirectory, targetDirectoryInfo, targetSubdirectory, "parent subdirectory", DELETE_SUBDIR_FLAG);
 
                         if (directoryDeleted)
+                        {
+                            // Update the 'Exists' property, since the directory has been deleted
+                            targetSubdirectory.Exists = false;
                             processSubdirectory = false;
+                        }
                     }
 
                     subdirectoryFlaggedForDeletion = true;
@@ -1469,7 +1473,11 @@ namespace DMSUpdateManager
 
                     var directoryDeleted = DeleteSubdirectory(sourceSubdirectory, targetDirectoryInfo, analysisMgrSubDir, "subdirectory", DELETE_AM_SUBDIR_FLAG);
                     if (directoryDeleted)
+                    {
+                        // Update the 'Exists' property, since the directory has been deleted
+                        targetSubdirectory.Exists = false;
                         processSubdirectory = false;
+                    }
 
                     subdirectoryFlaggedForDeletion = true;
                 }
@@ -1495,11 +1503,19 @@ namespace DMSUpdateManager
                     }
                 }
 
-                if (processSubdirectory && !subdirectoryFlaggedForDeletion)
+                // Note: targetSubdirectory.Exists does not automatically update, but we do update it above if the directory was deleted
+                if (processSubdirectory && (!subdirectoryFlaggedForDeletion || targetSubdirectory.Exists))
                 {
-                    var verifiedSubdirectory = CreateDirectoryIfMissing(targetDirectoryInfo, targetSubdirectoryPath);
+                    // Base assumption: target subdirectory exists (required for recursive processing when the target is flagged for deletion)
+                    var verifiedSubdirectory = targetSubdirectory;
+                    if (!subdirectoryFlaggedForDeletion && !targetSubdirectory.Exists)
+                    {
+                        // Create the target subdirectory if it does not exist.
+                        verifiedSubdirectory = CreateDirectoryIfMissing(targetDirectoryInfo, targetSubdirectoryPath);
+                    }
+
                     var success = UpdateDirectoryWork(sourceSubdirectory.FullName, targetDirectoryInfo, verifiedSubdirectory,
-                        pushNewSubdirectories: true, pushRecursively);
+                        pushNewSubdirectories: true, pushRecursively, subdirectoryFlaggedForDeletion);
 
                     if (!success)
                         successOverall = false;
