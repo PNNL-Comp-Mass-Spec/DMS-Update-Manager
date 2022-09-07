@@ -1514,7 +1514,8 @@ namespace DMSUpdateManager
             DirectoryContainer targetDirectoryInfo,
             FileOrDirectoryInfo targetSubdirectory,
             string directoryDescription,
-            string deleteFlag)
+            string deleteFlag,
+            bool processRecursively = true)
         {
             if (string.IsNullOrWhiteSpace(directoryDescription))
             {
@@ -1526,6 +1527,7 @@ namespace DMSUpdateManager
 
             var fileCount = targetDirectoryInfo.GetFiles(targetSubdirectory).Count;
             var directories = targetDirectoryInfo.GetDirectories(targetSubdirectory);
+            var directoryCount = directories.Count;
 
             if (fileCount > 0)
             {
@@ -1535,8 +1537,16 @@ namespace DMSUpdateManager
                 return false;
             }
 
-            if (directories.Count > 0)
+            if (directoryCount > 0)
             {
+                if (!processRecursively)
+                {
+                    ShowWarning(
+                        "Directory flagged for deletion, but it is not empty (Directory Count = " + directoryCount + "): " +
+                        AbbreviatePath(targetSubdirectory.FullName));
+                    return false;
+                }
+
                 // Check each sub directory for file _DeleteSubDir_.txt
                 foreach (var subDir in directories)
                 {
@@ -1801,44 +1811,45 @@ namespace DMSUpdateManager
 
                 // Initially assume we'll process this directory if it exists at the target
                 var processSubdirectory = targetSubdirectory.Exists;
-                var subdirectoryFlaggedForDeletion = false;
-
-                if (sourceSubdirectory.GetFiles(DELETE_SUBDIR_FLAG).Length > 0)
-                {
-                    if (targetSubdirectory.Exists)
-                    {
-                        // Remove this subdirectory (but only if it's empty)
-                        var directoryDeleted = DeleteSubdirectory(sourceSubdirectory, targetDirectoryInfo, targetSubdirectory, "subdirectory",
-                            DELETE_SUBDIR_FLAG);
-
-                        if (directoryDeleted)
-                        {
-                            processSubdirectory = false;
-                        }
-                    }
-
-                    subdirectoryFlaggedForDeletion = true;
-                }
+                var subdirectoryFlaggedForDeletion = sourceSubdirectory.GetFiles(DELETE_SUBDIR_FLAG).Length > 0;
+                var blockDeletion = false;
 
                 if (pushNewSubdirectories)
                 {
                     if (sourceSubdirectory.GetFiles(PUSH_DIR_FLAG).Length > 0)
                     {
                         processSubdirectory = true;
+                        blockDeletion = true;
                     }
                     else if (sourceSubdirectory.GetFiles(PUSH_DIR_RECURSE_FLAG).Length > 0)
                     {
                         processSubdirectory = true;
                         pushRecursively = true;
+                        blockDeletion = true;
                     }
                 }
 
                 if (processSubdirectory || pushRecursively && !subdirectoryFlaggedForDeletion)
                 {
-                    var verifiedSubdirectory = CreateDirectoryIfMissing(targetDirectoryInfo, targetSubdirectory.FullName);
+                    // Base assumption: target subdirectory exists (required for recursive processing when the target is flagged for deletion; we don't want to create the directory, just to delete it)
+                    var verifiedSubdirectory = targetSubdirectory;
+                    if (!subdirectoryFlaggedForDeletion && !targetSubdirectory.Exists)
+                    {
+                        // Create the target subdirectory if it does not exist.
+                        verifiedSubdirectory = CreateDirectoryIfMissing(targetDirectoryInfo, targetSubdirectory.FullName);
+                    }
+
                     UpdateDirectoryWork(
                         sourceSubdirectory.FullName, targetDirectoryInfo, verifiedSubdirectory,
                         pushNewSubdirectories, pushRecursively, directoryFlaggedForDeletion || subdirectoryFlaggedForDeletion);
+                }
+
+                // Note: targetSubdirectory.Exists does not automatically update, but that doesn't matter in this case;
+                //   it should not have been created if flagged for deletion, and it should not have been already deleted
+                if (subdirectoryFlaggedForDeletion && !blockDeletion && targetSubdirectory.Exists)
+                {
+                    // Remove this subdirectory (but only if it's empty)
+                    DeleteSubdirectory(sourceSubdirectory, targetDirectoryInfo, targetSubdirectory, "subdirectory", DELETE_SUBDIR_FLAG, false);
                 }
             }
 
