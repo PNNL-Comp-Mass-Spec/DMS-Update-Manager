@@ -5,7 +5,7 @@
     <item key="SourceDirectoryPath" value="\\pnl\projects\OmicsSW\DMS_Programs\AnalysisToolManagerDistribution" />
     <item key="TargetDirectoryPath" value="." />
     <item key="CopySubdirectoriesToParentDirectory" value="True" />
-    <item key="FilesToIgnore" value="AnalysisManagerProg.exe.config, Utils.pyc, Global.pyc, PValues.txt, PTMods.txt, thumbs.db" />
+    <item key="FilesToIgnore" value="Utils.pyc, Global.pyc, PValues.txt, PTMods.txt, thumbs.db" />
     <item key="LogMessages" value="True" />
     <item key="MinimumRepeatTimeSeconds" value="60" />
     <item key="LogDirectoryPath" value="..\DMSUpdateManager\Logs" />
