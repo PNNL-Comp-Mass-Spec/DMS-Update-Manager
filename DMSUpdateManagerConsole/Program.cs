@@ -28,7 +28,12 @@ namespace DMSUpdateManagerConsole
         /// <summary>
         /// Program date
         /// </summary>
-        public const string PROGRAM_DATE = "November 22, 2022";
+        public static readonly string ProgramDate;
+
+        static Program()
+        {
+            ProgramDate = ThisAssembly.GitCommitDate.ToString("MMMM dd, yyyy");
+        }
 
         // Either mSourceDirectoryPath and mTargetDirectoryPath must be specified, or mParameterFilePath needs to be specified
 
@@ -318,7 +323,7 @@ namespace DMSUpdateManagerConsole
                 Console.WriteLine(GetExeName() + " EncodedPassword /Decode");
                 Console.WriteLine();
                 Console.WriteLine("Program written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA)");
-                Console.WriteLine("Version: " + AppUtils.GetAppVersion(PROGRAM_DATE));
+                Console.WriteLine("Version: " + AppUtils.GetAppVersion(ProgramDate));
                 Console.WriteLine();
 
                 Console.WriteLine("E-mail: matthew.monroe@pnnl.gov or proteomics@pnnl.gov");
