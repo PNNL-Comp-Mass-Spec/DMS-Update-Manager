@@ -736,16 +736,6 @@ namespace DMSUpdateManager
         }
 
         /// <summary>
-        /// Decode a password
-        /// </summary>
-        /// <param name="encodedPwd">Encoded password</param>
-        /// <returns>Clear text password</returns>
-        public static string DecodePassword(string encodedPwd)
-        {
-            return EncryptDecrypt(encodedPwd, false);
-        }
-
-        /// <summary>
         /// Delete the lock file from the remote host
         /// </summary>
         /// <remarks>Requires an active sftp session</remarks>
@@ -892,46 +882,6 @@ namespace DMSUpdateManager
         public void DeleteFile(SftpClient sftpClient, string filePath)
         {
             sftpClient.Delete(filePath);
-        }
-
-        /// <summary>
-        /// Encode a password
-        /// </summary>
-        /// <param name="password">Clear text password</param>
-        /// <returns>Encoded password</returns>
-        public static string EncodePassword(string password)
-        {
-            return EncryptDecrypt(password, true);
-        }
-
-        /// <summary>
-        /// Encode or decode a password
-        /// </summary>
-        /// <param name="password">Password</param>
-        /// <param name="encrypt">True to encode the password; false to decode the password</param>
-        /// <returns>Encoded password</returns>
-        private static string EncryptDecrypt(string password, bool encrypt)
-        {
-            // Convert the password string to a character array
-            var pwdChars = password.ToCharArray();
-            var pwdCharsAdj = new List<char>();
-
-            var pwdBytes = pwdChars.Select(t => (byte)t).ToList();
-
-            var modTest = encrypt ? 1 : 0;
-
-            // Modify the byte array by shifting alternating bytes up or down and converting back to char
-            for (var index = 0; index < pwdBytes.Count; index++)
-            {
-                if (index % 2 == modTest)
-                    pwdBytes[index]++;
-                else
-                    pwdBytes[index]--;
-
-                pwdCharsAdj.Add((char)pwdBytes[index]);
-            }
-
-            return string.Join(string.Empty, pwdCharsAdj);
         }
 
         /// <summary>
@@ -1244,7 +1194,7 @@ namespace DMSUpdateManager
 
             try
             {
-                mPrivateKeyFile = new PrivateKeyFile(keyFileStream, DecodePassword(passphraseEncoded));
+                mPrivateKeyFile = new PrivateKeyFile(keyFileStream, AppUtils.DecodeShiftCipher(passphraseEncoded));
             }
             catch (InvalidOperationException ex)
             {

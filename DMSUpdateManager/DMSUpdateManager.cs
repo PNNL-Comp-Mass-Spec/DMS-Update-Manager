@@ -40,7 +40,7 @@ namespace DMSUpdateManager
             mFilesToIgnore = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             mProcessesDict = new Dictionary<uint, ProcessInfo>();
 
-            mExecutingExePath = GetAppPath();
+            mExecutingExePath = AppUtils.GetAppPath();
             mExecutingExeName = Path.GetFileName(mExecutingExePath);
 
             InitializeLocalVariables();
@@ -293,7 +293,7 @@ namespace DMSUpdateManager
 
         private string ConstructMutexName(string mutexSuffix)
         {
-            var appName = GetEntryOrExecutingAssembly().GetName().Name;
+            var appName = AppUtils.GetEntryOrExecutingAssembly().GetName().Name;
             var parameterFileCleaned = mutexSuffix.Replace("\\", "_").Replace(":", "_").Replace(".", "_").Replace(" ", "_");
             var mutexName = @"Global\" + appName.ToLower() + "_" + parameterFileCleaned.ToLower();
             return mutexName;
@@ -1165,7 +1165,7 @@ namespace DMSUpdateManager
 
                 // Note that CleanupFilePaths() will update mOutputDirectoryPath, which is used by LogMessage()
                 // Since we're updating a files on a remote host, use the entry assembly's path for parameter inputDirectoryPath of CleanupDirectoryPaths
-                var appDirectoryPath = GetAppDirectoryPath();
+                var appDirectoryPath = AppUtils.GetAppDirectoryPath();
                 var tempStr = string.Empty;
                 if (!CleanupDirectoryPaths(ref appDirectoryPath, ref tempStr))
                 {

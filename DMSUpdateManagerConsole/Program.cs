@@ -150,7 +150,7 @@ namespace DMSUpdateManagerConsole
 
         private static string GetExeName()
         {
-            return Path.GetFileName(ProcessFilesOrDirectoriesBase.GetAppPath());
+            return Path.GetFileName(AppUtils.GetAppPath());
         }
 
         /// <summary>
@@ -235,9 +235,9 @@ namespace DMSUpdateManagerConsole
             mPassword = mPassword.Replace("&quot;", "\"").Replace("&quote;", "\"");
 
             if (mEncodePassword)
-                Console.WriteLine(mPassword + " encodes to " + UpdateMgr.RemoteUpdateUtility.EncodePassword(mPassword));
+                Console.WriteLine(mPassword + " encodes to " + AppUtils.EncodeShiftCipher(mPassword));
             else
-                Console.WriteLine(mPassword + " decodes to " + UpdateMgr.RemoteUpdateUtility.DecodePassword(mPassword));
+                Console.WriteLine(mPassword + " decodes to " + AppUtils.DecodeShiftCipher(mPassword));
 
             return true;
         }
@@ -318,7 +318,7 @@ namespace DMSUpdateManagerConsole
                 Console.WriteLine(GetExeName() + " EncodedPassword /Decode");
                 Console.WriteLine();
                 Console.WriteLine("Program written by Matthew Monroe for the Department of Energy (PNNL, Richland, WA)");
-                Console.WriteLine("Version: " + ProcessFilesOrDirectoriesBase.GetAppVersion(PROGRAM_DATE));
+                Console.WriteLine("Version: " + AppUtils.GetAppVersion(PROGRAM_DATE));
                 Console.WriteLine();
 
                 Console.WriteLine("E-mail: matthew.monroe@pnnl.gov or proteomics@pnnl.gov");
