@@ -32,7 +32,7 @@ namespace DMSUpdateManagerConsole
 
         static Program()
         {
-            ProgramDate = ThisAssembly.GitCommitDate.ToString("MMMM dd, yyyy");
+            ProgramDate = ThisAssembly.GitCommitDate.ToLocalTime().ToString("MMMM dd, yyyy");
         }
 
         // Either mSourceDirectoryPath and mTargetDirectoryPath must be specified, or mParameterFilePath needs to be specified
