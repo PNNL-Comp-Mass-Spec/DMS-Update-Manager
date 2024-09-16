@@ -1399,9 +1399,12 @@ namespace DMSUpdateManager
             {
                 // Update the check file's date
                 TouchCheckFile(checkFilePath);
+            }
 
-                success = UpdateDirectoryCopyToParent(sourceDirectory, targetDirectoryInfo);
+            success = UpdateDirectoryCopyToParent(sourceDirectory, targetDirectoryInfo, !skipShared);
 
+            if (!skipShared)
+            {
                 // Update the check file's date one more time
                 TouchCheckFile(checkFilePath);
             }
@@ -1425,7 +1428,7 @@ namespace DMSUpdateManager
             }
         }
 
-        private bool UpdateDirectoryCopyToParent(DirectoryInfo sourceDirectory, DirectoryContainer targetDirectoryInfo)
+        private bool UpdateDirectoryCopyToParent(DirectoryInfo sourceDirectory, DirectoryContainer targetDirectoryInfo, bool processParentDirectoryItems)
         {
             var successOverall = true;
 
@@ -1444,10 +1447,10 @@ namespace DMSUpdateManager
                 // Initially assume we'll process this directory if it exists at the target
                 var targetSubdirectory = targetDirectoryInfo.GetDirectoryInfo(targetSubdirectoryPath);
 
-                var processSubdirectory = targetSubdirectory.Exists;
+                var processSubdirectory = targetSubdirectory.Exists && processParentDirectoryItems;
                 var subdirectoryFlaggedForDeletion = false;
 
-                if (sourceSubdirectory.GetFiles(DELETE_SUBDIR_FLAG).Length > 0)
+                if (sourceSubdirectory.GetFiles(DELETE_SUBDIR_FLAG).Length > 0 && processParentDirectoryItems)
                 {
                     if (targetSubdirectory.Exists)
                     {
@@ -1490,7 +1493,7 @@ namespace DMSUpdateManager
                     targetSubdirectoryPath = CombinePaths(targetDirectoryInfo, targetDirectoryInfo.DirectoryPath, sourceSubdirectory.Name);
                     processSubdirectory = true;
                 }
-                else
+                else if (processParentDirectoryItems)
                 {
                     if (sourceSubdirectory.GetFiles(PUSH_DIR_FLAG).Length > 0)
                     {
